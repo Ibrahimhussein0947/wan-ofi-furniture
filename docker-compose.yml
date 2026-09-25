@@ -1,0 +1,46 @@
+# Local MongoDB as a single-node replica set (needed for multi-document transactions).
+#
+#   docker compose up -d mongo
+#   server/.env → MONGO_URI=mongodb://127.0.0.1:27017/wanofi?directConnection=true
+#
+# Full stack in containers (API + built client on http://localhost:5050):
+#   JWT_SECRET=... JWT_REFRESH_SECRET=... docker compose --profile app up --build
+services:
+  mongo:
+    image: mongo:7
+    command: ['--replSet', 'rs0', '--bind_ip_all']
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      # Initiates the replica set on first start, then reports healthy.
+      test: >
+        mongosh --quiet --eval "try { rs.status().ok } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongo:27017' }] }).ok }"
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 5s
+
+  app:
+    profiles: ['app']
+    build: .
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - '5050:5050'
+    environment:
+      NODE_ENV: production
+      PORT: 5050
+      MONGO_URI: mongodb://mongo:27017/wanofi?replicaSet=rs0
+      CLIENT_URL: http://localhost:5050
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET (32+ characters)}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?Set JWT_REFRESH_SECRET (32+ characters)}
+      COOKIE_SAMESITE: lax
+    volumes:
+      - uploads:/app/server/uploads
+
+volumes:
+  mongo-data:
+  uploads:

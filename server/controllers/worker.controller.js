@@ -1,0 +1,79 @@
+const { Worker, ProductionJob, Payment, User } = require('../models');
+const { audit, actorFrom, diff } = require('../services/audit.service');
+const { asyncHandler, sendSuccess } = require('../utils/http');
+const { paginate, pickFilters, escapeRegex } = require('../utils/query');
+const { assertFound } = require('./helpers');
+const { AUDIT_ACTIONS, PRODUCTION_STAGES: S } = require('../config/constants');
+
+const CLOSED = [S.READY_FOR_DELIVERY, S.DELIVERED, S.CANCELLED];
+
+exports.list = asyncHandler(async (req, res) => {
+  const filter = pickFilters(req.query, ['position']);
+  if (req.query.isActive) filter.isActive = req.query.isActive === 'true';
+  if (req.query.search) {
+    const users = await User.find({ role: 'WORKER', name: new RegExp(escapeRegex(req.query.search), 'i') }).select('_id').lean();
+    filter.$or = [{ user: { $in: users.map((u) => u._id) } }, { employeeCode: new RegExp(escapeRegex(req.query.search), 'i') }];
+  }
+  const { items, pagination } = await paginate(Worker, filter, req.query, {
+    populate: { path: 'user', select: 'name email phone isActive lastLoginAt workerRole' },
+    allowedSort: ['employeeCode', 'position', 'createdAt'],
+  });
+  const workload = await ProductionJob.aggregate([
+    { $match: { assignedWorkers: { $in: items.map((w) => w.user?._id).filter(Boolean) }, stage: { $nin: CLOSED } } },
+    { $unwind: '$assignedWorkers' },
+    { $group: { _id: '$assignedWorkers', activeJobs: { $sum: 1 } } },
+  ]);
+  const byUser = new Map(workload.map((w) => [String(w._id), w.activeJobs]));
+  sendSuccess(res, { data: items.map((w) => ({ ...w, activeJobs: byUser.get(String(w.user?._id)) || 0 })), pagination });
+});
+
+exports.get = asyncHandler(async (req, res) => {
+  const worker = assertFound(await Worker.findById(req.params.id).populate('user', 'name email phone isActive lastLoginAt').lean(), 'Worker not found.');
+  const [jobs, payments, performance] = await Promise.all([
+    ProductionJob.find({ assignedWorkers: worker.user._id }).sort({ updatedAt: -1 }).limit(30).select('jobNumber title stage progress expectedCompletionDate actualCompletionDate reworkCount').lean(),
+    Payment.find({ worker: worker._id }).sort({ paidAt: -1 }).limit(30).select('paymentNumber paidAt amount method kind notes').lean(),
+    ProductionJob.aggregate([
+      { $match: { assignedWorkers: worker.user._id, stage: { $ne: S.CANCELLED } } },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          active: { $sum: { $cond: [{ $in: ['$stage', CLOSED] }, 0, 1] } },
+          completed: { $sum: { $cond: [{ $in: ['$stage', [S.READY_FOR_DELIVERY, S.DELIVERED]] }, 1, 0] } },
+          onTime: {
+            $sum: { $cond: [{ $and: [{ $ne: ['$actualCompletionDate', null] }, { $lte: ['$actualCompletionDate', '$expectedCompletionDate'] }] }, 1, 0] },
+          },
+          reworks: { $sum: '$reworkCount' },
+        },
+      },
+    ]),
+  ]);
+  const p = performance[0] || { total: 0, active: 0, completed: 0, onTime: 0, reworks: 0 };
+  sendSuccess(res, {
+    data: {
+      ...worker,
+      jobs,
+      payments,
+      performance: { ...p, _id: undefined, onTimeRate: p.completed ? Math.round((p.onTime / p.completed) * 100) : null },
+    },
+  });
+});
+
+exports.update = asyncHandler(async (req, res) => {
+  const worker = assertFound(await Worker.findById(req.params.id), 'Worker not found.');
+  const before = worker.toObject();
+  Object.assign(worker, req.body);
+  await worker.save();
+  const userChanges = {};
+  if (req.body.position) userChanges.workerRole = req.body.position;
+  if (req.body.isActive !== undefined) userChanges.isActive = req.body.isActive;
+  if (Object.keys(userChanges).length) await User.updateOne({ _id: worker.user }, { $set: userChanges });
+  await audit(actorFrom(req), {
+    action: req.body.position && req.body.position !== before.position ? AUDIT_ACTIONS.PERMISSION_CHANGE : AUDIT_ACTIONS.UPDATE,
+    entity: 'Worker',
+    entityId: worker._id,
+    reference: worker.employeeCode,
+    changes: diff(before, worker.toObject(), ['position', 'wageType', 'wageRate', 'isActive', 'skills']),
+  });
+  sendSuccess(res, { data: worker, message: 'Worker updated' });
+});

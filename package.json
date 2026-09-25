@@ -1,0 +1,19 @@
+{
+  "name": "wan-ofi-furniture",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Wan Ofi Furniture — Furniture ERP, e-commerce and production management system (MERN)",
+  "scripts": {
+    "install:all": "npm install && npm install --prefix server && npm install --prefix client",
+    "dev": "concurrently -n server,client -c blue,green \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "dev:memory": "concurrently -n server,client -c blue,green \"npm run dev:memory --prefix server\" \"npm run dev --prefix client\"",
+    "seed": "npm run seed --prefix server",
+    "test": "npm test --prefix server && npm test --prefix client",
+    "lint": "npm run lint --prefix server && npm run lint --prefix client",
+    "build": "npm run build --prefix client",
+    "start": "npm start --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
