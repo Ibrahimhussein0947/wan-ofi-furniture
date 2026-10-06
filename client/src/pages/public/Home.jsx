@@ -4,6 +4,7 @@ import { ArrowRight, Award, Hammer, PencilRuler, Quote, ShieldCheck, Truck, Cloc
 import Button from '../../components/ui/Button';
 import ProductCard from '../../components/ProductCard';
 import ProductImage from '../../components/ProductImage';
+import WorkGallery from '../../components/WorkGallery';
 import { Skeleton } from '../../components/ui/States';
 import { categoriesApi, productsApi } from '../../api/endpoints';
 import { usePublicSettings } from '../../components/SettingsLoader';
@@ -53,26 +54,58 @@ const WHY = [
   [Clock, 'Track your order', 'Follow production from first cut to delivery in your account.', unsplash('photo-1597960194599-22929afc25b1')],
 ];
 
-// Showcase photos (Unsplash License, free for commercial use). Shown until the shop has its own
-// categories, and used for any category that has no photo of its own.
+// Wan Ofi's own design photos (client/public/showcase).
+const work = (name) => `/showcase/${name}.webp`;
+
+// Shown in "Shop by category" until the shop has categories with products.
+const SHOWCASE_CATEGORIES = [
+  ['Beds', 'tufted-bed'],
+  ['Wardrobes', 'black-wardrobe'],
+  ['Bedroom Sets', 'white-bedroom-set'],
+  ['Kitchen Cabinets', 'kitchen-cabinets'],
+  ['TV Walls', 'tv-wall-unit'],
+  ['Display Cabinets', 'corner-display-cabinet'],
+  ['Doors', 'islamic-gate-doors'],
+  ['Office Shelving', 'office-shelving'],
+  ['Shop & Pharmacy Fittings', 'pharmacy-shelving'],
+  ['Custom Designs', 'islamic-display-cabinet'],
+].map(([name, photo]) => ({ _id: name, name, slug: name === 'Custom Designs' ? 'custom-furniture' : null, image: work(photo) }));
+
+// Photo for a real category that has none of its own, matched by name.
 const CATEGORY_PHOTOS = {
-  Beds: unsplash('photo-1578683010236-d716f9a3f461'),
-  Sofas: unsplash('photo-1762803841422-5b8cf8767cd9'),
-  'Dining Furniture': unsplash('photo-1616048056617-93b94a339009'),
-  Chairs: unsplash('photo-1617582907226-c49e2d8200d9'),
-  Tables: unsplash('photo-1559662780-33af019fd570'),
-  Wardrobes: unsplash('photo-1738229115082-b5647ffb3503'),
-  Cabinets: unsplash('photo-1622372738946-62e02505feb3'),
-  'Office Furniture': unsplash('photo-1706689656095-168768dc20a5'),
-  'TV Stands': unsplash('photo-1724582586470-85422853ad61'),
-  'Custom Furniture': unsplash('photo-1590880795696-20c7dfadacde'),
+  Beds: work('tufted-bed'),
+  Wardrobes: work('black-wardrobe'),
+  Cabinets: work('corner-display-cabinet'),
+  'Office Furniture': work('office-shelving'),
+  'TV Stands': work('tv-wall-unit'),
+  'Custom Furniture': work('islamic-display-cabinet'),
+  ...Object.fromEntries(SHOWCASE_CATEGORIES.map((c) => [c.name, c.image])),
 };
-const SHOWCASE_CATEGORIES = Object.keys(CATEGORY_PHOTOS).map((name) => ({
-  _id: name,
-  name,
-  slug: name === 'Custom Furniture' ? 'custom-furniture' : null,
-  image: CATEGORY_PHOTOS[name],
-}));
+
+// "Our work" gallery.
+const GALLERY = [
+  ['islamic-display-cabinet', 'Carved display cabinet with Islamic calligraphy'],
+  ['tufted-bed', 'Luxury tufted bed with matching bedside table'],
+  ['black-wardrobe', 'Black wardrobe with lighting and drawers'],
+  ['kitchen-cabinets', 'White kitchen cabinets with glass doors'],
+  ['tv-wall-unit', 'TV wall and storage unit'],
+  ['islamic-gate-doors', 'Black and gold entrance doors'],
+  ['white-bedroom-set', 'White wardrobe and dressing table'],
+  ['corner-display-cabinet', 'Corner display cabinet'],
+  ['office-shelving', 'Office shelving and cabinets'],
+  ['pharmacy-shelving', 'Pharmacy shelving and counter'],
+  ['bed-frame-light', 'Modern bed frame, 160 × 200 cm'],
+  ['multi-storage-wardrobe', 'Multi-storage wardrobe'],
+  ['tv-wall-wood', 'Wooden TV wall with lit niche'],
+  ['door-carved-wood', 'Carved wooden double door'],
+  ['door-white-green', 'White and green entrance door'],
+  ['door-black-gold', 'Black and gold double door'],
+  ['door-modern-slats', 'Modern slatted gate'],
+  ['modern-entrance-door', 'Grey entrance door with frosted panels'],
+  ['pharmacy-teal', 'Pharmacy display shelving'],
+  ['tv-wall-modern', 'Modern TV wall unit'],
+  ['bed-frame-dark', 'Bed frame with tufted headboard'],
+].map(([name, caption]) => ({ src: work(name), caption }));
 
 const TESTIMONIALS = [
   ['Amina H.', 'Bole', 'Our king bed is stunning and solid. I loved seeing progress photos while it was being built.'],
@@ -183,6 +216,20 @@ export default function Home() {
               ))}
           </div>
         </div>
+      </section>
+
+      {/* Our work */}
+      <section className="container-page py-16">
+        <SectionTitle
+          eyebrow={t('Our work')}
+          title={t('Made in our workshop')}
+          action={
+            <Link to="/custom-furniture" className="link inline-flex items-center gap-1">
+              {t('Request a design')} <ArrowRight className="h-4 w-4" />
+            </Link>
+          }
+        />
+        <WorkGallery photos={GALLERY} />
       </section>
 
       {/* Popular */}

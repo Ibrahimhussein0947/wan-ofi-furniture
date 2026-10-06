@@ -60,6 +60,23 @@ const ROWS = [
   ["Staff & customer login", "Seensa hojjettootaa fi maamiltootaa", "የሠራተኞች እና የደንበኞች መግቢያ"],
   ["Visit us", "Nu daawwadhaa", "ይጎብኙን"],
   ["Explore", "Qoradhu", "ያስሱ"],
+  // ── Home: our work ─────────────────────────────────────────────────
+  ["Bedroom Sets", "Meeshaalee kutaa ciisichaa", "የመኝታ ክፍል ዕቃዎች"],
+  ["Kitchen Cabinets", "Kaabinetii kushinaa", "የወጥ ቤት ካቢኔቶች"],
+  ["TV Walls", "Teessoo TV", "የቲቪ ግድግዳ ዕቃዎች"],
+  ["Display Cabinets", "Kaabinetii agarsiisaa", "የማሳያ ካቢኔቶች"],
+  ["Doors", "Balbala", "በሮች"],
+  ["Office Shelving", "Kuusaa waajjiraa", "የቢሮ መደርደሪያዎች"],
+  ["Shop & Pharmacy Fittings", "Meeshaalee suukii fi faarmaasii", "የሱቅ እና የፋርማሲ ዕቃዎች"],
+  ["Custom Designs", "Dizaayinii addaa", "ልዩ ዲዛይኖች"],
+  ["Our work", "Hojii keenya", "ሥራዎቻችን"],
+  ["Made in our workshop", "Mana hojii keenya keessatti kan hojjetame", "በዎርክሾፓችን የተሠሩ"],
+  ["Request a design", "Dizaayinii gaafadhu", "ዲዛይን ይጠይቁ"],
+  ["Show fewer", "Muraasa agarsiisi", "ጥቂት አሳይ"],
+  ["Show all {count} photos", "Suuraawwan {count} hunda agarsiisi", "ሁሉንም {count} ፎቶዎች አሳይ"],
+  ["View photo: {caption}", "Suuraa ilaali: {caption}", "ፎቶ ይመልከቱ፦ {caption}"],
+  ["Previous photo", "Suuraa duraa", "ቀዳሚ ፎቶ"],
+  ["Next photo", "Suuraa itti aanu", "ቀጣይ ፎቶ"],
   ["All rights reserved.", "Mirgi hundi seeraan eegamaadha.", "መብቱ በሕግ የተጠበቀ ነው።"],
 
   // ── Customer account navigation ────────────────────────────────────
