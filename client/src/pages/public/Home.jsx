@@ -55,8 +55,8 @@ const WHY = [
 
 const TESTIMONIALS = [
   ['Amina H.', 'Bole', 'Our king bed is stunning and solid. I loved seeing progress photos while it was being built.'],
-  ['Simien Hotels', 'Bahir Dar', 'They furnished our dining hall on time and on budget. The quality has held up beautifully.'],
-  ['John M.', 'Megenagna', 'The custom sofa fits our living room perfectly. Clear pricing and flexible payments.'],
+  ['Ibrahim Hussein', '', 'They furnished our dining hall on time and on budget. The quality has held up beautifully.'],
+  ['Abdul Rahman', '', 'The custom sofa fits our living room perfectly. Clear pricing and flexible payments.'],
 ];
 
 export default function Home() {
@@ -221,7 +221,7 @@ export default function Home() {
               <Quote className="h-7 w-7 text-brass-400" />
               <blockquote className="mt-3 text-stone-700">{t(text)}</blockquote>
               <figcaption className="mt-4 text-sm font-semibold text-walnut-900">
-                {name} <span className="font-normal text-stone-500">· {place}</span>
+                {name} {place && <span className="font-normal text-stone-500">· {place}</span>}
               </figcaption>
             </figure>
           ))}
