@@ -107,6 +107,10 @@ if (env.isProduction) {
     if (/change-me/i.test(env[key])) problems.push(`${key} is still the example value — generate a random one`);
   }
   if (env.JWT_SECRET === env.JWT_REFRESH_SECRET) problems.push('JWT_SECRET and JWT_REFRESH_SECRET must be different');
+  if (env.STORAGE_DRIVER === 's3') {
+    const missing = ['S3_BUCKET', 'S3_ACCESS_KEY_ID', 'S3_SECRET_ACCESS_KEY', 'S3_PUBLIC_URL'].filter((k) => !env[k]);
+    if (missing.length) problems.push(`${missing.join(', ')} required when STORAGE_DRIVER=s3 (or set STORAGE_DRIVER=local)`);
+  }
   if (env.PAYMENT_PROVIDER === 'sandbox') problems.push('PAYMENT_PROVIDER=sandbox simulates payments and must not be used in production');
   if (env.PAYMENT_PROVIDER !== 'manual' && !env.PAYMENT_WEBHOOK_SECRET) problems.push('PAYMENT_WEBHOOK_SECRET is required for online payments');
   if (env.EMAIL_DRIVER === 'smtp' && !env.SMTP_HOST) problems.push('SMTP_HOST is required when EMAIL_DRIVER=smtp');
