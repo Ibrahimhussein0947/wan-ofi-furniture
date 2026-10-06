@@ -5,8 +5,9 @@ services:
   - type: web
     name: wan-ofi-furniture
     runtime: docker
-    # Background jobs (payment reminders, low-stock alerts) need an always-on plan; free services sleep.
-    plan: starter
+    # Free plan sleeps after 15 idle minutes, pausing reminders and alerts. Keep it awake with a free
+    # uptime monitor on /api/health every 5 minutes, or switch to the paid starter plan.
+    plan: free
     healthCheckPath: /api/health
     autoDeploy: true
     envVars:
@@ -29,20 +30,21 @@ services:
         sync: false
       - key: OWNER_PASSWORD
         sync: false
-      # Uploaded photos: Cloudflare R2 / S3 (the service disk is wiped on every deploy).
+      # Uploaded photos: any S3-compatible storage — Supabase Storage (no card needed) or Cloudflare R2.
+      # The service disk is wiped on every deploy, so don't use local storage here.
       - key: STORAGE_DRIVER
         value: s3
       - key: S3_BUCKET
         sync: false
-      - key: S3_REGION
-        value: auto
-      - key: S3_ENDPOINT # R2: https://<account-id>.r2.cloudflarestorage.com
+      - key: S3_REGION # Supabase: the project's region, e.g. eu-central-1. R2: auto
+        sync: false
+      - key: S3_ENDPOINT # Supabase: https://<ref>.supabase.co/storage/v1/s3  R2: https://<account-id>.r2.cloudflarestorage.com
         sync: false
       - key: S3_ACCESS_KEY_ID
         sync: false
       - key: S3_SECRET_ACCESS_KEY
         sync: false
-      - key: S3_PUBLIC_URL # R2 public bucket URL, e.g. https://pub-xxxx.r2.dev
+      - key: S3_PUBLIC_URL # Supabase: https://<ref>.supabase.co/storage/v1/object/public/<bucket>  R2: https://pub-xxxx.r2.dev
         sync: false
       # Email (password resets, receipts, payment reminders). Leave as console until SMTP is ready.
       - key: EMAIL_DRIVER
