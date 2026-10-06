@@ -1,0 +1,51 @@
+# Render Blueprint: New → Blueprint → pick this repository.
+# One Docker service runs the API and serves the built React app on the same domain.
+# Fill in the values marked "sync: false" in the Render dashboard when asked.
+services:
+  - type: web
+    name: wan-ofi-furniture
+    runtime: docker
+    # Background jobs (payment reminders, low-stock alerts) need an always-on plan; free services sleep.
+    plan: starter
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI # MongoDB Atlas connection string
+        sync: false
+      - key: CLIENT_URL # e.g. https://wan-ofi-furniture.onrender.com or your own domain
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: COOKIE_SAMESITE
+        value: lax
+      # First owner login, created on the first start. Remove OWNER_PASSWORD afterwards.
+      - key: OWNER_NAME
+        sync: false
+      - key: OWNER_EMAIL
+        sync: false
+      - key: OWNER_PASSWORD
+        sync: false
+      # Uploaded photos: Cloudflare R2 / S3 (the service disk is wiped on every deploy).
+      - key: STORAGE_DRIVER
+        value: s3
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_REGION
+        value: auto
+      - key: S3_ENDPOINT # R2: https://<account-id>.r2.cloudflarestorage.com
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: S3_PUBLIC_URL # R2 public bucket URL, e.g. https://pub-xxxx.r2.dev
+        sync: false
+      # Email (password resets, receipts, payment reminders). Leave as console until SMTP is ready.
+      - key: EMAIL_DRIVER
+        value: console
+      - key: ENABLE_CRON
+        value: 'true'

@@ -11,6 +11,10 @@ const schema = z.object({
   CLIENT_URL: z.string().default('http://localhost:5174'),
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
   JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET must be at least 32 characters'),
+  // First owner account, created on start-up when the database has none (see services/bootstrap.service.js).
+  OWNER_NAME: z.string().default('Owner'),
+  OWNER_EMAIL: z.string().optional(),
+  OWNER_PASSWORD: z.string().optional(),
   JWT_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_DAYS: z.coerce.number().default(7),
   COOKIE_SAMESITE: z.enum(['lax', 'strict', 'none']).default('lax'),
@@ -99,6 +103,10 @@ env.APP_URL = (env.APP_URL || env.CLIENT_URL.split(',')[0]).replace(/\/$/, '');
 
 if (env.isProduction) {
   const problems = [];
+  for (const key of ['JWT_SECRET', 'JWT_REFRESH_SECRET']) {
+    if (/change-me/i.test(env[key])) problems.push(`${key} is still the example value — generate a random one`);
+  }
+  if (env.JWT_SECRET === env.JWT_REFRESH_SECRET) problems.push('JWT_SECRET and JWT_REFRESH_SECRET must be different');
   if (env.PAYMENT_PROVIDER === 'sandbox') problems.push('PAYMENT_PROVIDER=sandbox simulates payments and must not be used in production');
   if (env.PAYMENT_PROVIDER !== 'manual' && !env.PAYMENT_WEBHOOK_SECRET) problems.push('PAYMENT_WEBHOOK_SECRET is required for online payments');
   if (env.EMAIL_DRIVER === 'smtp' && !env.SMTP_HOST) problems.push('SMTP_HOST is required when EMAIL_DRIVER=smtp');
@@ -108,6 +116,10 @@ if (env.isProduction) {
     // eslint-disable-next-line no-console
     console.error(`Invalid production configuration:\n  - ${problems.join('\n  - ')}`);
     process.exit(1);
+  }
+  if (env.STORAGE_DRIVER === 'local') {
+    // eslint-disable-next-line no-console
+    console.warn('STORAGE_DRIVER=local: uploaded images are kept on this server disk. Use a persistent volume or STORAGE_DRIVER=s3, or they are lost on redeploy.');
   }
 }
 

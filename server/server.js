@@ -2,10 +2,12 @@ const env = require('./config/env');
 const app = require('./app');
 const { connectDB, disconnectDB } = require('./config/db');
 const { startJobs, stopJobs } = require('./jobs');
+const { ensureOwnerFromEnv } = require('./services/bootstrap.service');
 const logger = require('./utils/logger');
 
 async function start({ mongoUri = env.MONGO_URI } = {}) {
   await connectDB(mongoUri);
+  await ensureOwnerFromEnv(env, logger);
   const server = app.listen(env.PORT, () => logger.info(`Wan Ofi API listening on http://localhost:${env.PORT}`));
   server.on('error', (err) => {
     logger.error(err.code === 'EADDRINUSE' ? `Port ${env.PORT} is already in use. Set PORT in server/.env to a free port.` : err);

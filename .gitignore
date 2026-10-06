@@ -12,3 +12,8 @@ server/uploads/*
 .vscode/
 .idea/
 server/.devdb/
+
+# Large promo videos (keep out of Git; GitHub rejects files over 100 MB)
+promo/
+# Local dev login list
+LOGINS.md

@@ -8,6 +8,7 @@
     "dev": "nodemon server.js",
     "dev:memory": "node scripts/devMemoryServer.js",
     "seed": "node scripts/seed.js",
+    "create-owner": "node scripts/createOwner.js",
     "test": "jest --runInBand",
     "lint": "eslint ."
   },

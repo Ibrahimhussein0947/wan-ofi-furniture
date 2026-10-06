@@ -109,6 +109,20 @@ The client only needs `VITE_API_URL` when the API is hosted on a different origi
 
 ## Deployment
 
+### First owner account
+
+A new production database has no staff logins (sign-up only creates customers and the seed refuses to run in production). Either set `OWNER_NAME`, `OWNER_EMAIL` and `OWNER_PASSWORD` before the first start — the owner is created automatically, then remove `OWNER_PASSWORD` — or run once:
+
+```bash
+npm run create-owner --prefix server -- --name "Full Name" --email owner@example.com --password "Secret123"
+```
+
+Both refuse once an owner exists. In production the API also refuses to start with the example `change-me` JWT secrets.
+
+### Render (recommended)
+
+`render.yaml` is a ready Blueprint: on Render choose **New → Blueprint**, pick this repository, and fill in the Atlas connection string, `CLIENT_URL`, the owner details and the Cloudflare R2 values. JWT secrets are generated for you. Use an always-on plan so payment reminders and alerts run.
+
 ### Option A — one container (API serves the React build)
 
 ```bash
