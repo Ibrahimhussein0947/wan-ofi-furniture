@@ -59,6 +59,7 @@ const ROWS = [
   ["About us", "Waa'ee keenya", "ስለ እኛ"],
   ["Staff & customer login", "Seensa hojjettootaa fi maamiltootaa", "የሠራተኞች እና የደንበኞች መግቢያ"],
   ["Visit us", "Nu daawwadhaa", "ይጎብኙን"],
+  ["Explore", "Qoradhu", "ያስሱ"],
   ["All rights reserved.", "Mirgi hundi seeraan eegamaadha.", "መብቱ በሕግ የተጠበቀ ነው።"],
 
   // ── Customer account navigation ────────────────────────────────────

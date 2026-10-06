@@ -53,6 +53,27 @@ const WHY = [
   [Clock, 'Track your order', 'Follow production from first cut to delivery in your account.', unsplash('photo-1597960194599-22929afc25b1')],
 ];
 
+// Showcase photos (Unsplash License, free for commercial use). Shown until the shop has its own
+// categories, and used for any category that has no photo of its own.
+const CATEGORY_PHOTOS = {
+  Beds: unsplash('photo-1578683010236-d716f9a3f461'),
+  Sofas: unsplash('photo-1762803841422-5b8cf8767cd9'),
+  'Dining Furniture': unsplash('photo-1616048056617-93b94a339009'),
+  Chairs: unsplash('photo-1617582907226-c49e2d8200d9'),
+  Tables: unsplash('photo-1559662780-33af019fd570'),
+  Wardrobes: unsplash('photo-1738229115082-b5647ffb3503'),
+  Cabinets: unsplash('photo-1622372738946-62e02505feb3'),
+  'Office Furniture': unsplash('photo-1706689656095-168768dc20a5'),
+  'TV Stands': unsplash('photo-1724582586470-85422853ad61'),
+  'Custom Furniture': unsplash('photo-1590880795696-20c7dfadacde'),
+};
+const SHOWCASE_CATEGORIES = Object.keys(CATEGORY_PHOTOS).map((name) => ({
+  _id: name,
+  name,
+  slug: name === 'Custom Furniture' ? 'custom-furniture' : null,
+  image: CATEGORY_PHOTOS[name],
+}));
+
 const TESTIMONIALS = [
   ['Amina H.', 'Bole', 'Our king bed is stunning and solid. I loved seeing progress photos while it was being built.'],
   ['Ibrahim Hussein', '', 'They furnished our dining hall on time and on budget. The quality has held up beautifully.'],
@@ -65,6 +86,9 @@ export default function Home() {
   const featured = useQuery({ queryKey: ['products', 'featured'], queryFn: () => productsApi.list({ featured: 'true', limit: 4 }) });
   const popular = useQuery({ queryKey: ['products', 'popular'], queryFn: () => productsApi.list({ sort: 'popular', limit: 4 }) });
   const categories = useQuery({ queryKey: ['categories'], queryFn: () => categoriesApi.list().then((r) => r.items) });
+  const realCategories = (categories.data || []).filter((c) => c.productCount > 0 || c.slug === 'custom-furniture').slice(0, 10);
+  // Until the shop has categories with products, show the photo showcase instead of an empty section.
+  const shopCategories = realCategories.some((c) => c.productCount > 0) ? realCategories : categories.isLoading ? [] : SHOWCASE_CATEGORIES;
   const { data: company } = usePublicSettings();
 
   return (
@@ -140,19 +164,20 @@ export default function Home() {
         <div className="container-page">
           <SectionTitle eyebrow={t('Browse')} title={t('Shop by category')} />
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-            {categories.data
-              ?.filter((c) => c.productCount > 0 || c.slug === 'custom-furniture')
-              .slice(0, 10)
-              .map((c) => (
+            {shopCategories.map((c) => (
                 <Link
                   key={c._id}
-                  to={c.slug === 'custom-furniture' ? '/custom-furniture' : `/products?category=${c.slug}`}
+                  to={c.slug === 'custom-furniture' ? '/custom-furniture' : c.slug ? `/products?category=${c.slug}` : '/products'}
                   className="group overflow-hidden rounded-2xl border border-walnut-100 bg-canvas transition duration-300 hover:-translate-y-1 hover:border-brass-300/70 hover:shadow-lift"
                 >
-                  <ProductImage src={c.image} name={c.name} className="aspect-[4/3] w-full transition group-hover:scale-105" iconClassName="h-10 w-10" />
+                  <div className="overflow-hidden">
+                    <ProductImage src={c.image || CATEGORY_PHOTOS[c.name]} name={c.name} className="aspect-[4/3] w-full transition duration-500 group-hover:scale-105" iconClassName="h-10 w-10" />
+                  </div>
                   <div className="p-3">
                     <p className="font-medium text-walnut-950">{t(c.name)}</p>
-                    <p className="text-xs text-stone-500">{c.slug === 'custom-furniture' ? t('Designed for you') : c.productCount === 1 ? t('1 design') : t('{count} designs', { count: c.productCount })}</p>
+                    <p className="text-xs text-stone-500">
+                      {c.slug === 'custom-furniture' ? t('Designed for you') : c.productCount === undefined ? t('Explore') : c.productCount === 1 ? t('1 design') : t('{count} designs', { count: c.productCount })}
+                    </p>
                   </div>
                 </Link>
               ))}
