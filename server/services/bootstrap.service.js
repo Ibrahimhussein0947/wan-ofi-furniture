@@ -23,9 +23,15 @@ async function createFirstOwner(input) {
 async function ensureOwnerFromEnv(env, logger) {
   if (!env.OWNER_EMAIL || !env.OWNER_PASSWORD) return null;
   if (await User.exists({ role: ROLES.OWNER })) return null;
-  const owner = await createFirstOwner({ name: env.OWNER_NAME, email: env.OWNER_EMAIL, password: env.OWNER_PASSWORD });
-  logger.info(`Created the owner account ${owner.email}. You can now remove OWNER_PASSWORD from the environment.`);
-  return owner;
+  try {
+    const owner = await createFirstOwner({ name: env.OWNER_NAME, email: env.OWNER_EMAIL, password: env.OWNER_PASSWORD });
+    logger.info(`Created the owner account ${owner.email}. You can now remove OWNER_PASSWORD from the environment.`);
+    return owner;
+  } catch (err) {
+    // A bad OWNER_* value must not keep the whole site offline; fix the variable and restart.
+    logger.error(`Could not create the owner account from OWNER_EMAIL/OWNER_PASSWORD: ${err.message}`);
+    return null;
+  }
 }
 
 module.exports = { createFirstOwner, ensureOwnerFromEnv };

@@ -11,6 +11,13 @@ describe('first owner account', () => {
     expect(await models.User.countDocuments({ role: 'OWNER' })).toBe(0);
   });
 
+  test('a bad OWNER_PASSWORD is logged instead of stopping the server', async () => {
+    const errors = [];
+    const owner = await ensureOwnerFromEnv({ OWNER_NAME: 'Owner', OWNER_EMAIL: 'boss@example.com', OWNER_PASSWORD: 'password' }, { info: () => {}, error: (m) => errors.push(m) });
+    expect(owner).toBeNull();
+    expect(errors[0]).toMatch(/number/);
+  });
+
   test('the owner is created from the environment once and can sign in', async () => {
     const env = { OWNER_NAME: 'Wan Ofi Owner', OWNER_EMAIL: 'Boss@Example.com', OWNER_PASSWORD: PASSWORD };
     const owner = await ensureOwnerFromEnv(env, logger);
