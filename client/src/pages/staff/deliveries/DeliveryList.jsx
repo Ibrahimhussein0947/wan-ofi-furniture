@@ -9,6 +9,7 @@ import { EmptyState } from '../../../components/ui/States';
 import { deliveriesApi } from '../../../api/endpoints';
 import useListParams from '../../../hooks/useListParams';
 import { date, money } from '../../../utils/format';
+import { useT } from '../../../i18n/LanguageContext';
 
 const TABS = [
   { value: 'PENDING,SCHEDULED,OUT_FOR_DELIVERY', label: 'Upcoming' },
@@ -18,15 +19,16 @@ const TABS = [
 ];
 
 export default function DeliveryList() {
+  const t = useT();
   const [params, set] = useListParams({ status: 'PENDING,SCHEDULED,OUT_FOR_DELIVERY' });
   const navigate = useNavigate();
   const query = useQuery({ queryKey: ['deliveries', params], queryFn: () => deliveriesApi.list({ ...params, status: params.status === 'ALL' ? '' : params.status }), placeholderData: keepPreviousData });
   return (
     <div>
-      <PageHeader title="Deliveries" subtitle="Schedule deliveries from an order that is ready." />
+      <PageHeader title={t('Deliveries')} subtitle={t('Schedule deliveries from an order that is ready.')} />
       <Tabs tabs={TABS} value={params.status} onChange={(status) => set({ status })} className="mb-4" />
       <FilterBar>
-        <Input type="date" value={params.from || ''} onChange={(e) => set({ from: e.target.value })} aria-label="From" containerClassName="sm:w-44" />
+        <Input type="date" value={params.from || ''} onChange={(e) => set({ from: e.target.value })} aria-label={t('From')} containerClassName="sm:w-44" />
         <Input type="date" value={params.to || ''} onChange={(e) => set({ to: e.target.value })} aria-label="To" containerClassName="sm:w-44" />
       </FilterBar>
       <DataTable
@@ -36,7 +38,7 @@ export default function DeliveryList() {
         pagination={query.data?.pagination}
         onPageChange={(page) => set({ page })}
         onRowClick={(d) => navigate(`/app/deliveries/${d._id}`)}
-        empty={<EmptyState icon={Truck} title="No deliveries" />}
+        empty={<EmptyState icon={Truck} title={t('No deliveries')} />}
         columns={[
           { key: 'deliveryNumber', header: 'Delivery', render: (d) => <span className="font-medium">{d.deliveryNumber}</span> },
           { key: 'order', header: 'Order', render: (d) => d.order?.orderNumber },

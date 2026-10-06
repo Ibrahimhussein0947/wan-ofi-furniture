@@ -14,8 +14,10 @@ import { fileUrl } from '../../../api/client';
 import useMutationToast from '../../../hooks/useMutationToast';
 import { QC_ITEMS } from '../../../utils/constants';
 import { dateTime, label } from '../../../utils/format';
+import { useT } from '../../../i18n/LanguageContext';
 
 export default function Inspect() {
+  const t = useT();
   const { id } = useParams();
   const navigate = useNavigate();
   const query = useQuery({ queryKey: ['qc', id], queryFn: () => qualityApi.get(id) });
@@ -53,9 +55,9 @@ export default function Inspect() {
                   <StatusBadge status={qc.status} /> {job.jobNumber} · {qc.order?.orderNumber} · attempt {qc.attempt}
                 </span>
               }
-              actions={<Button to={`/app/production/${job._id}`} variant="secondary">Open job</Button>}
+              actions={<Button to={`/app/production/${job._id}`} variant="secondary">{t('Open job')}</Button>}
             />
-            <Card title="Specification to check against">
+            <Card title={t('Specification to check against')}>
               <DetailList
                 columns={3}
                 items={[
@@ -69,7 +71,7 @@ export default function Inspect() {
               />
             </Card>
 
-            <Card title="Checklist" subtitle={done ? `Inspected ${dateTime(qc.inspectedAt)} by ${qc.inspector?.name}` : 'Mark every item'} padded={false}>
+            <Card title={t('Checklist')} subtitle={done ? `Inspected ${dateTime(qc.inspectedAt)} by ${qc.inspector?.name}` : 'Mark every item'} padded={false}>
               <ul className="divide-y divide-stone-100">
                 {QC_ITEMS.map(([key, text]) => {
                   const c = checks[key] || {};
@@ -84,7 +86,7 @@ export default function Inspect() {
                           className={clsx('flex h-11 min-w-[88px] items-center justify-center gap-1 rounded-lg border-2 px-3 text-sm font-medium', c.passed === true ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-stone-200 text-stone-600 hover:border-emerald-400')}
                           aria-pressed={c.passed === true}
                         >
-                          <Check className="h-4 w-4" /> Pass
+                          <Check className="h-4 w-4" /> {t('Pass')}
                         </button>
                         <button
                           type="button"
@@ -93,7 +95,7 @@ export default function Inspect() {
                           className={clsx('flex h-11 min-w-[88px] items-center justify-center gap-1 rounded-lg border-2 px-3 text-sm font-medium', c.passed === false ? 'border-red-600 bg-red-600 text-white' : 'border-stone-200 text-stone-600 hover:border-red-400')}
                           aria-pressed={c.passed === false}
                         >
-                          <X className="h-4 w-4" /> Fail
+                          <X className="h-4 w-4" /> {t('Fail')}
                         </button>
                       </div>
                       {c.passed === false && (
@@ -106,29 +108,29 @@ export default function Inspect() {
             </Card>
 
             {!done ? (
-              <Card title="Result">
+              <Card title={t('Result')}>
                 <div className="space-y-4">
-                  <Textarea label="Inspector notes" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
+                  <Textarea label={t('Inspector notes')} rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
                   <div>
-                    <p className="label">Evidence photos</p>
-                    <ImagePicker files={images} onChange={setImages} capture label="Add photo" />
+                    <p className="label">{t('Evidence photos')}</p>
+                    <ImagePicker files={images} onChange={setImages} capture label={t('Add photo')} />
                   </div>
                   <div className="grid gap-3 sm:grid-cols-3">
                     <Button size="xl" variant="success" icon={ShieldCheck} disabled={!allPassed} loading={submit.isPending && submit.variables === 'PASSED'} onClick={() => submit.mutate('PASSED')}>
-                      Pass
+                      {t('Pass')}
                     </Button>
                     <Button size="xl" variant="secondary" icon={RotateCcw} disabled={!anyFailed} loading={submit.isPending && submit.variables === 'REWORK_REQUIRED'} onClick={() => submit.mutate('REWORK_REQUIRED')}>
-                      Rework required
+                      {t('Rework required')}
                     </Button>
                     <Button size="xl" variant="danger" icon={X} disabled={!anyFailed} loading={submit.isPending && submit.variables === 'FAILED'} onClick={() => submit.mutate('FAILED')}>
-                      Fail
+                      {t('Fail')}
                     </Button>
                   </div>
-                  {!allPassed && !anyFailed && <p className="text-sm text-stone-500">Mark each check to pass, or fail at least one to send it back.</p>}
+                  {!allPassed && !anyFailed && <p className="text-sm text-stone-500">{t('Mark each check to pass, or fail at least one to send it back.')}</p>}
                 </div>
               </Card>
             ) : (
-              <Card title="Result">
+              <Card title={t('Result')}>
                 <p className="text-sm">{qc.notes || 'No notes.'}</p>
                 {qc.images?.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -140,7 +142,7 @@ export default function Inspect() {
                   </div>
                 )}
                 <p className="mt-3 text-sm">
-                  Outcome: <StatusBadge status={qc.status} /> {qc.status !== 'PASSED' && <>— the job was returned to {label('IN_PRODUCTION').toLowerCase()}. <Link className="link" to={`/app/production/${job._id}`}>View job</Link></>}
+                  {t('Outcome:')} <StatusBadge status={qc.status} /> {qc.status !== 'PASSED' && <>— the job was returned to {t(label('IN_PRODUCTION')).toLowerCase()}. <Link className="link" to={`/app/production/${job._id}`}>{t('View job')}</Link></>}
                 </p>
               </Card>
             )}

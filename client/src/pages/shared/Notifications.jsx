@@ -9,8 +9,10 @@ import { EmptyState, QueryState } from '../../components/ui/States';
 import { notificationsApi } from '../../api/endpoints';
 import useListParams from '../../hooks/useListParams';
 import { dateTime, label } from '../../utils/format';
+import { useT } from '../../i18n/LanguageContext';
 
 export default function Notifications() {
+  const t = useT();
   const [params, set] = useListParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -24,7 +26,7 @@ export default function Notifications() {
   return (
     <div className="mx-auto max-w-3xl">
       <PageHeader
-        title="Notifications"
+        title={t('Notifications')}
         actions={
           <Button
             variant="secondary"
@@ -35,7 +37,7 @@ export default function Notifications() {
               refresh();
             }}
           >
-            Mark all read
+            {t('Mark all read')}
           </Button>
         }
       />
@@ -48,7 +50,7 @@ export default function Notifications() {
         value={params.unread || ''}
         onChange={(unread) => set({ unread })}
       />
-      <QueryState query={query} isEmpty={(d) => !d.items.length} empty={<EmptyState icon={Bell} title="No notifications" />}>
+      <QueryState query={query} isEmpty={(d) => !d.items.length} empty={<EmptyState icon={Bell} title={t('No notifications')} />}>
         {(data) => (
           <div className="card overflow-hidden">
             <ul className="divide-y divide-stone-100">
@@ -68,7 +70,7 @@ export default function Notifications() {
                       <span className="block font-medium text-stone-900">{n.title}</span>
                       {n.message && <span className="mt-0.5 block text-sm text-stone-600">{n.message}</span>}
                       <span className="mt-1 block text-xs text-stone-400">
-                        {label(n.type)} · {dateTime(n.createdAt)}
+                        {t(label(n.type))} · {dateTime(n.createdAt)}
                       </span>
                     </span>
                   </button>

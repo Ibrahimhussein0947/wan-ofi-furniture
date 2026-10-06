@@ -29,6 +29,7 @@ jobs.post('/:id/return-materials', update, id, validate({ body: v.materialReturn
 jobs.post('/:id/material-requests', update, id, validate({ body: v.materialRequest }), production.requestMaterials);
 jobs.post('/:id/material-requests/:requestId', requirePermission(P.MATERIALS_ISSUE), withSub('requestId'), validate({ body: v.decision }), production.handleMaterialRequest);
 jobs.post('/:id/notes', update, id, validate({ body: v.jobNote }), production.addNote);
+jobs.post('/:id/hours', update, id, validate({ body: v.laborHours }), production.logHours);
 jobs.post('/:id/images', update, id, uploadImages('images', { maxCount: 6, folder: 'production' }), production.addImages);
 jobs.post('/:id/problems', update, id, validate({ body: v.problem }), production.reportProblem);
 jobs.post('/:id/problems/:problemId/resolve', manage, withSub('problemId'), validate({ body: v.resolution }), production.resolveProblem);

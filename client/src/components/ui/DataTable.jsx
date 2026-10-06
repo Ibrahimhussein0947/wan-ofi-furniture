@@ -1,14 +1,16 @@
 import clsx from 'clsx';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { EmptyState, ErrorState, Skeleton } from './States';
+import { useT } from '../../i18n/LanguageContext';
 
 export function Pagination({ pagination, onPageChange }) {
+  const t = useT();
   if (!pagination || pagination.pages <= 1) return null;
   const { page, pages, total, limit } = pagination;
   const from = (page - 1) * limit + 1;
   const to = Math.min(page * limit, total);
   return (
-    <nav className="flex items-center justify-between gap-3 border-t border-stone-100 px-4 py-3 text-sm" aria-label="Pagination">
+    <nav className="flex items-center justify-between gap-3 border-t border-stone-100 px-4 py-3 text-sm" aria-label={t('Pagination')}>
       <p className="text-stone-500">
         <span className="font-medium text-stone-700">{from}</span>–<span className="font-medium text-stone-700">{to}</span> of{' '}
         <span className="font-medium text-stone-700">{total}</span>
@@ -19,7 +21,7 @@ export function Pagination({ pagination, onPageChange }) {
           className="rounded-lg border border-stone-200 p-1.5 text-stone-600 hover:bg-stone-50 disabled:opacity-40"
           onClick={() => onPageChange(page - 1)}
           disabled={page <= 1}
-          aria-label="Previous page"
+          aria-label={t('Previous page')}
         >
           <ChevronLeft className="h-4 w-4" />
         </button>
@@ -31,7 +33,7 @@ export function Pagination({ pagination, onPageChange }) {
           className="rounded-lg border border-stone-200 p-1.5 text-stone-600 hover:bg-stone-50 disabled:opacity-40"
           onClick={() => onPageChange(page + 1)}
           disabled={page >= pages}
-          aria-label="Next page"
+          aria-label={t('Next page')}
         >
           <ChevronRight className="h-4 w-4" />
         </button>
@@ -45,6 +47,7 @@ export function Pagination({ pagination, onPageChange }) {
  * the columns marked `primary`/`mobile` (all columns if none are marked).
  */
 export default function DataTable({ columns, rows, loading, error, onRetry, onRowClick, empty, pagination, onPageChange, rowKey = (r) => r._id, footer, dense }) {
+  const t = useT();
   const mobileCols = columns.filter((c) => c.mobile !== false);
 
   let body;
@@ -64,12 +67,12 @@ export default function DataTable({ columns, rows, loading, error, onRetry, onRo
     body = (
       <>
         <div className="hidden overflow-x-auto md:block">
-          <table className="min-w-full divide-y divide-stone-100">
+          <table className="table-zebra min-w-full divide-y divide-stone-100">
             <thead className="bg-stone-50/80">
               <tr>
                 {columns.map((c) => (
                   <th key={c.key} scope="col" className={clsx('table-th', c.align === 'right' && 'text-right', c.headerClassName)}>
-                    {c.header}
+                    {typeof c.header === 'string' ? t(c.header) : c.header}
                   </th>
                 ))}
               </tr>
@@ -106,7 +109,7 @@ export default function DataTable({ columns, rows, loading, error, onRetry, onRo
               >
                 {mobileCols.map((c, i) => (
                   <div key={c.key} className={clsx('flex items-center justify-between gap-3 text-sm', i === 0 && 'font-medium text-stone-900')}>
-                    {i > 0 && <span className="text-xs text-stone-500">{c.header}</span>}
+                    {i > 0 && <span className="text-xs text-stone-500">{typeof c.header === 'string' ? t(c.header) : c.header}</span>}
                     <span className={clsx(i === 0 ? 'min-w-0' : 'text-right', 'text-stone-700')}>{c.render ? c.render(row) : row[c.key]}</span>
                   </div>
                 ))}

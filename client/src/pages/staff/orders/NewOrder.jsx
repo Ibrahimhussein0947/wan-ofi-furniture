@@ -13,10 +13,12 @@ import { useAuth } from '../../../context/AuthContext';
 import { money } from '../../../utils/format';
 import BranchSelect from '../../../components/BranchSelect';
 import { usePublicSettings } from '../../../components/SettingsLoader';
+import { useT } from '../../../i18n/LanguageContext';
 
 const emptyLine = () => ({ key: Math.random().toString(36).slice(2), product: null, quantity: 1, color: '' });
 
 export default function NewOrder() {
+  const t = useT();
   const navigate = useNavigate();
   const { can, user } = useAuth();
   const { data: settings } = usePublicSettings();
@@ -70,12 +72,12 @@ export default function NewOrder() {
 
   return (
     <div className="space-y-6">
-      <PageHeader back="/app/orders" title="New order" subtitle="For walk-in, phone or showroom customers" />
+      <PageHeader back="/app/orders" title={t('New order')} subtitle={t('For walk-in, phone or showroom customers')} />
       <div className="grid gap-6 xl:grid-cols-3">
         <div className="space-y-6 xl:col-span-2">
-          <Card title="Customer" actions={can('customers:write') && <Button size="sm" variant="secondary" icon={UserPlus} onClick={() => setNewCustomer(true)}>New customer</Button>}>
+          <Card title={t('Customer')} actions={can('customers:write') && <Button size="sm" variant="secondary" icon={UserPlus} onClick={() => setNewCustomer(true)}>{t('New customer')}</Button>}>
             <EntityPicker
-              label="Customer"
+              label={t('Customer')}
               required
               value={customer}
               onChange={setCustomer}
@@ -86,12 +88,12 @@ export default function NewOrder() {
             />
           </Card>
 
-          <Card title="Products" padded={false}>
+          <Card title={t('Products')} padded={false}>
             <ul className="divide-y divide-stone-100">
               {lines.map((line) => (
                 <li key={line.key} className="grid gap-3 p-4 sm:grid-cols-[1fr_90px_140px_auto] sm:items-end">
                   <EntityPicker
-                    label="Product"
+                    label={t('Product')}
                     value={line.product}
                     onChange={(product) => updateLine(line.key, { product, color: product?.colors?.[0] || '' })}
                     queryKey="products"
@@ -99,8 +101,8 @@ export default function NewOrder() {
                     getLabel={(p) => `${p.name} (${p.sku})`}
                     getSubLabel={(p) => `${money(p.sellingPrice)} · ${p.quantity} in stock${p.madeToOrder ? ' · made to order' : ''}`}
                   />
-                  <Input label="Qty" type="number" min="1" value={line.quantity} onChange={(e) => updateLine(line.key, { quantity: Math.max(1, Number(e.target.value) || 1) })} />
-                  <Select label="Colour" value={line.color} onChange={(e) => updateLine(line.key, { color: e.target.value })} options={line.product?.colors || []} placeholder="—" disabled={!line.product?.colors?.length} />
+                  <Input label={t('Qty')} type="number" min="1" value={line.quantity} onChange={(e) => updateLine(line.key, { quantity: Math.max(1, Number(e.target.value) || 1) })} />
+                  <Select label={t('Colour')} value={line.color} onChange={(e) => updateLine(line.key, { color: e.target.value })} options={line.product?.colors || []} placeholder="—" disabled={!line.product?.colors?.length} />
                   <div className="flex items-center justify-between gap-3 sm:justify-end">
                     <span className="text-sm font-medium tabular-nums">{line.product ? money(line.product.sellingPrice * line.quantity) : '—'}</span>
                     <button type="button" className="rounded p-2 text-stone-400 hover:text-red-600" onClick={() => setLines((ls) => (ls.length > 1 ? ls.filter((l) => l.key !== line.key) : ls))} aria-label="Remove line">
@@ -112,23 +114,23 @@ export default function NewOrder() {
             </ul>
             <div className="border-t border-stone-100 p-4">
               <Button size="sm" variant="secondary" icon={Plus} onClick={() => setLines((ls) => [...ls, emptyLine()])}>
-                Add product
+                {t('Add product')}
               </Button>
             </div>
           </Card>
 
-          <Card title="Notes">
+          <Card title={t('Notes')}>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Textarea label="Customer-visible notes" value={notes} onChange={(e) => setNotes(e.target.value)} />
-              <Textarea label="Internal notes" value={internalNotes} onChange={(e) => setInternalNotes(e.target.value)} />
+              <Textarea label={t('Customer-visible notes')} value={notes} onChange={(e) => setNotes(e.target.value)} />
+              <Textarea label={t('Internal notes')} value={internalNotes} onChange={(e) => setInternalNotes(e.target.value)} />
             </div>
           </Card>
         </div>
 
-        <Card title="Summary" className="h-fit">
+        <Card title={t('Summary')} className="h-fit">
           <div className="space-y-4">
             <Select
-              label="Delivery method"
+              label={t('Delivery method')}
               value={deliveryMethod}
               onChange={(e) => setDeliveryMethod(e.target.value)}
               options={[
@@ -136,12 +138,12 @@ export default function NewOrder() {
                 { value: 'DELIVERY', label: 'Deliver to customer' },
               ]}
             />
-            {deliveryMethod === 'DELIVERY' && <Input label="Delivery fee" type="number" min="0" value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} />}
-            {can('discounts:write') && <Input label="Discount" type="number" min="0" value={discount} onChange={(e) => setDiscount(e.target.value)} />}
-            <BranchSelect label="Branch" placeholder="Default branch" value={branch} onChange={(e) => setBranch(e.target.value)} />
+            {deliveryMethod === 'DELIVERY' && <Input label={t('Delivery fee')} type="number" min="0" value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} />}
+            {can('discounts:write') && <Input label={t('Discount')} type="number" min="0" value={discount} onChange={(e) => setDiscount(e.target.value)} />}
+            <BranchSelect label={t('Branch')} placeholder={t('Default branch')} value={branch} onChange={(e) => setBranch(e.target.value)} />
             <dl className="space-y-1.5 border-t border-stone-100 pt-3 text-sm">
               <div className="flex justify-between">
-                <dt>Subtotal</dt>
+                <dt>{t('Subtotal')}</dt>
                 <dd className="tabular-nums">{money(subtotal)}</dd>
               </div>
               {taxRate > 0 && (
@@ -151,13 +153,13 @@ export default function NewOrder() {
                 </div>
               )}
               <div className="flex justify-between text-base font-semibold">
-                <dt>Total</dt>
+                <dt>{t('Total')}</dt>
                 <dd className="tabular-nums">{money(total)}</dd>
               </div>
             </dl>
-            {can('orders:approve') && <Checkbox label="Confirm immediately (skip deposit)" checked={autoConfirm} onChange={(e) => setAutoConfirm(e.target.checked)} />}
+            {can('orders:approve') && <Checkbox label={t('Confirm immediately (skip deposit)')} checked={autoConfirm} onChange={(e) => setAutoConfirm(e.target.checked)} />}
             <Button block size="lg" loading={saving} onClick={submit}>
-              Create order
+              {t('Create order')}
             </Button>
           </div>
         </Card>

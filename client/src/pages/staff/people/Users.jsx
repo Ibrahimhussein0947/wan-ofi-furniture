@@ -17,8 +17,10 @@ import useMutationToast from '../../../hooks/useMutationToast';
 import { WORKER_ROLES } from '../../../utils/constants';
 import BranchSelect from '../../../components/BranchSelect';
 import { dateTime, label } from '../../../utils/format';
+import { useT } from '../../../i18n/LanguageContext';
 
 function UserModal({ open, onClose, user, initialRole }) {
+  const t = useT();
   const { can } = useAuth();
   const catalog = useQuery({ queryKey: ['permissions'], queryFn: usersApi.permissions, enabled: open });
   const form = useForm({
@@ -43,7 +45,7 @@ function UserModal({ open, onClose, user, initialRole }) {
   const submit = form.handleSubmit((v) => {
     const body = { name: v.name, phone: v.phone || undefined, role: v.role, workerRole: v.role === 'WORKER' ? v.workerRole : null, permissions: extra, branch: branch || null };
     if (user) {
-      save.mutate({ ...body, isActive: v.isActive, ...(v.password && { password: v.password }) });
+      save.mutate({ ...body, isActive: v.isActive, ...(v.email !== user.email && { email: v.email }), ...(v.password && { password: v.password }) });
     } else {
       save.mutate({ ...body, email: v.email, password: v.password, ...(v.role === 'WORKER' && v.wageRate && { worker: { wageRate: Number(v.wageRate) } }) });
     }
@@ -51,32 +53,32 @@ function UserModal({ open, onClose, user, initialRole }) {
   const { errors } = form.formState;
 
   return (
-    <Modal open={open} onClose={onClose} title={user ? `Edit ${user.name}` : 'New staff account'} size="lg" footer={<Button loading={save.isPending} onClick={submit}>Save</Button>}>
+    <Modal open={open} onClose={onClose} title={user ? `Edit ${user.name}` : 'New staff account'} size="lg" footer={<Button loading={save.isPending} onClick={submit}>{t('Save')}</Button>}>
       <div className="space-y-5">
         <div className="grid gap-4 sm:grid-cols-2">
-          <Input label="Full name" required error={errors.name && 'Required'} {...form.register('name', { required: true, minLength: 2 })} />
-          <Input label="Email" type="email" required disabled={Boolean(user)} error={errors.email && 'Valid email required'} {...form.register('email', { required: !user })} />
-          <Input label="Phone" {...form.register('phone')} />
+          <Input label={t('Full name')} required error={errors.name && 'Required'} {...form.register('name', { required: true, minLength: 2 })} />
+          <Input label={t('Email')} type="email" required disabled={user?.role === 'CUSTOMER'} error={errors.email && t('Valid email required')} {...form.register('email', { required: true, pattern: /^\S+@\S+\.\S+$/ })} />
+          <Input label={t('Phone')} {...form.register('phone')} />
           <Input
             label={user ? 'New password (optional)' : 'Temporary password'}
             type="password"
             autoComplete="new-password"
-            hint="8+ characters with a letter and a number"
+            hint={t('8+ characters with a letter and a number')}
             error={errors.password && '8+ characters with a letter and a number'}
             {...form.register('password', { validate: (v) => (user && !v) || (/[A-Za-z]/.test(v) && /\d/.test(v) && v.length >= 8) })}
           />
-          <Select label="Role" disabled={user?.role === 'CUSTOMER'} options={['OWNER', 'ACCOUNTANT', 'WORKER'].map((r) => ({ value: r, label: label(r) }))} {...form.register('role')} />
-          {role === 'WORKER' && <Select label="Worker position" options={WORKER_ROLES.map((r) => ({ value: r, label: label(r) }))} {...form.register('workerRole')} />}
-          {role === 'WORKER' && !user && <Input label="Monthly wage (optional)" type="number" min="0" {...form.register('wageRate')} />}
-          <BranchSelect label="Branch" placeholder="No branch" value={branch} onChange={(e) => setBranch(e.target.value)} />
-          {user && <Checkbox label="Account active" {...form.register('isActive')} />}
+          <Select label={t('Role')} disabled={user?.role === 'CUSTOMER'} options={['OWNER', 'ACCOUNTANT', 'WORKER'].map((r) => ({ value: r, label: t(label(r)) }))} {...form.register('role')} />
+          {role === 'WORKER' && <Select label={t('Worker position')} options={WORKER_ROLES.map((r) => ({ value: r, label: t(label(r)) }))} {...form.register('workerRole')} />}
+          {role === 'WORKER' && !user && <Input label={t('Monthly wage (optional)')} type="number" min="0" {...form.register('wageRate')} />}
+          <BranchSelect label={t('Branch')} placeholder={t('No branch')} value={branch} onChange={(e) => setBranch(e.target.value)} />
+          {user && <Checkbox label={t('Account active')} {...form.register('isActive')} />}
         </div>
         {can('permissions:manage') && catalog.data && role !== 'OWNER' && (
           <div>
             <p className="label flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4" /> Permissions
+              <ShieldCheck className="h-4 w-4" /> {t('Permissions')}
             </p>
-            <p className="mb-2 text-xs text-stone-500">Ticked-and-greyed permissions come with the role. Tick others to grant extra access to this person only.</p>
+            <p className="mb-2 text-xs text-stone-500">{t('Ticked-and-greyed permissions come with the role. Tick others to grant extra access to this person only.')}</p>
             <div className="grid max-h-60 gap-1.5 overflow-y-auto rounded-lg border border-stone-200 p-3 sm:grid-cols-2">
               {catalog.data.permissions.map((p) => (
                 <Checkbox
@@ -97,6 +99,7 @@ function UserModal({ open, onClose, user, initialRole }) {
 }
 
 export default function Users() {
+  const t = useT();
   const [params, set] = useListParams();
   const [search, setSearch] = useSearchParams();
   const [editing, setEditing] = useState(search.get('new') ? { new: true, role: search.get('new') } : null);
@@ -115,10 +118,10 @@ export default function Users() {
 
   return (
     <div>
-      <PageHeader title="Users & roles" subtitle="Staff accounts, roles and permissions" actions={can('users:write') && <Button icon={UserPlus} onClick={() => setEditing({ new: true })}>New staff account</Button>} />
+      <PageHeader title={t('Users & roles')} subtitle={t('Staff accounts, roles and permissions')} actions={can('users:write') && <Button icon={UserPlus} onClick={() => setEditing({ new: true })}>{t('New staff account')}</Button>} />
       <FilterBar>
-        <SearchInput value={params.search} onChange={(s) => set({ search: s })} placeholder="Name, email, phone…" className="sm:w-72" />
-        <Select value={params.role || ''} onChange={(e) => set({ role: e.target.value })} options={['OWNER', 'ACCOUNTANT', 'WORKER', 'CUSTOMER'].map((r) => ({ value: r, label: label(r) }))} placeholder="All roles" aria-label="Role" containerClassName="sm:w-44" />
+        <SearchInput value={params.search} onChange={(s) => set({ search: s })} placeholder={t('Name, email, phone…')} className="sm:w-72" />
+        <Select value={params.role || ''} onChange={(e) => set({ role: e.target.value })} options={['OWNER', 'ACCOUNTANT', 'WORKER', 'CUSTOMER'].map((r) => ({ value: r, label: t(label(r)) }))} placeholder={t('All roles')} aria-label={t('Role')} containerClassName="sm:w-44" />
       </FilterBar>
       <DataTable
         loading={query.isLoading}
@@ -143,7 +146,7 @@ export default function Users() {
           { key: 'role', header: 'Role', render: (u) => <Badge tone={u.role === 'OWNER' ? 'brass' : u.role === 'ACCOUNTANT' ? 'blue' : u.role === 'WORKER' ? 'violet' : 'stone'}>{label(u.workerRole || u.role)}</Badge> },
           { key: 'extra', header: 'Extra permissions', mobile: false, render: (u) => (u.permissions?.length ? <span className="inline-flex items-center gap-1 text-xs"><KeyRound className="h-3.5 w-3.5" /> {u.permissions.length}</span> : '—') },
           { key: 'lastLoginAt', header: 'Last login', mobile: false, render: (u) => dateTime(u.lastLoginAt) },
-          { key: 'isActive', header: 'Status', render: (u) => (u.isActive ? <Badge tone="green">Active</Badge> : <Badge tone="red">Disabled</Badge>) },
+          { key: 'isActive', header: 'Status', render: (u) => (u.isActive ? <Badge tone="green">{t('Active')}</Badge> : <Badge tone="red">{t('Disabled')}</Badge>) },
           {
             key: 'actions',
             header: '',
@@ -165,7 +168,7 @@ export default function Users() {
         ]}
       />
       {editing && <UserModal open onClose={close} user={editing.new ? null : editing} initialRole={editing.role} />}
-      <ConfirmDialog open={Boolean(deleting)} onClose={() => setDeleting(null)} title={`Remove ${deleting?.name}?`} message="The account is disabled and signed out everywhere. Its history is kept." confirmLabel="Remove" loading={remove.isPending} onConfirm={() => remove.mutate(deleting._id)} />
+      <ConfirmDialog open={Boolean(deleting)} onClose={() => setDeleting(null)} title={`Remove ${deleting?.name}?`} message={t('The account is disabled and signed out everywhere. Its history is kept.')} confirmLabel={t('Remove')} loading={remove.isPending} onConfirm={() => remove.mutate(deleting._id)} />
     </div>
   );
 }

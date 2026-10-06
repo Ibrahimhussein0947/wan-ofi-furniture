@@ -16,6 +16,7 @@ import { categoriesApi, productsApi } from '../../../api/endpoints';
 import { errorMessage, fieldErrors, fileUrl } from '../../../api/client';
 import { PRODUCT_STATUSES } from '../../../utils/constants';
 import { label, money } from '../../../utils/format';
+import { useT } from '../../../i18n/LanguageContext';
 
 const num = z.coerce.number({ invalid_type_error: 'Enter a number' }).min(0, 'Must not be negative');
 const optNum = z.preprocess((v) => (v === '' || v === null ? undefined : v), num.optional());
@@ -41,6 +42,8 @@ export const productSchema = z
     quantity: optNum,
     minStock: optNum,
     productionTimeDays: optNum,
+    warrantyMonths: optNum,
+    warrantyTerms: z.string().max(500).optional(),
     width: optNum,
     height: optNum,
     depth: optNum,
@@ -56,6 +59,7 @@ export const productSchema = z
   .refine((v) => v.sellingPrice >= v.costPrice || v.allowLoss, { message: 'Selling price is below cost — tick "allow selling at a loss" to confirm', path: ['sellingPrice'] });
 
 export default function ProductForm() {
+  const t = useT();
   const { id } = useParams();
   const isNew = !id;
   const navigate = useNavigate();
@@ -80,6 +84,8 @@ export default function ProductForm() {
           sellingPrice: p.sellingPrice,
           minStock: p.minStock,
           productionTimeDays: p.productionTimeDays,
+          warrantyMonths: p.warrantyMonths ?? 0,
+          warrantyTerms: p.warrantyTerms || '',
           width: p.dimensions?.width ?? '',
           height: p.dimensions?.height ?? '',
           depth: p.dimensions?.depth ?? '',
@@ -92,7 +98,7 @@ export default function ProductForm() {
           madeToOrder: p.madeToOrder,
         }
       : undefined,
-    defaultValues: { unit: 'cm', status: 'ACTIVE', isFeatured: false, madeToOrder: true, quantity: 0, minStock: 1, productionTimeDays: 7 },
+    defaultValues: { unit: 'cm', status: 'ACTIVE', isFeatured: false, madeToOrder: true, quantity: 0, minStock: 1, productionTimeDays: 7, warrantyMonths: 12 },
   });
   const { errors, isSubmitting } = form.formState;
   const [cost, selling] = form.watch(['costPrice', 'sellingPrice']);
@@ -111,6 +117,8 @@ export default function ProductForm() {
       sellingPrice: v.sellingPrice,
       minStock: v.minStock,
       productionTimeDays: v.productionTimeDays,
+      warrantyMonths: v.warrantyMonths ?? 0,
+      warrantyTerms: v.warrantyTerms,
       dimensions: { width: v.width, height: v.height, depth: v.depth, unit: v.unit },
       colors: list(v.colors),
       sizes: list(v.sizes),
@@ -161,10 +169,10 @@ export default function ProductForm() {
             {!isNew && (
               <>
                 <Button variant="ghost" icon={ExternalLink} to={`/products/${p.slug}`} target="_blank">
-                  View in shop
+                  {t('View in shop')}
                 </Button>
                 <Button variant="secondary" icon={Layers} to={`/app/bom?product=${id}`}>
-                  Bill of materials
+                  {t('Bill of materials')}
                 </Button>
               </>
             )}
@@ -176,82 +184,84 @@ export default function ProductForm() {
       />
       <div className="grid gap-6 xl:grid-cols-3">
         <div className="space-y-6 xl:col-span-2">
-          <Card title="Details">
+          <Card title={t('Details')}>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Input label="Name" required error={errors.name?.message} {...form.register('name')} />
-              <Input label="SKU" required error={errors.sku?.message} {...form.register('sku')} />
-              <Select label="Category" required placeholder="Choose…" error={errors.category?.message} options={(categories.data || []).map((c) => ({ value: c._id, label: c.name }))} {...form.register('category')} />
-              <Select label="Status" options={PRODUCT_STATUSES.map((s) => ({ value: s, label: label(s) }))} {...form.register('status')} />
-              <Textarea label="Description" rows={5} containerClassName="sm:col-span-2" {...form.register('description')} />
+              <Input label={t('Name')} required error={errors.name?.message} {...form.register('name')} />
+              <Input label={t('SKU')} required error={errors.sku?.message} {...form.register('sku')} />
+              <Select label={t('Category')} required placeholder={t('Choose…')} error={errors.category?.message} options={(categories.data || []).map((c) => ({ value: c._id, label: c.name }))} {...form.register('category')} />
+              <Select label={t('Status')} options={PRODUCT_STATUSES.map((s) => ({ value: s, label: t(label(s)) }))} {...form.register('status')} />
+              <Textarea label={t('Description')} rows={5} containerClassName="sm:col-span-2" {...form.register('description')} />
             </div>
           </Card>
-          <Card title="Options & specifications">
+          <Card title={t('Options & specifications')}>
             <div className="grid gap-4 sm:grid-cols-2">
-              <Input label="Colours" hint="Comma separated" {...form.register('colors')} />
-              <Input label="Sizes" hint="Comma separated" {...form.register('sizes')} />
-              <Input label="Materials" hint="Comma separated, shown to customers" containerClassName="sm:col-span-2" {...form.register('materials')} />
+              <Input label={t('Colours')} hint={t('Comma separated')} {...form.register('colors')} />
+              <Input label={t('Sizes')} hint={t('Comma separated')} {...form.register('sizes')} />
+              <Input label={t('Materials')} hint={t('Comma separated, shown to customers')} containerClassName="sm:col-span-2" {...form.register('materials')} />
               <div className="grid grid-cols-4 gap-3 sm:col-span-2">
-                <Input label="Width" type="number" step="any" {...form.register('width')} />
-                <Input label="Height" type="number" step="any" {...form.register('height')} />
-                <Input label="Depth" type="number" step="any" {...form.register('depth')} />
-                <Select label="Unit" options={['cm', 'mm', 'm', 'in', 'ft']} {...form.register('unit')} />
+                <Input label={t('Width')} type="number" step="any" {...form.register('width')} />
+                <Input label={t('Height')} type="number" step="any" {...form.register('height')} />
+                <Input label={t('Depth')} type="number" step="any" {...form.register('depth')} />
+                <Select label={t('Unit')} options={['cm', 'mm', 'm', 'in', 'ft']} {...form.register('unit')} />
               </div>
-              <Input label="Production time (days)" type="number" min="0" {...form.register('productionTimeDays')} />
+              <Input label={t('Production time (days)')} type="number" min="0" {...form.register('productionTimeDays')} />
+              <Input label={t('Warranty (months)')} type="number" min="0" max="120" hint="0 = no warranty" {...form.register('warrantyMonths')} />
+              <Textarea label={t('Warranty terms')} rows={2} containerClassName="sm:col-span-2" placeholder={t('What the warranty covers, e.g. frame and joinery')} {...form.register('warrantyTerms')} />
             </div>
           </Card>
-          <Card title="Images">
+          <Card title={t('Images')} subtitle={t('First image: the piece on its own. Then add photos of it in a real room so customers can judge size and style.')}>
             {!isNew && p.images?.length > 0 && (
               <div className="mb-4 flex flex-wrap gap-3">
                 {p.images
                   .filter((u) => !removedImages.includes(u))
                   .map((u) => (
                     <div key={u} className="relative">
-                      <img src={fileUrl(u)} alt="Product" className="h-24 w-24 rounded-lg object-cover" />
-                      <button type="button" onClick={() => setRemovedImages((r) => [...r, u])} className="absolute right-1 top-1 rounded-full bg-black/60 p-0.5 text-white" aria-label="Remove image">
+                      <img src={fileUrl(u)} alt={t('Product')} className="h-24 w-24 rounded-lg object-cover" />
+                      <button type="button" onClick={() => setRemovedImages((r) => [...r, u])} className="absolute right-1 top-1 rounded-full bg-black/60 p-0.5 text-white" aria-label={t('Remove image')}>
                         <X className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   ))}
               </div>
             )}
-            <ImagePicker files={images} onChange={setImages} max={8} label="Add images" />
+            <ImagePicker files={images} onChange={setImages} max={8} label={t('Add images')} />
           </Card>
         </div>
         <div className="space-y-6">
-          <Card title="Pricing">
+          <Card title={t('Pricing')}>
             <div className="space-y-4">
-              <Input label="List price" type="number" step="any" required hint="Shown crossed-out when higher than the selling price" error={errors.price?.message} {...form.register('price')} />
-              <Input label="Cost price" type="number" step="any" required error={errors.costPrice?.message} {...form.register('costPrice')} />
-              <Input label="Selling price" type="number" step="any" required error={errors.sellingPrice?.message} {...form.register('sellingPrice')} />
+              <Input label={t('List price')} type="number" step="any" required hint={t('Shown crossed-out when higher than the selling price')} error={errors.price?.message} {...form.register('price')} />
+              <Input label={t('Cost price')} type="number" step="any" required error={errors.costPrice?.message} {...form.register('costPrice')} />
+              <Input label={t('Selling price')} type="number" step="any" required error={errors.sellingPrice?.message} {...form.register('sellingPrice')} />
               <p className={`rounded-lg p-3 text-sm ${margin < 0 ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-800'}`}>
-                Margin per unit: <strong>{money(margin || 0)}</strong>
+                {t('Margin per unit:')} <strong>{money(margin || 0)}</strong>
                 {Number(selling) > 0 && ` (${Math.round((margin / Number(selling)) * 100)}%)`}
               </p>
-              {isNew && margin < 0 && <Checkbox label="Allow selling at a loss" {...form.register('allowLoss')} />}
+              {isNew && margin < 0 && <Checkbox label={t('Allow selling at a loss')} {...form.register('allowLoss')} />}
             </div>
           </Card>
-          <Card title="Stock">
+          <Card title={t('Stock')}>
             <div className="space-y-4">
               {isNew ? (
-                <Input label="Opening stock" type="number" min="0" hint="Recorded as a stock-in transaction" {...form.register('quantity')} />
+                <Input label={t('Opening stock')} type="number" min="0" hint={t('Recorded as a stock-in transaction')} {...form.register('quantity')} />
               ) : (
                 <p className="text-sm text-stone-600">
-                  Current stock: <strong>{p.quantity}</strong>. Adjust it from <a className="link" href="/app/inventory">Inventory</a> so every change is recorded.
+                  {t('Current stock:')} <strong>{p.quantity}</strong>. Adjust it from <a className="link" href="/app/inventory">{t('Inventory')}</a> so every change is recorded.
                 </p>
               )}
-              <Input label="Minimum stock level" type="number" min="0" {...form.register('minStock')} />
-              <Checkbox label="Made to order (can be ordered when out of stock)" {...form.register('madeToOrder')} />
-              <Checkbox label="Featured on the homepage" {...form.register('isFeatured')} />
+              <Input label={t('Minimum stock level')} type="number" min="0" {...form.register('minStock')} />
+              <Checkbox label={t('Made to order (can be ordered when out of stock)')} {...form.register('madeToOrder')} />
+              <Checkbox label={t('Featured on the homepage')} {...form.register('isFeatured')} />
             </div>
           </Card>
           {!isNew && (
             <Button variant="ghost" icon={Trash2} className="text-red-600" onClick={() => setDeleting(true)}>
-              Remove product
+              {t('Remove product')}
             </Button>
           )}
         </div>
       </div>
-      <ConfirmDialog open={deleting} onClose={() => setDeleting(false)} title="Remove this product?" message="It will be hidden from the shop. Products on open orders cannot be removed." confirmLabel="Remove" onConfirm={remove} />
+      <ConfirmDialog open={deleting} onClose={() => setDeleting(false)} title={t('Remove this product?')} message={t('It will be hidden from the shop. Products on open orders cannot be removed.')} confirmLabel={t('Remove')} onConfirm={remove} />
     </form>
   );
 }

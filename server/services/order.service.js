@@ -13,11 +13,12 @@ const {
   TRANSACTION_TYPES,
 } = require('../config/constants');
 const { getSettings } = require('./settings.service');
-const { adjustStock, alertIfCrossed } = require('./inventory.service');
+const { adjustStock, alertIfCrossed, quantityAt, defaultBranchId } = require('./inventory.service');
 const { recordLedgerEntry } = require('./ledger.service');
 const { createJobsForOrder, PRODUCTION_STARTED_STAGES } = require('./production.service');
 const { audit, diff } = require('./audit.service');
 const notify = require('./notification.service');
+const promotionService = require('./promotion.service');
 
 const DAY = 24 * 3600 * 1000;
 
@@ -29,21 +30,24 @@ const ORDER_POPULATE = [
 
 /**
  * Builds validated order lines from product ids. Prices always come from the
- * database — never from the client.
+ * database — never from the client. Items ship from stock only when the order's
+ * branch holds enough; otherwise they are built in the workshop.
  */
-async function buildItems(rawItems) {
+async function buildItems(rawItems, branch) {
   const ids = rawItems.map((i) => i.product);
   const products = await Product.find({ _id: { $in: ids } }).lean();
   const byId = new Map(products.map((p) => [String(p._id), p]));
+  const available = new Map(await Promise.all(products.map(async (p) => [String(p._id), await quantityAt(p, branch)])));
 
   return rawItems.map((raw) => {
     const product = byId.get(String(raw.product));
     if (!product || [PRODUCT_STATUS.INACTIVE, PRODUCT_STATUS.DISCONTINUED].includes(product.status)) {
       throw ApiError.unprocessable(`Product is unavailable${product ? `: ${product.name}` : ''}.`);
     }
-    const inStock = product.quantity >= raw.quantity;
+    const here = available.get(String(raw.product)) || 0;
+    const inStock = here >= raw.quantity;
     if (!inStock && !product.madeToOrder) {
-      throw ApiError.conflict(`Insufficient inventory for ${product.name}. Only ${product.quantity} available.`);
+      throw ApiError.conflict(`Insufficient inventory for ${product.name}. Only ${here} available at this branch.`);
     }
     if (raw.color && product.colors?.length && !product.colors.includes(raw.color)) {
       throw ApiError.badRequest(`${product.name} is not available in ${raw.color}.`);
@@ -65,6 +69,8 @@ async function buildItems(rawItems) {
       options: raw.options,
       fulfillment: inStock ? 'STOCK' : 'PRODUCTION',
       productionDays: product.productionTimeDays || 7,
+      warrantyMonths: product.warrantyMonths ?? 0,
+      warrantyTerms: product.warrantyTerms,
     };
   });
 }
@@ -80,19 +86,20 @@ async function createOrder(input, actor, { isStaff = false } = {}) {
   const customer = await Customer.findById(input.customer).lean();
   if (!customer) throw ApiError.notFound('Customer not found.');
 
-  const items = await buildItems(input.items);
+  // Staff orders belong to the chosen branch or the staff member's branch; online orders to the default branch.
+  const branch = (isStaff && (input.branch || actor.user?.branch)) || settings.defaultBranch || (await defaultBranchId());
+  const items = await buildItems(input.items, branch);
   const deliveryMethod = input.deliveryMethod || DELIVERY_METHODS.DELIVERY;
-  // Customers cannot set their own discount or delivery fee.
-  const discount = isStaff ? input.discount || 0 : 0;
+  // Customers cannot set their own discount or delivery fee; a valid promo code adds to any staff discount.
+  const itemsSubtotal = round2(items.reduce((sum, i) => sum + i.lineTotal, 0));
+  const promo = input.promoCode ? await promotionService.evaluate(input.promoCode, { subtotal: itemsSubtotal, customerId: customer._id }) : null;
+  const discount = round2((isStaff ? input.discount || 0 : 0) + (promo?.discount || 0));
   const deliveryFee =
     deliveryMethod === DELIVERY_METHODS.PICKUP ? 0 : isStaff && input.deliveryFee !== undefined ? input.deliveryFee : settings.defaultDeliveryFee;
 
   const taxRate = settings.taxRate || 0;
   const { subtotal, tax, total, balance } = calcOrderTotals({ items, discount, deliveryFee, taxRate });
   if (discount > subtotal) throw ApiError.badRequest('Discount cannot exceed the order subtotal.');
-
-  // Staff orders belong to the chosen branch or the staff member's branch; online orders to the default branch.
-  const branch = (isStaff && (input.branch || actor.user?.branch)) || settings.defaultBranch || null;
 
   const order = await Order.create({
     orderNumber: await nextNumber('WO'),
@@ -101,6 +108,8 @@ async function createOrder(input, actor, { isStaff = false } = {}) {
     items: items.map(({ productionDays, ...rest }) => rest),
     subtotal,
     discount,
+    promoCode: promo?.code,
+    promoDiscount: promo?.discount || 0,
     deliveryFee,
     taxRate,
     tax,
@@ -164,6 +173,7 @@ async function confirmOrderInTransaction(order, { session, actor, afterCommit, n
         reference: { model: 'Order', id: order._id, number: order.orderNumber },
         note: `Sold on ${order.orderNumber}`,
         userId: actor.user?._id,
+        branch: order.branch,
         session,
       });
       alertIfCrossed(result, 'PRODUCT', afterCommit);
@@ -261,6 +271,7 @@ async function cancelOrder(orderId, { reason }, actor, { asCustomer = false } = 
         reference: { model: 'Order', id: order._id, number: order.orderNumber },
         note: `Order ${order.orderNumber} cancelled`,
         userId: actor.user?._id,
+        branch: order.branch,
         session,
       });
       item.stockDeducted = false;
@@ -367,7 +378,7 @@ async function updateOrderItems(orderId, { items: rawItems, reason }, actor) {
   if (!order) throw ApiError.notFound('Order not found.');
   if (order.status !== O.PENDING) throw ApiError.badRequest('Items can only be changed while the order is pending. Cancel and re-create confirmed orders.');
 
-  const items = await buildItems(rawItems);
+  const items = await buildItems(rawItems, order.branch || (await defaultBranchId()));
   const { subtotal, tax, total, balance } = calcOrderTotals({
     items,
     discount: order.discount,

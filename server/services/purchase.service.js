@@ -4,11 +4,11 @@ const ApiError = require('../utils/ApiError');
 const { round2 } = require('../utils/money');
 const { withTransaction } = require('../utils/transaction');
 const { PURCHASE_STATUS: PS, AUDIT_ACTIONS, INVENTORY_TX_TYPES, TRANSACTION_TYPES } = require('../config/constants');
-const { adjustStock } = require('./inventory.service');
+const { adjustStock, defaultBranchId } = require('./inventory.service');
 const { recordLedgerEntry } = require('./ledger.service');
 const { audit } = require('./audit.service');
 
-async function createPurchaseOrder({ supplier, items, expectedDate, notes, status }, actor) {
+async function createPurchaseOrder({ supplier, items, expectedDate, notes, status, branch }, actor) {
   const sup = await Supplier.findById(supplier).lean();
   if (!sup) throw ApiError.notFound('Supplier not found.');
   const materials = await Material.find({ _id: { $in: items.map((i) => i.material) } }).lean();
@@ -25,6 +25,8 @@ async function createPurchaseOrder({ supplier, items, expectedDate, notes, statu
     total: round2(lines.reduce((s, i) => s + i.quantity * i.unitCost, 0)),
     expectedDate,
     notes,
+    // Goods are delivered to (and stocked at) this branch.
+    branch: branch || actor.user?.branch || (await defaultBranchId()),
     status: status === PS.DRAFT ? PS.DRAFT : PS.ORDERED,
     createdBy: actor.user._id,
   });
@@ -63,6 +65,7 @@ async function receivePurchaseOrder(poId, { items }, actor) {
         reference: { model: 'PurchaseOrder', id: po._id, number: po.poNumber },
         note: `Received from ${po.poNumber}`,
         userId: actor.user._id,
+        branch: po.branch,
         session,
       });
       await Material.updateOne(
@@ -119,4 +122,51 @@ async function cancelPurchaseOrder(poId, reason, actor) {
   return po;
 }
 
-module.exports = { createPurchaseOrder, receivePurchaseOrder, cancelPurchaseOrder };
+const OPEN_PO = [PS.DRAFT, PS.ORDERED, PS.PARTIALLY_RECEIVED];
+
+/**
+ * Materials at or below their minimum that aren't already covered by open purchase
+ * orders, grouped by their main supplier, with a suggested quantity to buy.
+ */
+async function reorderSuggestions() {
+  const low = await Material.find({ minStock: { $gt: 0 }, $expr: { $lte: ['$quantity', '$minStock'] } })
+    .populate('supplier', 'name phone')
+    .lean();
+  if (!low.length) return [];
+
+  const onOrder = await PurchaseOrder.aggregate([
+    { $match: { status: { $in: OPEN_PO } } },
+    { $unwind: '$items' },
+    { $match: { 'items.material': { $in: low.map((m) => m._id) } } },
+    { $group: { _id: '$items.material', qty: { $sum: { $subtract: ['$items.quantity', '$items.receivedQuantity'] } }, pos: { $addToSet: '$poNumber' } } },
+  ]);
+  const pending = new Map(onOrder.map((o) => [String(o._id), o]));
+
+  const groups = new Map();
+  for (const m of low) {
+    const open = pending.get(String(m._id));
+    const onOrderQty = open?.qty || 0;
+    // Already enough on the way to get back above the minimum.
+    if (m.quantity + onOrderQty > m.minStock) continue;
+    const target = m.reorderQuantity > 0 ? m.reorderQuantity : m.minStock * 2 - m.quantity - onOrderQty;
+    const suggested = Math.max(Math.ceil(target), 1);
+    const key = m.supplier ? String(m.supplier._id) : 'none';
+    if (!groups.has(key)) groups.set(key, { supplier: m.supplier || null, items: [], total: 0 });
+    const group = groups.get(key);
+    group.items.push({
+      material: { _id: m._id, name: m.name, code: m.code, unit: m.unit },
+      quantity: m.quantity,
+      minStock: m.minStock,
+      onOrder: onOrderQty,
+      openOrders: open?.pos || [],
+      suggestedQuantity: suggested,
+      unitCost: m.unitCost,
+      lineTotal: round2(suggested * m.unitCost),
+    });
+    group.total = round2(group.total + suggested * m.unitCost);
+  }
+  // Suppliers first (alphabetically), materials without a supplier last.
+  return [...groups.values()].sort((a, b) => (a.supplier ? 0 : 1) - (b.supplier ? 0 : 1) || (a.supplier?.name || '').localeCompare(b.supplier?.name || ''));
+}
+
+module.exports = { createPurchaseOrder, receivePurchaseOrder, cancelPurchaseOrder, reorderSuggestions };

@@ -13,8 +13,10 @@ import { customersApi } from '../../../api/endpoints';
 import { useAuth } from '../../../context/AuthContext';
 import useListParams from '../../../hooks/useListParams';
 import { date, label, money } from '../../../utils/format';
+import { useT } from '../../../i18n/LanguageContext';
 
 export default function CustomerList() {
+  const t = useT();
   const [params, set] = useListParams();
   const [creating, setCreating] = useState(false);
   const navigate = useNavigate();
@@ -25,7 +27,7 @@ export default function CustomerList() {
     { key: 'name', header: 'Customer', render: (c) => <span className="font-medium text-stone-900">{c.name}</span> },
     { key: 'customerCode', header: 'Code', mobile: false },
     { key: 'phone', header: 'Phone' },
-    { key: 'source', header: 'Source', mobile: false, render: (c) => <Badge>{label(c.source)}</Badge>, exportValue: (c) => c.source },
+    { key: 'source', header: 'Source', mobile: false, render: (c) => <Badge>{t(label(c.source))}</Badge>, exportValue: (c) => c.source },
     { key: 'orderCount', header: 'Orders', align: 'right' },
     { key: 'totalSpent', header: 'Spent', align: 'right', render: (c) => money(c.totalSpent) },
     { key: 'balance', header: 'Balance', align: 'right', render: (c) => <span className={c.balance > 0 ? 'font-semibold text-brass-800' : 'text-stone-400'}>{money(c.balance)}</span> },
@@ -35,21 +37,21 @@ export default function CustomerList() {
   return (
     <div>
       <PageHeader
-        title="Customers"
+        title={t('Customers')}
         actions={
           <>
-            <ExportMenu filename="customers" title="Customers" columns={columns} rows={query.data?.items} />
+            <ExportMenu filename="customers" title={t('Customers')} columns={columns} rows={query.data?.items} />
             {can('customers:write') && (
               <Button icon={UserPlus} onClick={() => setCreating(true)}>
-                New customer
+                {t('New customer')}
               </Button>
             )}
           </>
         }
       />
       <FilterBar>
-        <SearchInput value={params.search} onChange={(search) => set({ search })} placeholder="Name, phone, email, code…" className="sm:w-80" />
-        <Checkbox label="With outstanding balance" checked={params.withDebt === 'true'} onChange={(e) => set({ withDebt: e.target.checked ? 'true' : '' })} />
+        <SearchInput value={params.search} onChange={(search) => set({ search })} placeholder={t('Name, phone, email, code…')} className="sm:w-80" />
+        <Checkbox label={t('With outstanding balance')} checked={params.withDebt === 'true'} onChange={(e) => set({ withDebt: e.target.checked ? 'true' : '' })} />
       </FilterBar>
       <DataTable
         columns={columns}

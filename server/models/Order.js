@@ -29,6 +29,9 @@ const orderSchema = new mongoose.Schema(
     items: { type: [orderItemSchema], validate: [(v) => v.length > 0, 'An order needs at least one item.'] },
     subtotal: { type: Number, required: true, min: 0 },
     discount: { type: Number, default: 0, min: 0 },
+    // Promo code used at checkout and the part of `discount` it gave.
+    promoCode: { type: String, uppercase: true, trim: true, index: true },
+    promoDiscount: { type: Number, default: 0, min: 0 },
     deliveryFee: { type: Number, default: 0, min: 0 },
     // Tax rate in force when the order was placed, so later setting changes don't alter it.
     taxRate: { type: Number, default: 0, min: 0 },
@@ -47,6 +50,8 @@ const orderSchema = new mongoose.Schema(
     orderDate: { type: Date, default: Date.now, index: true },
     expectedCompletionDate: Date,
     completedAt: Date,
+    // When the customer was last reminded about an unpaid balance (by the weekly job or by staff).
+    lastPaymentReminderAt: Date,
     cancelledAt: Date,
     cancellationReason: String,
     notes: { type: String, maxlength: 2000 },

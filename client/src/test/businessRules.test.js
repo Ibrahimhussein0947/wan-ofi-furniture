@@ -7,9 +7,9 @@ import { WORKER_STAGE_PERMISSIONS, STAGE_TRANSITIONS } from '../utils/constants'
 
 describe('formatting', () => {
   test('money uses the business currency', () => {
-    setCurrency('TZS');
-    expect(money(50000)).toBe('TZS 50,000');
-    expect(money(1250000, { compact: true })).toBe('TZS 1.3M');
+    setCurrency('ETB');
+    expect(money(50000)).toBe('ETB 50,000');
+    expect(money(1250000, { compact: true })).toBe('ETB 1.3M');
   });
   test('status labels are human readable', () => {
     expect(label('IN_PRODUCTION')).toBe('In production');

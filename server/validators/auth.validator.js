@@ -19,6 +19,7 @@ const changePassword = z.object({
 });
 
 const forgotPassword = z.object({ email });
+const changeEmail = z.object({ email, currentPassword: z.string().min(1, 'Enter your current password').max(128) });
 const resetPassword = z.object({ token: z.string().regex(/^[a-f\d]{64}$/, 'Invalid reset link'), password });
 const verifyEmail = z.object({ token: z.string().regex(/^[a-f\d]{64}$/, 'Invalid verification link') });
 
@@ -27,7 +28,7 @@ const updateProfile = z.object({
   phone,
   address,
   company: trimmed(120).optional(),
-  notificationPrefs: z.object({ email: z.boolean(), sms: z.boolean() }).partial().optional(),
+  notificationPrefs: z.object({ email: z.boolean(), sms: z.boolean(), telegram: z.boolean(), whatsapp: z.boolean() }).partial().optional(),
 });
 
-module.exports = { register, login, changePassword, updateProfile, forgotPassword, resetPassword, verifyEmail };
+module.exports = { register, login, changePassword, changeEmail, updateProfile, forgotPassword, resetPassword, verifyEmail };

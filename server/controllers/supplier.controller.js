@@ -62,6 +62,11 @@ exports.remove = asyncHandler(async (req, res) => {
 });
 
 // ---------- Purchase orders ----------
+// Low-stock materials not yet covered by an open purchase order, grouped by supplier.
+exports.reorderSuggestions = asyncHandler(async (_req, res) => {
+  sendSuccess(res, { data: await purchaseService.reorderSuggestions() });
+});
+
 exports.listPurchases = asyncHandler(async (req, res) => {
   const filter = {
     ...pickFilters(req.query, ['supplier', 'status', 'paymentStatus'], ['supplier']),

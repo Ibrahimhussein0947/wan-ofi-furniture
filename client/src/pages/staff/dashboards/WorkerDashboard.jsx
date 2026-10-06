@@ -9,6 +9,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { tasksApi } from '../../../api/endpoints';
 import useMutationToast from '../../../hooks/useMutationToast';
 import { date, daysUntil, label, timeAgo } from '../../../utils/format';
+import { useT } from '../../../i18n/LanguageContext';
 
 function DueLabel({ value }) {
   const days = daysUntil(value);
@@ -18,6 +19,7 @@ function DueLabel({ value }) {
 }
 
 export default function WorkerDashboard({ data }) {
+  const t = useT();
   const { user, can } = useAuth();
   const k = data.kpis;
   const updateTask = useMutationToast(({ id, status }) => tasksApi.update(id, { status }), { success: 'Task updated', invalidate: ['dashboard', 'tasks'] });
@@ -27,27 +29,27 @@ export default function WorkerDashboard({ data }) {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">Hi {user?.name?.split(' ')[0]} 👋</h1>
-          <p className="text-sm text-stone-500">{label(user?.workerRole)} · your work for today</p>
+          <p className="text-sm text-stone-500">{t(label(user?.workerRole))} · your work for today</p>
         </div>
         {can('production:manage') && (
           <Button to="/app/production" icon={Factory} size="lg">
-            Production board
+            {t('Production board')}
           </Button>
         )}
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <StatCard label="My jobs" value={k.assignedJobs} icon={Hammer} />
-        <StatCard label="Due soon" value={k.dueSoon} icon={CalendarClock} tone="brass" />
-        <StatCard label="Overdue" value={k.overdue} icon={AlertTriangle} tone={k.overdue ? 'red' : 'green'} />
-        <StatCard label="Open tasks" value={k.openTasks} icon={ClipboardList} tone="blue" to="/app/tasks" />
+        <StatCard label={t('My jobs')} value={k.assignedJobs} icon={Hammer} />
+        <StatCard label={t('Due soon')} value={k.dueSoon} icon={CalendarClock} tone="brass" />
+        <StatCard label={t('Overdue')} value={k.overdue} icon={AlertTriangle} tone={k.overdue ? 'red' : 'green'} />
+        <StatCard label={t('Open tasks')} value={k.openTasks} icon={ClipboardList} tone="blue" to="/app/tasks" />
       </div>
 
       <section>
-        <h2 className="mb-3 text-lg font-semibold">Assigned jobs</h2>
+        <h2 className="mb-3 text-lg font-semibold">{t('Assigned jobs')}</h2>
         {!data.jobs.length ? (
           <div className="card">
-            <EmptyState icon={CheckCircle2} title="No active jobs" message="New assignments will appear here and you'll get a notification." />
+            <EmptyState icon={CheckCircle2} title={t('No active jobs')} message="New assignments will appear here and you'll get a notification." />
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
@@ -78,26 +80,26 @@ export default function WorkerDashboard({ data }) {
       </section>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card title="My tasks" padded={false} actions={<Link to="/app/tasks" className="link text-sm">All tasks</Link>}>
+        <Card title={t('My tasks')} padded={false} actions={<Link to="/app/tasks" className="link text-sm">{t('All tasks')}</Link>}>
           {!data.tasks.length ? (
-            <p className="p-5 text-sm text-stone-500">No open tasks.</p>
+            <p className="p-5 text-sm text-stone-500">{t('No open tasks.')}</p>
           ) : (
             <ul className="divide-y divide-stone-100">
-              {data.tasks.map((t) => (
-                <li key={t._id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
+              {data.tasks.map((task) => (
+                <li key={task._id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3">
                   <div className="min-w-0">
-                    <p className="font-medium">{t.title}</p>
+                    <p className="font-medium">{task.title}</p>
                     <p className="text-xs text-stone-500">
-                      {t.job?.jobNumber} · {t.dueDate ? `due ${date(t.dueDate)}` : 'no due date'}
+                      {task.job?.jobNumber} · {task.dueDate ? `due ${date(task.dueDate)}` : 'no due date'}
                     </p>
                   </div>
-                  {t.status === 'TODO' ? (
-                    <Button size="md" variant="secondary" icon={PlayCircle} onClick={() => updateTask.mutate({ id: t._id, status: 'IN_PROGRESS' })}>
-                      Start
+                  {task.status === 'TODO' ? (
+                    <Button size="md" variant="secondary" icon={PlayCircle} onClick={() => updateTask.mutate({ id: task._id, status: 'IN_PROGRESS' })}>
+                      {t('Start')}
                     </Button>
                   ) : (
-                    <Button size="md" variant="success" icon={CheckCircle2} onClick={() => updateTask.mutate({ id: t._id, status: 'DONE' })}>
-                      Done
+                    <Button size="md" variant="success" icon={CheckCircle2} onClick={() => updateTask.mutate({ id: task._id, status: 'DONE' })}>
+                      {t('Done')}
                     </Button>
                   )}
                 </li>
@@ -106,9 +108,9 @@ export default function WorkerDashboard({ data }) {
           )}
         </Card>
 
-        <Card title="Materials still needed" padded={false}>
+        <Card title={t('Materials still needed')} padded={false}>
           {!data.materialNeeds.length ? (
-            <p className="p-5 text-sm text-stone-500">All required materials have been issued for your jobs.</p>
+            <p className="p-5 text-sm text-stone-500">{t('All required materials have been issued for your jobs.')}</p>
           ) : (
             <ul className="divide-y divide-stone-100">
               {data.materialNeeds.map((m, i) => (
@@ -127,7 +129,7 @@ export default function WorkerDashboard({ data }) {
       </div>
 
       {data.deliveries.length > 0 && (
-        <Card title="My deliveries" padded={false}>
+        <Card title={t('My deliveries')} padded={false}>
           <ul className="divide-y divide-stone-100">
             {data.deliveries.map((d) => (
               <li key={d._id}>
@@ -149,9 +151,9 @@ export default function WorkerDashboard({ data }) {
         </Card>
       )}
 
-      <Card title="Recent notifications" padded={false} actions={<Link to="/app/notifications" className="link text-sm">All</Link>}>
+      <Card title={t('Recent notifications')} padded={false} actions={<Link to="/app/notifications" className="link text-sm">{t('All')}</Link>}>
         <ul className="divide-y divide-stone-100">
-          {!data.notifications.length && <li className="p-5 text-sm text-stone-500">Nothing new.</li>}
+          {!data.notifications.length && <li className="p-5 text-sm text-stone-500">{t('Nothing new.')}</li>}
           {data.notifications.map((n) => (
             <li key={n._id} className="px-5 py-3">
               <p className="text-sm font-medium">{n.title}</p>

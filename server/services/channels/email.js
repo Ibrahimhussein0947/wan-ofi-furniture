@@ -26,7 +26,7 @@ const escapeHtml = (s) =>
     .replace(/"/g, '&quot;');
 
 /** Branded, table-based HTML that renders in every mail client. */
-function renderEmail({ title, lines = [], action, footer = 'Wan Ofi Furniture · Dar es Salaam, Tanzania' }) {
+function renderEmail({ title, lines = [], action, footer = 'Wan Ofi Furniture · Addis Ababa, Ethiopia' }) {
   const body = lines.map((l) => `<p style="margin:0 0 12px;color:#44403c;font-size:15px;line-height:1.6">${escapeHtml(l)}</p>`).join('');
   const button = action
     ? `<p style="margin:24px 0"><a href="${escapeHtml(action.url)}" style="background:#5c3a2c;color:#ffffff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:600;display:inline-block">${escapeHtml(action.label)}</a></p>

@@ -1,4 +1,4 @@
-let currency = 'TZS';
+let currency = 'ETB';
 export const setCurrency = (c) => {
   if (c) currency = c;
 };
@@ -61,3 +61,10 @@ export const initials = (name = '') =>
     .join('');
 
 export const daysUntil = (value) => (value ? Math.ceil((new Date(value).getTime() - Date.now()) / 86400000) : null);
+
+// "2-year warranty" / "6-month warranty"; null when there is none. `t` is the i18n translator.
+export const warrantyLabel = (months, t = (k, v) => k.replace(/\{(\w+)\}/g, (_, x) => v[x])) => {
+  if (!months) return null;
+  if (months % 12 === 0) return months === 12 ? t('1-year warranty') : t('{count}-year warranty', { count: months / 12 });
+  return t('{count}-month warranty', { count: months });
+};

@@ -12,6 +12,7 @@ import Button from '../../../components/ui/Button';
 import { productionApi } from '../../../api/endpoints';
 import useListParams from '../../../hooks/useListParams';
 import { date, daysUntil, label } from '../../../utils/format';
+import { useT } from '../../../i18n/LanguageContext';
 
 const COLUMN_TONES = {
   PENDING: 'border-t-amber-400',
@@ -25,6 +26,7 @@ const COLUMN_TONES = {
 };
 
 function JobCard({ job }) {
+  const t = useT();
   const days = daysUntil(job.expectedCompletionDate);
   const late = days !== null && days < 0 && !['READY_FOR_DELIVERY', 'DELIVERED'].includes(job.stage);
   return (
@@ -39,7 +41,7 @@ function JobCard({ job }) {
       </p>
       <ProgressBar value={job.progress} className="mt-2" />
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
-        <span className="text-[11px] text-stone-500">{label(job.stage)}</span>
+        <span className="text-[11px] text-stone-500">{t(label(job.stage))}</span>
         {job.openProblems > 0 && (
           <Badge tone="red">
             <AlertTriangle className="h-3 w-3" /> {job.openProblems}
@@ -67,6 +69,7 @@ function JobCard({ job }) {
 }
 
 export default function Board() {
+  const t = useT();
   const [params, set] = useListParams();
   const [view, setView] = useState('board');
   const navigate = useNavigate();
@@ -76,22 +79,22 @@ export default function Board() {
   return (
     <div>
       <PageHeader
-        title="Production"
-        subtitle="Jobs flow from pending through quality check to ready"
+        title={t('Production')}
+        subtitle={t('Jobs flow from pending through quality check to ready')}
         actions={
           <div className="flex rounded-lg border border-stone-200 bg-white p-0.5">
             <Button size="sm" variant={view === 'board' ? 'primary' : 'ghost'} icon={LayoutGrid} onClick={() => setView('board')}>
-              Board
+              {t('Board')}
             </Button>
             <Button size="sm" variant={view === 'list' ? 'primary' : 'ghost'} icon={List} onClick={() => setView('list')}>
-              List
+              {t('List')}
             </Button>
           </div>
         }
       />
       <FilterBar>
-        <Checkbox label="Only my jobs" checked={params.mine === 'true'} onChange={(e) => set({ mine: e.target.checked ? 'true' : '' })} />
-        <Checkbox label="Overdue only" checked={params.overdue === 'true'} onChange={(e) => set({ overdue: e.target.checked ? 'true' : '' })} />
+        <Checkbox label={t('Only my jobs')} checked={params.mine === 'true'} onChange={(e) => set({ mine: e.target.checked ? 'true' : '' })} />
+        <Checkbox label={t('Overdue only')} checked={params.overdue === 'true'} onChange={(e) => set({ overdue: e.target.checked ? 'true' : '' })} />
       </FilterBar>
 
       {view === 'board' ? (
@@ -100,13 +103,13 @@ export default function Board() {
             <div className="-mx-4 overflow-x-auto px-4 pb-4 sm:-mx-6 sm:px-6">
               <div className="flex min-w-max gap-4">
                 {columns.map((col) => (
-                  <section key={col.key} className={clsx('flex w-72 shrink-0 flex-col rounded-xl border-t-4 bg-stone-100/80', COLUMN_TONES[col.key])} aria-label={col.title}>
+                  <section key={col.key} className={clsx('flex w-72 shrink-0 flex-col rounded-xl border-t-4 bg-stone-100/80', COLUMN_TONES[col.key])} aria-label={t(col.title)}>
                     <header className="flex items-center justify-between px-3 py-2.5">
-                      <h2 className="text-sm font-semibold text-stone-800">{col.title}</h2>
+                      <h2 className="text-sm font-semibold text-stone-800">{t(col.title)}</h2>
                       <span className="rounded-full bg-white px-2 text-xs font-medium text-stone-600">{col.jobs.length}</span>
                     </header>
                     <div className="flex max-h-[calc(100vh-18rem)] flex-col gap-2 overflow-y-auto px-2 pb-3">
-                      {col.jobs.length ? col.jobs.map((job) => <JobCard key={job._id} job={job} />) : <p className="px-2 py-6 text-center text-xs text-stone-400">No jobs</p>}
+                      {col.jobs.length ? col.jobs.map((job) => <JobCard key={job._id} job={job} />) : <p className="px-2 py-6 text-center text-xs text-stone-400">{t('No jobs')}</p>}
                     </div>
                   </section>
                 ))}

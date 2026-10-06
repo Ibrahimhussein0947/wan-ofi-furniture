@@ -13,8 +13,10 @@ import { useAuth } from '../../../context/AuthContext';
 import useListParams from '../../../hooks/useListParams';
 import { ORDER_STATUSES, PAYMENT_STATUSES } from '../../../utils/constants';
 import { date, label, money } from '../../../utils/format';
+import { useT } from '../../../i18n/LanguageContext';
 
 export default function OrderList() {
+  const t = useT();
   const [params, set] = useListParams();
   const navigate = useNavigate();
   const { can } = useAuth();
@@ -24,7 +26,7 @@ export default function OrderList() {
     { key: 'orderNumber', header: 'Order', render: (o) => <span className="font-medium text-walnut-900">{o.orderNumber}</span> },
     { key: 'customer', header: 'Customer', render: (o) => o.customer?.name, exportValue: (o) => o.customer?.name },
     { key: 'orderDate', header: 'Date', render: (o) => date(o.orderDate), exportValue: (o) => date(o.orderDate) },
-    { key: 'orderType', header: 'Type', mobile: false, render: (o) => label(o.orderType) },
+    { key: 'orderType', header: 'Type', mobile: false, render: (o) => t(label(o.orderType)) },
     { key: 'branch', header: 'Branch', mobile: false, render: (o) => o.branch?.code || '—', exportValue: (o) => o.branch?.name },
     { key: 'total', header: 'Total', align: 'right', render: (o) => money(o.total) },
     { key: 'balance', header: 'Balance', align: 'right', render: (o) => <span className={o.balance > 0 ? 'font-medium text-brass-800' : 'text-stone-400'}>{money(o.balance)}</span> },
@@ -35,26 +37,26 @@ export default function OrderList() {
   return (
     <div>
       <PageHeader
-        title="Orders"
+        title={t('Orders')}
         subtitle={query.data ? `${query.data.pagination.total} orders` : undefined}
         actions={
           <>
-            <ExportMenu filename="orders" title="Orders" columns={columns} rows={query.data?.items} />
+            <ExportMenu filename="orders" title={t('Orders')} columns={columns} rows={query.data?.items} />
             {can('orders:write') && (
               <Button to="/app/orders/new" icon={Plus}>
-                New order
+                {t('New order')}
               </Button>
             )}
           </>
         }
       />
       <FilterBar>
-        <SearchInput value={params.search} onChange={(search) => set({ search })} placeholder="Order number, item, phone…" className="sm:w-72" />
-        <Select value={params.status || ''} onChange={(e) => set({ status: e.target.value })} options={ORDER_STATUSES.map((s) => ({ value: s, label: label(s) }))} placeholder="All statuses" aria-label="Status" containerClassName="sm:w-44" />
-        <Select value={params.paymentStatus || ''} onChange={(e) => set({ paymentStatus: e.target.value })} options={PAYMENT_STATUSES.map((s) => ({ value: s, label: label(s) }))} placeholder="Any payment" aria-label="Payment status" containerClassName="sm:w-40" />
-        <BranchSelect label={undefined} value={params.branch || ''} onChange={(e) => set({ branch: e.target.value })} aria-label="Branch" containerClassName="sm:w-48" />
-        <Input type="date" value={params.from || ''} onChange={(e) => set({ from: e.target.value })} aria-label="From date" containerClassName="sm:w-40" />
-        <Input type="date" value={params.to || ''} onChange={(e) => set({ to: e.target.value })} aria-label="To date" containerClassName="sm:w-40" />
+        <SearchInput value={params.search} onChange={(search) => set({ search })} placeholder={t('Order number, item, phone…')} className="sm:w-72" />
+        <Select value={params.status || ''} onChange={(e) => set({ status: e.target.value })} options={ORDER_STATUSES.map((s) => ({ value: s, label: t(label(s)) }))} placeholder={t('All statuses')} aria-label={t('Status')} containerClassName="sm:w-44" />
+        <Select value={params.paymentStatus || ''} onChange={(e) => set({ paymentStatus: e.target.value })} options={PAYMENT_STATUSES.map((s) => ({ value: s, label: t(label(s)) }))} placeholder={t('Any payment')} aria-label={t('Payment status')} containerClassName="sm:w-40" />
+        <BranchSelect label={undefined} value={params.branch || ''} onChange={(e) => set({ branch: e.target.value })} aria-label={t('Branch')} containerClassName="sm:w-48" />
+        <Input type="date" value={params.from || ''} onChange={(e) => set({ from: e.target.value })} aria-label={t('From date')} containerClassName="sm:w-40" />
+        <Input type="date" value={params.to || ''} onChange={(e) => set({ to: e.target.value })} aria-label={t('To date')} containerClassName="sm:w-40" />
       </FilterBar>
       <DataTable
         columns={columns}

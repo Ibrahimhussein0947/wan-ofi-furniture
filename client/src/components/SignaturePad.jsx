@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Eraser } from 'lucide-react';
 import Button from './ui/Button';
+import { useT } from '../i18n/LanguageContext';
 
 /** Finger/mouse signature capture that returns a PNG File. */
 export default function SignaturePad({ onChange }) {
+  const t = useT();
   const canvasRef = useRef(null);
   const drawing = useRef(false);
   const [empty, setEmpty] = useState(true);
@@ -61,12 +63,12 @@ export default function SignaturePad({ onChange }) {
         onPointerMove={move}
         onPointerUp={end}
         onPointerLeave={end}
-        aria-label="Signature area"
+        aria-label={t('Signature area')}
       />
       <div className="mt-2 flex items-center justify-between">
         <p className="text-xs text-stone-500">{empty ? 'Customer signs above' : 'Signature captured'}</p>
         <Button size="sm" variant="ghost" icon={Eraser} onClick={clear}>
-          Clear
+          {t('Clear')}
         </Button>
       </div>
     </div>

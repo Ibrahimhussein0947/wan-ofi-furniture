@@ -12,6 +12,8 @@ const productionTaskSchema = new mongoose.Schema(
     dueDate: Date,
     startedAt: Date,
     completedAt: Date,
+    // Hours the worker logged on this task (used for hourly pay and productivity).
+    hoursWorked: { type: Number, min: 0, max: 200 },
     deadlineNotifiedAt: Date,
     createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },

@@ -10,8 +10,10 @@ import CustomerFormModal from './CustomerFormModal';
 import { customersApi } from '../../../api/endpoints';
 import { useAuth } from '../../../context/AuthContext';
 import { date, label, money } from '../../../utils/format';
+import { useT } from '../../../i18n/LanguageContext';
 
 export default function CustomerDetail() {
+  const t = useT();
   const { id } = useParams();
   const { can } = useAuth();
   const [tab, setTab] = useState('orders');
@@ -21,45 +23,79 @@ export default function CustomerDetail() {
   return (
     <QueryState query={query}>
       {(c) => (
-        <div className="space-y-6">
+        <div className='space-y-6'>
           <PageHeader
-            back="/app/customers"
+            back='/app/customers'
             title={c.name}
             subtitle={`${c.customerCode} · customer since ${date(c.createdAt)}${c.user ? ' · has online account' : ' · walk-in'}`}
             actions={
               <>
                 {can('orders:write') && (
-                  <Button to="/app/orders/new" variant="secondary" icon={ShoppingCart}>
-                    New order
+                  <Button to='/app/orders/new' variant='secondary' icon={ShoppingCart}>
+                    {t('New order')}
                   </Button>
                 )}
                 {can('customers:write') && (
                   <Button icon={Pencil} onClick={() => setEditing(true)}>
-                    Edit
+                    {t('Edit')}
                   </Button>
                 )}
               </>
             }
           />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard label="Outstanding balance" value={money(c.summary.balance)} tone={c.summary.balance > 0 ? 'brass' : 'green'} />
-            <StatCard label="Total ordered" value={money(c.summary.totalSpent)} />
-            <StatCard label="Total paid" value={money(c.summary.totalPaid)} tone="green" />
-            <StatCard label="Orders" value={c.summary.orderCount} tone="blue" />
+          <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
+            <StatCard
+              label={t('Outstanding balance')}
+              value={money(c.summary.balance)}
+              tone={c.summary.balance > 0 ? 'brass' : 'green'}
+            />
+            <StatCard label={t('Total ordered')} value={money(c.summary.totalSpent)} />
+            <StatCard label={t('Total paid')} value={money(c.summary.totalPaid)} tone='green' />
+            <StatCard label={t('Orders')} value={c.summary.orderCount} tone='blue' />
           </div>
-          <Card title="Contact details">
+          <Card title={t('Contact details')}>
             <DetailList
               columns={3}
               items={[
                 { label: 'Phone', value: c.phone || '—' },
                 { label: 'Email', value: c.email || '—' },
                 { label: 'Company', value: c.company || '—' },
-                { label: 'Address', value: [c.address?.street, c.address?.city, c.address?.region].filter(Boolean).join(', ') || '—' },
-                { label: 'Source', value: label(c.source) },
+                {
+                  label: 'Address',
+                  value:
+                    [c.address?.street, c.address?.city, c.address?.region]
+                      .filter(Boolean)
+                      .join(', ') || '—',
+                },
+                { label: 'Source', value: t(label(c.source)) },
                 { label: 'Notes', value: c.notes || '—' },
               ]}
             />
           </Card>
+          {c.bankAccounts?.length > 0 && (
+            <Card title={t('Bank accounts')}>
+              <p className='mb-3 text-sm text-stone-600'>
+                {t("The customer's own accounts — use these when refunding money to them.")}
+              </p>
+              <ul className='space-y-2'>
+                {c.bankAccounts.map((a, i) => (
+                  <li
+                    key={`${a.accountNumber}-${i}`}
+                    className='rounded-lg border border-stone-200 p-3 text-sm'
+                  >
+                    <p className='font-medium'>
+                      {a.bankName}
+                      {a.branch ? ` · ${a.branch}` : ''}
+                    </p>
+                    <p>
+                      {a.accountName} · <span className='font-mono'>{a.accountNumber}</span>
+                    </p>
+                    {a.notes && <p className='mt-1 text-xs text-stone-500'>{a.notes}</p>}
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
 
           <Tabs
             value={tab}
@@ -71,21 +107,21 @@ export default function CustomerDetail() {
               { value: 'custom', label: 'Custom requests', count: c.customRequests.length },
             ]}
           />
-          <div className="card overflow-x-auto">
-            <table className="min-w-full divide-y divide-stone-100">
-              <tbody className="divide-y divide-stone-100">
+          <div className='card overflow-x-auto'>
+            <table className='min-w-full divide-y divide-stone-100'>
+              <tbody className='divide-y divide-stone-100'>
                 {tab === 'orders' &&
                   c.orders.map((o) => (
                     <tr key={o._id}>
-                      <td className="table-td">
-                        <Link to={`/app/orders/${o._id}`} className="link">
+                      <td className='table-td'>
+                        <Link to={`/app/orders/${o._id}`} className='link'>
                           {o.orderNumber}
                         </Link>
                       </td>
-                      <td className="table-td">{date(o.orderDate)}</td>
-                      <td className="table-td text-right tabular-nums">{money(o.total)}</td>
-                      <td className="table-td text-right tabular-nums">{money(o.balance)}</td>
-                      <td className="table-td">
+                      <td className='table-td'>{date(o.orderDate)}</td>
+                      <td className='table-td text-right tabular-nums'>{money(o.total)}</td>
+                      <td className='table-td text-right tabular-nums'>{money(o.balance)}</td>
+                      <td className='table-td'>
                         <StatusBadge status={o.status} />
                       </td>
                     </tr>
@@ -93,15 +129,15 @@ export default function CustomerDetail() {
                 {tab === 'payments' &&
                   c.payments.map((p) => (
                     <tr key={p._id}>
-                      <td className="table-td">
-                        <Link to={`/app/receipts/${p._id}`} className="link">
+                      <td className='table-td'>
+                        <Link to={`/app/receipts/${p._id}`} className='link'>
                           {p.receiptNumber || p.paymentNumber}
                         </Link>
                       </td>
-                      <td className="table-td">{date(p.paidAt)}</td>
-                      <td className="table-td">{label(p.method)}</td>
-                      <td className="table-td text-right tabular-nums">{money(p.amount)}</td>
-                      <td className="table-td">
+                      <td className='table-td'>{date(p.paidAt)}</td>
+                      <td className='table-td'>{t(label(p.method))}</td>
+                      <td className='table-td text-right tabular-nums'>{money(p.amount)}</td>
+                      <td className='table-td'>
                         <StatusBadge status={p.status} />
                       </td>
                     </tr>
@@ -109,15 +145,15 @@ export default function CustomerDetail() {
                 {tab === 'invoices' &&
                   c.invoices.map((i) => (
                     <tr key={i._id}>
-                      <td className="table-td">
-                        <Link to={`/app/invoices/${i._id}`} className="link">
+                      <td className='table-td'>
+                        <Link to={`/app/invoices/${i._id}`} className='link'>
                           {i.invoiceNumber}
                         </Link>
                       </td>
-                      <td className="table-td">{date(i.issueDate)}</td>
-                      <td className="table-td text-right tabular-nums">{money(i.total)}</td>
-                      <td className="table-td text-right tabular-nums">{money(i.balance)}</td>
-                      <td className="table-td">
+                      <td className='table-td'>{date(i.issueDate)}</td>
+                      <td className='table-td text-right tabular-nums'>{money(i.total)}</td>
+                      <td className='table-td text-right tabular-nums'>{money(i.balance)}</td>
+                      <td className='table-td'>
                         <StatusBadge status={i.status} />
                       </td>
                     </tr>
@@ -125,22 +161,31 @@ export default function CustomerDetail() {
                 {tab === 'custom' &&
                   c.customRequests.map((r) => (
                     <tr key={r._id}>
-                      <td className="table-td">
-                        <Link to={`/app/custom-orders/${r._id}`} className="link">
+                      <td className='table-td'>
+                        <Link to={`/app/custom-orders/${r._id}`} className='link'>
                           {r.requestNumber}
                         </Link>
                       </td>
-                      <td className="table-td">{r.furnitureType}</td>
-                      <td className="table-td">{date(r.createdAt)}</td>
-                      <td className="table-td text-right">{r.quotedPrice ? money(r.quotedPrice) : '—'}</td>
-                      <td className="table-td">
+                      <td className='table-td'>{r.furnitureType}</td>
+                      <td className='table-td'>{date(r.createdAt)}</td>
+                      <td className='table-td text-right'>
+                        {r.quotedPrice ? money(r.quotedPrice) : '—'}
+                      </td>
+                      <td className='table-td'>
                         <StatusBadge status={r.status} />
                       </td>
                     </tr>
                   ))}
               </tbody>
             </table>
-            {!{ orders: c.orders, payments: c.payments, invoices: c.invoices, custom: c.customRequests }[tab].length && <p className="p-6 text-center text-sm text-stone-500">Nothing to show.</p>}
+            {!{
+              orders: c.orders,
+              payments: c.payments,
+              invoices: c.invoices,
+              custom: c.customRequests,
+            }[tab].length && (
+              <p className='p-6 text-center text-sm text-stone-500'>{t('Nothing to show.')}</p>
+            )}
           </div>
           <CustomerFormModal open={editing} onClose={() => setEditing(false)} customer={c} />
         </div>

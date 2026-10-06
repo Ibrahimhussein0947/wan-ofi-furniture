@@ -4,7 +4,7 @@ const cookieFrom = (res) => (res.headers['set-cookie'] || []).find((c) => c.star
 
 describe('authentication', () => {
   test('customer can register and receives a session', async () => {
-    const res = await api().post('/api/auth/register', { name: 'Jane Doe', email: 'jane@test.com', password: 'Secret123', phone: '+255711111111' });
+    const res = await api().post('/api/auth/register', { name: 'Jane Doe', email: 'jane@test.com', password: 'Secret123', phone: '+251911111111' });
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
     expect(res.body.data.accessToken).toBeTruthy();

@@ -5,24 +5,26 @@ import { Card, PageHeader, StatCard } from '../../../components/ui/misc';
 import { TrendChart, DonutChart } from '../../../components/charts/Charts';
 import { RecentTransactions } from './OwnerDashboard';
 import { money } from '../../../utils/format';
+import { useT } from '../../../i18n/LanguageContext';
 
 export default function AccountantDashboard({ data }) {
+  const t = useT();
   const k = data.kpis;
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Accounts"
-        subtitle="Income, expenses, payments and debts"
+        title={t('Accounts')}
+        subtitle={t('Income, expenses, payments and debts')}
         actions={
           <>
             <Button to="/app/payments?record=customer" icon={Banknote}>
-              Record payment
+              {t('Record payment')}
             </Button>
             <Button to="/app/expenses?record=1" variant="secondary" icon={Receipt}>
-              Record expense
+              {t('Record expense')}
             </Button>
             <Button to="/app/reports" variant="secondary">
-              Reports
+              {t('Reports')}
             </Button>
           </>
         }
@@ -50,15 +52,15 @@ export default function AccountantDashboard({ data }) {
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard label="Today's income" value={money(k.todayIncome)} icon={CalendarDays} tone="green" />
-        <StatCard label="Monthly income" value={money(k.monthIncome)} icon={ArrowDownCircle} tone="green" />
-        <StatCard label="Monthly expenses" value={money(k.monthExpenses)} icon={ArrowUpCircle} tone="red" />
-        <StatCard label="Net profit (month)" value={money(k.netProfit)} icon={Wallet} tone={k.netProfit >= 0 ? 'green' : 'red'} />
-        <StatCard label="Outstanding customer payments" value={money(k.outstandingCustomer)} icon={HandCoins} tone="brass" to="/app/reports?report=customer-debts" />
-        <StatCard label="Outstanding supplier payments" value={money(k.outstandingSupplier)} icon={CircleDollarSign} tone="red" to="/app/reports?report=supplier-debts" />
+        <StatCard label={t('Monthly income')} value={money(k.monthIncome)} icon={ArrowDownCircle} tone="green" />
+        <StatCard label={t('Monthly expenses')} value={money(k.monthExpenses)} icon={ArrowUpCircle} tone="red" />
+        <StatCard label={t('Net profit (month)')} value={money(k.netProfit)} icon={Wallet} tone={k.netProfit >= 0 ? 'green' : 'red'} />
+        <StatCard label={t('Outstanding customer payments')} value={money(k.outstandingCustomer)} icon={HandCoins} tone="brass" to="/app/reports?report=customer-debts" />
+        <StatCard label={t('Outstanding supplier payments')} value={money(k.outstandingSupplier)} icon={CircleDollarSign} tone="red" to="/app/reports?report=supplier-debts" />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-3">
-        <Card title="Income vs expenses" subtitle="Last 6 months" className="xl:col-span-2">
+        <Card title={t('Income vs expenses')} subtitle={t('Last 6 months')} className="xl:col-span-2">
           <TrendChart
             data={data.revenueSeries}
             series={[
@@ -68,18 +70,18 @@ export default function AccountantDashboard({ data }) {
             height={260}
           />
         </Card>
-        <Card title="Payments by method" subtitle="This month">
-          {data.paymentStats.length ? <DonutChart data={data.paymentStats} nameKey="method" valueKey="amount" height={200} /> : <p className="text-sm text-stone-500">No payments this month.</p>}
+        <Card title={t('Payments by method')} subtitle={t('This month')}>
+          {data.paymentStats.length ? <DonutChart data={data.paymentStats} nameKey="method" valueKey="amount" height={200} /> : <p className="text-sm text-stone-500">{t('No payments this month.')}</p>}
         </Card>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card title="Recent transactions" padded={false} actions={<Link to="/app/accounting" className="link text-sm">Ledger</Link>}>
+        <Card title={t('Recent transactions')} padded={false} actions={<Link to="/app/accounting" className="link text-sm">{t('Ledger')}</Link>}>
           <RecentTransactions rows={data.recentTransactions} />
         </Card>
-        <Card title="Top customer debts" padded={false} actions={<Link to="/app/reports?report=customer-debts" className="link text-sm">Debt report</Link>}>
+        <Card title={t('Top customer debts')} padded={false} actions={<Link to="/app/reports?report=customer-debts" className="link text-sm">{t('Debt report')}</Link>}>
           {!data.topDebtors.length ? (
-            <p className="p-5 text-sm text-stone-500">No outstanding customer balances.</p>
+            <p className="p-5 text-sm text-stone-500">{t('No outstanding customer balances.')}</p>
           ) : (
             <ul className="divide-y divide-stone-100">
               {data.topDebtors.map((d) => (

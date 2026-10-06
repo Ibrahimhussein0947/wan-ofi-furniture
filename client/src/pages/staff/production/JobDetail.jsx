@@ -16,12 +16,15 @@ import { materialsApi, productionApi, tasksApi, workersApi } from '../../../api/
 import { fileUrl } from '../../../api/client';
 import { useAuth } from '../../../context/AuthContext';
 import useMutationToast from '../../../hooks/useMutationToast';
+import LaborCard from './LaborCard';
 import { STAGE_TRANSITIONS, WORKER_STAGE_PERMISSIONS } from '../../../utils/constants';
 import { date, dateTime, label, number, timeAgo, toInputDate } from '../../../utils/format';
+import { useT } from '../../../i18n/LanguageContext';
 
 const KEYS = ['job', 'production', 'dashboard'];
 
 export default function JobDetail() {
+  const t = useT();
   const { id } = useParams();
   const { user, can } = useAuth();
   const [modal, setModal] = useState(null);
@@ -29,7 +32,7 @@ export default function JobDetail() {
   const query = useQuery({ queryKey: ['job', id], queryFn: () => productionApi.get(id) });
   const manager = can('production:manage');
 
-  const stage = useMutationToast((body) => productionApi.action(id, 'stage', body), { success: (j) => `Moved to ${label(j.stage).toLowerCase()}`, invalidate: KEYS });
+  const stage = useMutationToast((body) => productionApi.action(id, 'stage', body), { success: (j) => `Moved to ${t(label(j.stage)).toLowerCase()}`, invalidate: KEYS });
   const issue = useMutationToast((body) => productionApi.action(id, 'issue-materials', body), { success: 'Materials issued from stock', invalidate: [...KEYS, 'materials'] });
   const note = useMutationToast((text) => productionApi.action(id, 'notes', { text }), { success: 'Note added', invalidate: KEYS, onSuccess: () => setModal(null) });
   const problem = useMutationToast((body) => productionApi.action(id, 'problems', body), { success: 'Problem reported to your supervisor', invalidate: KEYS, onSuccess: () => setModal(null) });
@@ -88,7 +91,7 @@ export default function JobDetail() {
               <ProgressBar value={job.progress} showLabel tone={job.progress >= 100 ? 'green' : 'walnut'} />
               {nextStages.length > 0 && (
                 <div className="mt-5">
-                  <p className="mb-2 text-sm font-medium text-stone-700">Update stage</p>
+                  <p className="mb-2 text-sm font-medium text-stone-700">{t('Update stage')}</p>
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                     {nextStages.map((s) => {
                       const blocked = s === 'IN_PRODUCTION' && materialsOutstanding;
@@ -103,35 +106,35 @@ export default function JobDetail() {
                           onClick={() => stage.mutate({ stage: s })}
                           title={blocked ? 'Materials must be issued first' : undefined}
                         >
-                          {s === 'QUALITY_CHECK' ? 'Send to quality check' : label(s)}
+                          {s === 'QUALITY_CHECK' ? 'Send to quality check' : t(label(s))}
                         </Button>
                       );
                     })}
                   </div>
-                  {materialsOutstanding && nextStages.includes('IN_PRODUCTION') && <p className="mt-2 text-sm text-amber-700">Production can start once all materials are issued.</p>}
+                  {materialsOutstanding && nextStages.includes('IN_PRODUCTION') && <p className="mt-2 text-sm text-amber-700">{t('Production can start once all materials are issued.')}</p>}
                 </div>
               )}
-              {job.stage === 'QUALITY_CHECK' && <p className="mt-4 rounded-lg bg-teal-50 p-3 text-sm text-teal-800">Waiting for quality inspection.{can('quality:manage') && job.qualityChecks?.[0]?.status === 'PENDING' && <Link to={`/app/quality/${job.qualityChecks[0]._id}`} className="ml-2 font-semibold underline">Inspect now</Link>}</p>}
+              {job.stage === 'QUALITY_CHECK' && <p className="mt-4 rounded-lg bg-teal-50 p-3 text-sm text-teal-800">Waiting for quality inspection.{can('quality:manage') && job.qualityChecks?.[0]?.status === 'PENDING' && <Link to={`/app/quality/${job.qualityChecks[0]._id}`} className="ml-2 font-semibold underline">{t('Inspect now')}</Link>}</p>}
 
               <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <Button size="lg" variant="secondary" icon={Camera} onClick={() => setModal('photos')}>
-                  Photos
+                  {t('Photos')}
                 </Button>
                 <Button size="lg" variant="secondary" icon={StickyNote} onClick={() => setModal('note')}>
-                  Add note
+                  {t('Add note')}
                 </Button>
                 <Button size="lg" variant="secondary" icon={PackagePlus} onClick={() => setModal('request')}>
-                  Request material
+                  {t('Request material')}
                 </Button>
                 <Button size="lg" variant="secondary" icon={AlertTriangle} className="text-red-700" onClick={() => setModal('problem')}>
-                  Report problem
+                  {t('Report problem')}
                 </Button>
               </div>
             </Card>
 
             <div className="grid gap-6 xl:grid-cols-3">
               <div className="space-y-6 xl:col-span-2">
-                <Card title="Requirements & specifications">
+                <Card title={t('Requirements & specifications')}>
                   <DetailList
                     columns={3}
                     items={[
@@ -141,16 +144,16 @@ export default function JobDetail() {
                       { label: 'Product', value: job.product?.name || 'Custom design' },
                       { label: 'Material', value: job.customRequest?.preferredMaterial || '—' },
                       { label: 'Fabric', value: job.customRequest?.fabric || '—' },
-                      { label: 'Measurements', value: dims ? `${['width', 'height', 'length', 'depth'].filter((k) => dims[k]).map((k) => `${label(k)[0]} ${dims[k]}`).join(' × ')} ${dims.unit || ''}` : '—' },
+                      { label: 'Measurements', value: dims ? `${['width', 'height', 'length', 'depth'].filter((k) => dims[k]).map((k) => `${t(label(k))[0]} ${dims[k]}`).join(' × ')} ${dims.unit || ''}` : '—' },
                       { label: 'Customer', value: job.customer?.name },
                       { label: 'Options', value: spec.options || '—' },
                     ]}
                   />
                   {(job.instructions || job.customRequest?.description) && (
                     <div className="mt-4 space-y-2 rounded-lg bg-stone-50 p-4 text-sm">
-                      {job.instructions && <p><strong>Instructions:</strong> {job.instructions}</p>}
-                      {job.customRequest?.description && <p><strong>Customer description:</strong> {job.customRequest.description}</p>}
-                      {job.customRequest?.designRequirements && <p><strong>Design:</strong> {job.customRequest.designRequirements}</p>}
+                      {job.instructions && <p><strong>{t('Instructions:')}</strong> {job.instructions}</p>}
+                      {job.customRequest?.description && <p><strong>{t('Customer description:')}</strong> {job.customRequest.description}</p>}
+                      {job.customRequest?.designRequirements && <p><strong>{t('Design:')}</strong> {job.customRequest.designRequirements}</p>}
                     </div>
                   )}
                   {job.customRequest?.referenceImages?.length > 0 && (
@@ -165,18 +168,18 @@ export default function JobDetail() {
                 </Card>
 
                 <Card
-                  title="Required materials"
+                  title={t('Required materials')}
                   padded={false}
                   actions={
                     <>
                       {can('materials:issue') && materialsOutstanding && (
                         <Button size="sm" icon={PackageMinus} loading={issue.isPending} onClick={() => issue.mutate({})}>
-                          Issue all outstanding
+                          {t('Issue all outstanding')}
                         </Button>
                       )}
                       {job.requiredMaterials.some((m) => m.quantityIssued - m.quantityReturned > 0) && (
                         <Button size="sm" variant="secondary" icon={Undo2} onClick={() => setModal('return')}>
-                          Return leftovers
+                          {t('Return leftovers')}
                         </Button>
                       )}
                     </>
@@ -189,11 +192,11 @@ export default function JobDetail() {
                       <table className="min-w-full divide-y divide-stone-100">
                         <thead className="bg-stone-50">
                           <tr>
-                            <th className="table-th">Material</th>
-                            <th className="table-th text-right">Required</th>
-                            <th className="table-th text-right">Issued</th>
-                            <th className="table-th text-right">Returned</th>
-                            <th className="table-th text-right">In stock</th>
+                            <th className="table-th">{t('Material')}</th>
+                            <th className="table-th text-right">{t('Required')}</th>
+                            <th className="table-th text-right">{t('Issued')}</th>
+                            <th className="table-th text-right">{t('Returned')}</th>
+                            <th className="table-th text-right">{t('In stock')}</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-stone-100">
@@ -223,7 +226,7 @@ export default function JobDetail() {
                 </Card>
 
                 {job.materialRequests.length > 0 && (
-                  <Card title="Material requests" padded={false}>
+                  <Card title={t('Material requests')} padded={false}>
                     <ul className="divide-y divide-stone-100">
                       {job.materialRequests.map((r) => (
                         <li key={r._id} className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 text-sm">
@@ -238,10 +241,10 @@ export default function JobDetail() {
                           {r.status === 'PENDING' && can('materials:issue') ? (
                             <span className="flex gap-2">
                               <Button size="sm" variant="success" onClick={() => handleReq.mutate({ requestId: r._id, approve: true })}>
-                                Issue
+                                {t('Issue')}
                               </Button>
                               <Button size="sm" variant="secondary" onClick={() => handleReq.mutate({ requestId: r._id, approve: false })}>
-                                Reject
+                                {t('Reject')}
                               </Button>
                             </span>
                           ) : (
@@ -254,20 +257,20 @@ export default function JobDetail() {
                 )}
 
                 {job.images.length > 0 && (
-                  <Card title="Production photos">
+                  <Card title={t('Production photos')}>
                     <div className="grid grid-cols-3 gap-3 sm:grid-cols-5">
                       {job.images.map((img) => (
                         <a key={img._id} href={fileUrl(img.url)} target="_blank" rel="noreferrer" className="group relative">
-                          <img src={fileUrl(img.url)} alt={img.caption || `Stage ${label(img.stage)}`} className="aspect-square w-full rounded-lg object-cover" />
-                          <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 text-[10px] text-white">{label(img.stage)}</span>
+                          <img src={fileUrl(img.url)} alt={img.caption || `Stage ${t(label(img.stage))}`} className="aspect-square w-full rounded-lg object-cover" />
+                          <span className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 text-[10px] text-white">{t(label(img.stage))}</span>
                         </a>
                       ))}
                     </div>
                   </Card>
                 )}
 
-                <Card title="Notes">
-                  {!job.notes.length && <p className="text-sm text-stone-500">No notes yet.</p>}
+                <Card title={t('Notes')}>
+                  {!job.notes.length && <p className="text-sm text-stone-500">{t('No notes yet.')}</p>}
                   <ul className="space-y-3">
                     {[...job.notes].reverse().map((n) => (
                       <li key={n._id} className="flex gap-3">
@@ -285,17 +288,19 @@ export default function JobDetail() {
               </div>
 
               <div className="space-y-6">
-                <Card title="Team" actions={manager && <Button size="sm" variant="secondary" icon={UserPlus} onClick={() => { setAssignIds(job.assignedWorkers.map((w) => w._id)); setModal('assign'); }}>Assign</Button>}>
-                  {!job.assignedWorkers.length && <p className="text-sm text-stone-500">No workers assigned yet.</p>}
+                <Card title={t('Team')} actions={manager && <Button size="sm" variant="secondary" icon={UserPlus} onClick={() => { setAssignIds(job.assignedWorkers.map((w) => w._id)); setModal('assign'); }}>{t('Assign')}</Button>}>
+                  {!job.assignedWorkers.length && <p className="text-sm text-stone-500">{t('No workers assigned yet.')}</p>}
                   <ul className="space-y-2">
                     {job.assignedWorkers.map((w) => (
                       <li key={w._id} className="flex items-center gap-2 text-sm">
-                        <Avatar name={w.name} size="sm" /> {w.name} <span className="text-xs text-stone-500">{label(w.workerRole)}</span>
+                        <Avatar name={w.name} size="sm" /> {w.name} <span className="text-xs text-stone-500">{t(label(w.workerRole))}</span>
                       </li>
                     ))}
                   </ul>
                   {job.supervisor && <p className="mt-3 text-xs text-stone-500">Supervisor: {job.supervisor.name}</p>}
                 </Card>
+
+                <LaborCard job={job} user={user} manager={manager} />
 
                 {openProblems.length > 0 && (
                   <Card title={`Open problems (${openProblems.length})`} className="border-red-200">
@@ -311,7 +316,7 @@ export default function JobDetail() {
                           <p className="mt-1">{p.description}</p>
                           {manager && (
                             <Button size="xs" variant="secondary" className="mt-2" onClick={() => setResolving(p)}>
-                              Mark resolved
+                              {t('Mark resolved')}
                             </Button>
                           )}
                         </li>
@@ -320,23 +325,23 @@ export default function JobDetail() {
                   </Card>
                 )}
 
-                <Card title="Tasks" actions={manager && <Button size="sm" variant="secondary" icon={Plus} onClick={() => setModal('task')}>Add</Button>}>
-                  {!job.tasks?.length && <p className="text-sm text-stone-500">No tasks.</p>}
+                <Card title={t('Tasks')} actions={manager && <Button size="sm" variant="secondary" icon={Plus} onClick={() => setModal('task')}>{t('Add')}</Button>}>
+                  {!job.tasks?.length && <p className="text-sm text-stone-500">{t('No tasks.')}</p>}
                   <ul className="space-y-2">
-                    {job.tasks?.map((t) => (
-                      <li key={t._id} className="flex items-center justify-between gap-2 text-sm">
+                    {job.tasks?.map((task) => (
+                      <li key={task._id} className="flex items-center justify-between gap-2 text-sm">
                         <span>
-                          <span className={t.status === 'DONE' ? 'text-stone-400 line-through' : ''}>{t.title}</span>
+                          <span className={task.status === 'DONE' ? 'text-stone-400 line-through' : ''}>{task.title}</span>
                           <span className="block text-xs text-stone-500">
-                            {t.assignedTo?.name || 'Unassigned'} {t.dueDate && `· ${date(t.dueDate)}`}
+                            {task.assignedTo?.name || 'Unassigned'} {task.dueDate && `· ${date(task.dueDate)}`}
                           </span>
                         </span>
-                        {t.status !== 'DONE' && (manager || String(t.assignedTo?._id) === String(user._id)) ? (
-                          <Button size="xs" variant="secondary" onClick={() => taskUpdate.mutate({ taskId: t._id, status: t.status === 'TODO' ? 'IN_PROGRESS' : 'DONE' })}>
-                            {t.status === 'TODO' ? 'Start' : 'Done'}
+                        {task.status !== 'DONE' && (manager || String(task.assignedTo?._id) === String(user._id)) ? (
+                          <Button size="xs" variant="secondary" onClick={() => taskUpdate.mutate({ taskId: task._id, status: task.status === 'TODO' ? 'IN_PROGRESS' : 'DONE' })}>
+                            {task.status === 'TODO' ? 'Start' : 'Done'}
                           </Button>
                         ) : (
-                          <StatusBadge status={t.status} />
+                          <StatusBadge status={task.status} />
                         )}
                       </li>
                     ))}
@@ -344,7 +349,7 @@ export default function JobDetail() {
                 </Card>
 
                 {job.qualityChecks?.length > 0 && (
-                  <Card title="Quality checks">
+                  <Card title={t('Quality checks')}>
                     <ul className="space-y-2 text-sm">
                       {job.qualityChecks.map((q) => (
                         <li key={q._id} className="flex items-center justify-between">
@@ -360,11 +365,11 @@ export default function JobDetail() {
                   </Card>
                 )}
 
-                <Card title="Stage history">
+                <Card title={t('Stage history')}>
                   <ol className="space-y-2 text-xs">
                     {[...job.stageHistory].reverse().map((h, i) => (
                       <li key={i}>
-                        <span className="font-medium text-stone-800">{label(h.to)}</span> · {dateTime(h.at)} {h.by?.name && `· ${h.by.name}`}
+                        <span className="font-medium text-stone-800">{t(label(h.to))}</span> · {dateTime(h.at)} {h.by?.name && `· ${h.by.name}`}
                         {h.note && <span className="block text-stone-500">{h.note}</span>}
                       </li>
                     ))}
@@ -378,52 +383,52 @@ export default function JobDetail() {
               open={Boolean(resolving)}
               onClose={() => setResolving(null)}
               tone="primary"
-              title="Resolve problem"
+              title={t('Resolve problem')}
               message={resolving?.description}
-              confirmLabel="Mark resolved"
+              confirmLabel={t('Mark resolved')}
               requireReason
               reasonLabel="How was it resolved?"
               loading={resolve.isPending}
               onConfirm={(resolution) => resolve.mutate({ problemId: resolving._id, resolution })}
             />
-            <Modal open={modal === 'photos'} onClose={() => setModal(null)} title="Upload production photos" footer={<Button icon={Camera} loading={upload.isPending} disabled={!photos.length} onClick={() => upload.mutate()}>Upload {photos.length || ''}</Button>}>
-              <ImagePicker files={photos} onChange={setPhotos} capture large label="Take or choose photos" />
+            <Modal open={modal === 'photos'} onClose={() => setModal(null)} title={t('Upload production photos')} footer={<Button icon={Camera} loading={upload.isPending} disabled={!photos.length} onClick={() => upload.mutate()}>Upload {photos.length || ''}</Button>}>
+              <ImagePicker files={photos} onChange={setPhotos} capture large label={t('Take or choose photos')} />
             </Modal>
-            <Modal open={modal === 'note'} onClose={() => setModal(null)} title="Add production note" footer={<Button loading={note.isPending} onClick={noteForm.handleSubmit((v) => note.mutate(v.text))}>Save note</Button>}>
-              <Textarea label="Note" rows={4} {...noteForm.register('text', { required: true })} />
+            <Modal open={modal === 'note'} onClose={() => setModal(null)} title={t('Add production note')} footer={<Button loading={note.isPending} onClick={noteForm.handleSubmit((v) => note.mutate(v.text))}>{t('Save note')}</Button>}>
+              <Textarea label={t('Note')} rows={4} {...noteForm.register('text', { required: true })} />
             </Modal>
-            <Modal open={modal === 'problem'} onClose={() => setModal(null)} title="Report a problem" footer={<Button variant="danger" loading={problem.isPending} onClick={problemForm.handleSubmit((v) => problem.mutate(v))}>Report</Button>}>
+            <Modal open={modal === 'problem'} onClose={() => setModal(null)} title={t('Report a problem')} footer={<Button variant="danger" loading={problem.isPending} onClick={problemForm.handleSubmit((v) => problem.mutate(v))}>{t('Report')}</Button>}>
               <div className="space-y-4">
-                <Select label="Severity" options={['LOW', 'MEDIUM', 'HIGH'].map((s) => ({ value: s, label: label(s) }))} {...problemForm.register('severity')} />
+                <Select label={t('Severity')} options={['LOW', 'MEDIUM', 'HIGH'].map((s) => ({ value: s, label: t(label(s)) }))} {...problemForm.register('severity')} />
                 <Textarea label="What's wrong?" rows={4} {...problemForm.register('description', { required: true, minLength: 3 })} error={problemForm.formState.errors.description && 'Describe the problem'} />
               </div>
             </Modal>
-            <Modal open={modal === 'request'} onClose={() => setModal(null)} title="Request additional material" footer={<Button loading={request.isPending} onClick={requestForm.handleSubmit((v) => request.mutate({ ...v, quantity: Number(v.quantity) }))}>Send request</Button>}>
+            <Modal open={modal === 'request'} onClose={() => setModal(null)} title={t('Request additional material')} footer={<Button loading={request.isPending} onClick={requestForm.handleSubmit((v) => request.mutate({ ...v, quantity: Number(v.quantity) }))}>{t('Send request')}</Button>}>
               <div className="space-y-4">
-                <Select label="Material" placeholder="Choose material" options={(materials.data || []).map((m) => ({ value: m._id, label: `${m.name} (${m.quantity} ${m.unit} in stock)` }))} {...requestForm.register('material', { required: true })} />
-                <Input label="Quantity" type="number" step="any" min="0" {...requestForm.register('quantity', { required: true, min: 0.0001 })} />
-                <Textarea label="Reason" rows={2} {...requestForm.register('reason')} />
+                <Select label={t('Material')} placeholder={t('Choose material')} options={(materials.data || []).map((m) => ({ value: m._id, label: `${m.name} (${m.quantity} ${m.unit} in stock)` }))} {...requestForm.register('material', { required: true })} />
+                <Input label={t('Quantity')} type="number" step="any" min="0" {...requestForm.register('quantity', { required: true, min: 0.0001 })} />
+                <Textarea label={t('Reason')} rows={2} {...requestForm.register('reason')} />
               </div>
             </Modal>
-            <Modal open={modal === 'return'} onClose={() => setModal(null)} title="Return unused material" footer={<Button loading={returnMat.isPending} onClick={returnForm.handleSubmit((v) => returnMat.mutate({ items: [{ material: v.material, quantity: Number(v.quantity) }] }))}>Return to stock</Button>}>
+            <Modal open={modal === 'return'} onClose={() => setModal(null)} title={t('Return unused material')} footer={<Button loading={returnMat.isPending} onClick={returnForm.handleSubmit((v) => returnMat.mutate({ items: [{ material: v.material, quantity: Number(v.quantity) }] }))}>{t('Return to stock')}</Button>}>
               <div className="space-y-4">
                 <Select
-                  label="Material"
-                  placeholder="Choose material"
+                  label={t('Material')}
+                  placeholder={t('Choose material')}
                   options={job.requiredMaterials.filter((m) => m.quantityIssued - m.quantityReturned > 0).map((m) => ({ value: m.material._id, label: `${m.material.name} (up to ${number(m.quantityIssued - m.quantityReturned)} ${m.material.unit})` }))}
                   {...returnForm.register('material', { required: true })}
                 />
-                <Input label="Quantity returned" type="number" step="any" min="0" {...returnForm.register('quantity', { required: true })} />
+                <Input label={t('Quantity returned')} type="number" step="any" min="0" {...returnForm.register('quantity', { required: true })} />
               </div>
             </Modal>
-            <Modal open={modal === 'assign'} onClose={() => setModal(null)} title="Assign workers" footer={<Button loading={assign.isPending} onClick={() => assign.mutate({ workerIds: assignIds })}>Save assignment</Button>}>
+            <Modal open={modal === 'assign'} onClose={() => setModal(null)} title={t('Assign workers')} footer={<Button loading={assign.isPending} onClick={() => assign.mutate({ workerIds: assignIds })}>{t('Save assignment')}</Button>}>
               <div className="grid gap-2 sm:grid-cols-2">
                 {(workers.data || [])
                   .filter((w) => w.user)
                   .map((w) => (
                     <Checkbox
                       key={w._id}
-                      label={`${w.user.name} — ${label(w.position)} (${w.activeJobs} active)`}
+                      label={`${w.user.name} — ${t(label(w.position))} (${w.activeJobs} active)`}
                       checked={assignIds.includes(w.user._id)}
                       onChange={(e) => setAssignIds((ids) => (e.target.checked ? [...ids, w.user._id] : ids.filter((x) => x !== w.user._id)))}
                     />
@@ -433,14 +438,14 @@ export default function JobDetail() {
             <Modal
               open={modal === 'task'}
               onClose={() => setModal(null)}
-              title="New task"
-              footer={<Button loading={createTask.isPending} onClick={taskForm.handleSubmit((v) => createTask.mutate({ ...v, job: id, assignedTo: v.assignedTo || undefined, dueDate: v.dueDate || undefined }))}>Create task</Button>}
+              title={t('New task')}
+              footer={<Button loading={createTask.isPending} onClick={taskForm.handleSubmit((v) => createTask.mutate({ ...v, job: id, assignedTo: v.assignedTo || undefined, dueDate: v.dueDate || undefined }))}>{t('Create task')}</Button>}
             >
               <div className="space-y-4">
-                <Input label="Title" {...taskForm.register('title', { required: true })} />
-                <Select label="Assign to" placeholder="Unassigned" options={job.assignedWorkers.map((w) => ({ value: w._id, label: w.name }))} {...taskForm.register('assignedTo')} />
-                <Input label="Due date" type="date" defaultValue={toInputDate(job.expectedCompletionDate)} {...taskForm.register('dueDate')} />
-                <Textarea label="Description" rows={2} {...taskForm.register('description')} />
+                <Input label={t('Title')} {...taskForm.register('title', { required: true })} />
+                <Select label={t('Assign to')} placeholder={t('Unassigned')} options={job.assignedWorkers.map((w) => ({ value: w._id, label: w.name }))} {...taskForm.register('assignedTo')} />
+                <Input label={t('Due date')} type="date" defaultValue={toInputDate(job.expectedCompletionDate)} {...taskForm.register('dueDate')} />
+                <Textarea label={t('Description')} rows={2} {...taskForm.register('description')} />
               </div>
             </Modal>
           </div>

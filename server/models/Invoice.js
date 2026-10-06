@@ -7,6 +7,8 @@ const invoiceLineSchema = new mongoose.Schema(
     quantity: { type: Number, required: true, min: 0 },
     unitPrice: { type: Number, required: true, min: 0 },
     lineTotal: { type: Number, required: true, min: 0 },
+    warrantyMonths: { type: Number, min: 0, default: 0 },
+    warrantyTerms: { type: String, maxlength: 500 },
   },
   { _id: false }
 );

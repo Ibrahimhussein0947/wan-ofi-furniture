@@ -13,8 +13,10 @@ import { SupplierPaymentModal } from '../../../components/finance/PaymentModals'
 import { suppliersApi } from '../../../api/endpoints';
 import { useAuth } from '../../../context/AuthContext';
 import { date, label, money, number } from '../../../utils/format';
+import { useT } from '../../../i18n/LanguageContext';
 
 export default function SupplierDetail() {
+  const t = useT();
   const { id } = useParams();
   const { can } = useAuth();
   const [tab, setTab] = useState('history');
@@ -30,18 +32,18 @@ export default function SupplierDetail() {
             subtitle={s.paymentTerms && `Terms: ${s.paymentTerms}`}
             actions={
               <>
-                {can('purchases:write') && <Button variant="secondary" icon={PackagePlus} onClick={() => setModal('po')}>New purchase order</Button>}
-                {can('payments:write') && <Button icon={Banknote} onClick={() => setModal('pay')}>Record payment</Button>}
-                {can('suppliers:write') && <Button variant="ghost" icon={Pencil} onClick={() => setModal('edit')}>Edit</Button>}
+                {can('purchases:write') && <Button variant="secondary" icon={PackagePlus} onClick={() => setModal('po')}>{t('New purchase order')}</Button>}
+                {can('payments:write') && <Button icon={Banknote} onClick={() => setModal('pay')}>{t('Record payment')}</Button>}
+                {can('suppliers:write') && <Button variant="ghost" icon={Pencil} onClick={() => setModal('edit')}>{t('Edit')}</Button>}
               </>
             }
           />
           <div className="grid gap-4 sm:grid-cols-3">
-            <StatCard label="Outstanding balance" value={money(s.balance)} tone={s.balance > 0 ? 'red' : 'green'} />
-            <StatCard label="Purchase orders" value={s.purchases.length} />
-            <StatCard label="Total paid" value={money(s.payments.reduce((t, p) => t + p.amount, 0))} tone="green" />
+            <StatCard label={t('Outstanding balance')} value={money(s.balance)} tone={s.balance > 0 ? 'red' : 'green'} />
+            <StatCard label={t('Purchase orders')} value={s.purchases.length} />
+            <StatCard label={t('Total paid')} value={money(s.payments.reduce((sum, p) => sum + p.amount, 0))} tone="green" />
           </div>
-          <Card title="Contact">
+          <Card title={t('Contact')}>
             <DetailList
               columns={3}
               items={[
@@ -71,7 +73,7 @@ export default function SupplierDetail() {
               rows={s.history}
               columns={[
                 { key: 'date', header: 'Date', render: (r) => date(r.date) },
-                { key: 'type', header: 'Type', render: (r) => label(r.type) },
+                { key: 'type', header: 'Type', render: (r) => t(label(r.type)) },
                 { key: 'reference', header: 'Reference' },
                 { key: 'debit', header: 'Goods received', align: 'right', render: (r) => (r.debit ? money(r.debit) : '') },
                 { key: 'credit', header: 'Paid', align: 'right', render: (r) => (r.credit ? money(r.credit) : '') },
@@ -100,7 +102,7 @@ export default function SupplierDetail() {
                 { key: 'paymentNumber', header: 'Payment', render: (p) => <Link to={`/app/receipts/${p._id}`} className="link">{p.receiptNumber || p.paymentNumber}</Link> },
                 { key: 'paidAt', header: 'Date', render: (p) => date(p.paidAt) },
                 { key: 'po', header: 'PO', render: (p) => p.purchaseOrder?.poNumber || '—' },
-                { key: 'method', header: 'Method', render: (p) => label(p.method) },
+                { key: 'method', header: 'Method', render: (p) => t(label(p.method)) },
                 { key: 'amount', header: 'Amount', align: 'right', render: (p) => money(p.amount) },
               ]}
             />

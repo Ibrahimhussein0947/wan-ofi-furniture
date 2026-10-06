@@ -3,9 +3,11 @@ import { FileDown, FileSpreadsheet, FileText, Printer } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Button from './ui/Button';
 import { exportCSV, exportPDF, exportXLSX } from '../utils/export';
+import { useT } from '../i18n/LanguageContext';
 
 /** Excel / CSV / PDF / print buttons for any tabular report. */
 export default function ExportMenu({ filename, title, subtitle, columns, rows, summary }) {
+  const t = useT();
   const [busy, setBusy] = useState(null);
   const disabled = !rows?.length;
   const exportable = columns.filter((c) => c.export !== false);
@@ -33,7 +35,7 @@ export default function ExportMenu({ filename, title, subtitle, columns, rows, s
         PDF
       </Button>
       <Button variant="secondary" size="sm" icon={Printer} onClick={() => window.print()}>
-        Print
+        {t('Print')}
       </Button>
     </div>
   );

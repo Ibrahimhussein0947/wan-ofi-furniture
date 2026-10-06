@@ -8,8 +8,10 @@ import { QueryState, EmptyState } from '../../components/ui/States';
 import { dashboardApi } from '../../api/endpoints';
 import { useAuth } from '../../context/AuthContext';
 import { date, money, timeAgo } from '../../utils/format';
+import { useT } from '../../i18n/LanguageContext';
 
 export default function Overview() {
+  const t = useT();
   const { user } = useAuth();
   const query = useQuery({ queryKey: ['dashboard'], queryFn: dashboardApi.get });
 
@@ -19,30 +21,30 @@ export default function Overview() {
         <div className="space-y-6">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h1 className="font-display text-3xl font-semibold text-walnut-950">Hello, {user?.name?.split(' ')[0]}</h1>
-              <p className="text-stone-600">Here's what's happening with your furniture.</p>
+              <h1 className="font-display text-3xl font-semibold text-walnut-950">{t('Hello, {name}', { name: user?.name?.split(' ')[0] })}</h1>
+              <p className="text-stone-600">{t("Here's what's happening with your furniture.")}</p>
             </div>
             <div className="flex gap-2">
               <Button to="/products" variant="secondary" icon={ShoppingBag}>
-                Shop
+                {t('Shop')}
               </Button>
               <Button to="/custom-furniture" icon={PencilRuler}>
-                Custom request
+                {t('Custom request')}
               </Button>
             </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard label="Active orders" value={d.kpis.activeOrders} icon={Package} to="/account/orders" />
-            <StatCard label="Balance due" value={money(d.kpis.balanceDue)} icon={CircleDollarSign} tone={d.kpis.balanceDue > 0 ? 'brass' : 'green'} />
-            <StatCard label="Completed" value={d.kpis.completedOrders} icon={CheckCircle2} tone="green" />
-            <StatCard label="Payments being verified" value={d.kpis.pendingPayments} icon={Clock} tone="blue" />
+            <StatCard label={t('Active orders')} value={d.kpis.activeOrders} icon={Package} to="/account/orders" />
+            <StatCard label={t('Balance due')} value={money(d.kpis.balanceDue)} icon={CircleDollarSign} tone={d.kpis.balanceDue > 0 ? 'brass' : 'green'} />
+            <StatCard label={t('Completed')} value={d.kpis.completedOrders} icon={CheckCircle2} tone="green" />
+            <StatCard label={t('Payments being verified')} value={d.kpis.pendingPayments} icon={Clock} tone="blue" />
           </div>
 
           <div className="grid gap-6 lg:grid-cols-3">
-            <Card title="Active orders" className="lg:col-span-2" padded={false} actions={<Link to="/account/orders" className="link text-sm">All orders</Link>}>
+            <Card title={t('Active orders')} className="lg:col-span-2" padded={false} actions={<Link to="/account/orders" className="link text-sm">{t('All orders')}</Link>}>
               {!d.activeOrders.length ? (
-                <EmptyState title="No active orders" message="When you place an order, you'll follow its progress here." action={<Button to="/products">Browse furniture</Button>} />
+                <EmptyState title={t('No active orders')} message="When you place an order, you'll follow its progress here." action={<Button to="/products">{t('Browse furniture')}</Button>} />
               ) : (
                 <ul className="divide-y divide-stone-100">
                   {d.activeOrders.map((o) => {
@@ -65,9 +67,9 @@ export default function Overview() {
                               <ProgressBar value={paidPct} tone={paidPct >= 100 ? 'green' : 'brass'} />
                             </div>
                             <p className="sm:text-right">
-                              Expected: <span className="font-medium text-stone-800">{date(o.expectedCompletionDate)}</span>
+                              {t('Expected:')} <span className="font-medium text-stone-800">{date(o.expectedCompletionDate)}</span>
                               {o.status === 'PENDING' && o.amountPaid < o.depositRequired && (
-                                <span className="block text-brass-700">Pay the {money(o.depositRequired)} deposit to confirm</span>
+                                <span className="block text-brass-700">{t('Pay the {amount} deposit to confirm', { amount: money(o.depositRequired) })}</span>
                               )}
                             </p>
                           </div>
@@ -79,9 +81,9 @@ export default function Overview() {
               )}
             </Card>
 
-            <Card title="Notifications" padded={false} actions={<Link to="/account/notifications" className="link text-sm">View all</Link>}>
+            <Card title={t('Notifications')} padded={false} actions={<Link to="/account/notifications" className="link text-sm">{t('View all')}</Link>}>
               <ul className="divide-y divide-stone-100">
-                {!d.notifications.length && <li className="p-5 text-sm text-stone-500">No notifications yet.</li>}
+                {!d.notifications.length && <li className="p-5 text-sm text-stone-500">{t('No notifications yet.')}</li>}
                 {d.notifications.map((n) => (
                   <li key={n._id} className="px-5 py-3">
                     <p className="text-sm font-medium text-stone-800">{n.title}</p>
@@ -93,9 +95,9 @@ export default function Overview() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <Card title="Custom requests" padded={false} actions={<Link to="/account/custom-requests" className="link text-sm">View all</Link>}>
+            <Card title={t('Custom requests')} padded={false} actions={<Link to="/account/custom-requests" className="link text-sm">{t('View all')}</Link>}>
               <ul className="divide-y divide-stone-100">
-                {!d.customRequests.length && <li className="p-5 text-sm text-stone-500">No custom requests yet.</li>}
+                {!d.customRequests.length && <li className="p-5 text-sm text-stone-500">{t('No custom requests yet.')}</li>}
                 {d.customRequests.map((r) => (
                   <li key={r._id}>
                     <Link to={`/account/custom-requests/${r._id}`} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-stone-50">
@@ -112,16 +114,16 @@ export default function Overview() {
                 ))}
               </ul>
             </Card>
-            <Card title="Recent invoices" padded={false} actions={<Link to="/account/invoices" className="link text-sm">View all</Link>}>
+            <Card title={t('Recent invoices')} padded={false} actions={<Link to="/account/invoices" className="link text-sm">{t('View all')}</Link>}>
               <ul className="divide-y divide-stone-100">
-                {!d.invoices.length && <li className="p-5 text-sm text-stone-500">No invoices yet.</li>}
+                {!d.invoices.length && <li className="p-5 text-sm text-stone-500">{t('No invoices yet.')}</li>}
                 {d.invoices.map((inv) => (
                   <li key={inv._id}>
                     <Link to={`/account/invoices/${inv._id}`} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-stone-50">
                       <span>
                         <span className="block text-sm font-medium">{inv.invoiceNumber}</span>
                         <span className="text-xs text-stone-500">
-                          {date(inv.issueDate)} · Balance {money(inv.balance)}
+                          {date(inv.issueDate)} · {t('Balance')} {money(inv.balance)}
                         </span>
                       </span>
                       <StatusBadge status={inv.status} />

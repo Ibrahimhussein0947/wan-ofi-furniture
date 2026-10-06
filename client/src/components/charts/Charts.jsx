@@ -16,6 +16,7 @@ import {
   YAxis,
 } from 'recharts';
 import { money, label } from '../../utils/format';
+import { useT } from '../../i18n/LanguageContext';
 
 // Warm, distinguishable series colours that match the walnut/brass theme.
 export const SERIES = ['#744832', '#c48a22', '#5f7f63', '#3b82a0', '#a8734c', '#8b5cf6', '#d2b393', '#b45353'];
@@ -101,6 +102,7 @@ export function BarsChart({ data, xKey, series, height = 280, horizontal = false
 }
 
 export function DonutChart({ data, nameKey, valueKey, height = 260, count = false }) {
+  const t = useT();
   const total = data.reduce((s, d) => s + (d[valueKey] || 0), 0);
   return (
     <div className="flex flex-col items-center gap-4 sm:flex-row">
@@ -121,7 +123,7 @@ export function DonutChart({ data, nameKey, valueKey, height = 260, count = fals
           <li key={d[nameKey]} className="flex items-center justify-between gap-2">
             <span className="flex min-w-0 items-center gap-2">
               <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: SERIES[i % SERIES.length] }} />
-              <span className="truncate text-stone-600">{label(d[nameKey])}</span>
+              <span className="truncate text-stone-600">{t(label(d[nameKey]))}</span>
             </span>
             <span className="tabular-nums text-stone-800">
               {count ? d[valueKey] : money(d[valueKey], { compact: true })}

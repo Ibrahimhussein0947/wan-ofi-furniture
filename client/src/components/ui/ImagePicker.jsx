@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Camera, ImagePlus, X } from 'lucide-react';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
+import { useT } from '../../i18n/LanguageContext';
 
 const ALLOWED = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 const MAX_MB = 5;
@@ -11,6 +12,7 @@ const MAX_MB = 5;
  * re-validates everything). `capture` opens the camera directly on phones.
  */
 export default function ImagePicker({ files, onChange, max = 6, label = 'Add photos', capture = false, large = false, className }) {
+  const t = useT();
   const inputRef = useRef(null);
   const [previews, setPreviews] = useState([]);
   const list = useMemo(() => files || [], [files]);
@@ -43,7 +45,7 @@ export default function ImagePicker({ files, onChange, max = 6, label = 'Add pho
               type="button"
               onClick={() => onChange(list.filter((_, idx) => idx !== i))}
               className="absolute right-1 top-1 rounded-full bg-black/60 p-0.5 text-white"
-              aria-label="Remove image"
+              aria-label={t('Remove image')}
             >
               <X className="h-3.5 w-3.5" />
             </button>

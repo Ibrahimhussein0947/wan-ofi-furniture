@@ -33,6 +33,7 @@ orderRoutes.put('/:id/items', requirePermission(P.ORDERS_WRITE), id, validate({ 
 orderRoutes.post('/:id/confirm', requirePermission(P.ORDERS_APPROVE), id, validate({ body: v.note }), orders.confirm);
 orderRoutes.post('/:id/status', requirePermission(P.ORDERS_WRITE), id, validate({ body: v.orderStatus }), onlyOwnerConfirms, orders.changeStatus);
 orderRoutes.post('/:id/cancel', customerOr(P.ORDERS_WRITE), id, validate({ body: v.cancel }), orders.cancel);
+orderRoutes.post('/:id/remind', requirePermission(P.PAYMENTS_WRITE), id, orders.remindBalance);
 orderRoutes.post('/:id/discount', requirePermission(P.DISCOUNTS_WRITE), id, validate({ body: v.discount }), orders.discount);
 
 const customRoutes = express.Router();

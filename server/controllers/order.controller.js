@@ -1,5 +1,6 @@
 const { Order, Payment, Invoice, Delivery, ProductionJob } = require('../models');
 const orderService = require('../services/order.service');
+const paymentService = require('../services/payment.service');
 const productionService = require('../services/production.service');
 const { actorFrom } = require('../services/audit.service');
 const { asyncHandler, sendSuccess, sendCreated } = require('../utils/http');
@@ -96,6 +97,12 @@ exports.cancel = asyncHandler(async (req, res) => {
 
 exports.discount = asyncHandler(async (req, res) => {
   sendSuccess(res, { data: await orderService.applyDiscount(req.params.id, req.body, actorFrom(req)), message: 'Discount applied' });
+});
+
+/** Sends the customer a reminder of what is still owed on the order. */
+exports.remindBalance = asyncHandler(async (req, res) => {
+  const result = await paymentService.sendBalanceReminder(req.params.id, actorFrom(req));
+  sendSuccess(res, { data: result, message: 'Reminder sent to the customer' });
 });
 
 exports.toCustomerOrder = toCustomerOrder;

@@ -4,7 +4,7 @@ import { screen } from '@testing-library/react';
 import { renderWithProviders, makeUser } from './utils';
 
 vi.mock('../api/endpoints', () => ({
-  publicApi: { settings: vi.fn().mockResolvedValue({ currency: 'TZS', taxRate: 18, depositPercent: 40, onlinePayments: true, mobileNetworks: ['MPESA', 'TIGO'] }) },
+  publicApi: { settings: vi.fn().mockResolvedValue({ currency: 'ETB', taxRate: 15, depositPercent: 40, onlinePayments: true, mobileNetworks: ['TELEBIRR', 'CBE_BIRR'] }) },
   authApi: { forgotPassword: vi.fn(), resetPassword: vi.fn(), resendVerification: vi.fn() },
   ordersApi: { create: vi.fn() },
   paymentsApi: { mobile: vi.fn(), mobileStatus: vi.fn(), submit: vi.fn() },
@@ -64,7 +64,7 @@ describe('accessibility (axe)', () => {
   test('checkout', async () => {
     localStorage.setItem('wanofi.cart', JSON.stringify([{ productId: 'p1', name: 'Chair', price: 1000, quantity: 1 }]));
     const { container } = renderWithProviders(<Checkout />, { user: makeUser('CUSTOMER') });
-    await screen.findByText('VAT (18%)');
+    await screen.findByText('VAT (15%)');
     await expectNoViolations(container);
   });
 

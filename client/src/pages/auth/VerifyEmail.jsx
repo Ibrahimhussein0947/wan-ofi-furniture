@@ -6,8 +6,10 @@ import { PageLoader } from '../../components/ui/States';
 import { authApi } from '../../api/endpoints';
 import { errorMessage } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
+import { useT } from '../../i18n/LanguageContext';
 
 export default function VerifyEmail() {
+  const t = useT();
   const [params] = useSearchParams();
   const { user, refreshProfile } = useAuth();
   const [state, setState] = useState({ status: 'loading' });
@@ -26,16 +28,16 @@ export default function VerifyEmail() {
       .catch((err) => setState({ status: 'error', message: errorMessage(err) }));
   }, [params, user, refreshProfile]);
 
-  if (state.status === 'loading') return <PageLoader label="Confirming your email…" />;
+  if (state.status === 'loading') return <PageLoader label={t('Confirming your email…')} />;
   const ok = state.status === 'ok';
   return (
     <div className="container-page flex justify-center py-16">
       <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-card">
         {ok ? <CheckCircle2 className="mx-auto h-12 w-12 text-sage-600" /> : <XCircle className="mx-auto h-12 w-12 text-red-500" />}
-        <h1 className="mt-4 font-display text-2xl font-semibold text-walnut-950">{ok ? 'Email confirmed' : 'Link not valid'}</h1>
+        <h1 className="mt-4 font-display text-2xl font-semibold text-walnut-950">{ok ? t('Email confirmed') : t('Link not valid')}</h1>
         <p className="mt-2 text-sm text-stone-600">{state.message}</p>
         <Button to={user ? '/account' : '/login'} className="mt-6">
-          {user ? 'Go to my account' : 'Log in'}
+          {user ? t('Go to my account') : t('Log in')}
         </Button>
       </div>
     </div>

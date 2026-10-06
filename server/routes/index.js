@@ -23,6 +23,7 @@ router.use('/auth', authRoutes);
 router.get('/public/settings', system.publicSettings);
 router.post('/public/contact', publicFormLimiter, validate({ body: opsV.contact }), system.contact);
 router.post('/payments/webhooks/:gateway/:secret', express.json({ limit: '100kb' }), financeController.paymentWebhook);
+router.post('/telegram/webhook/:secret', express.json({ limit: '100kb' }), require('../controllers/telegram.controller').webhook);
 router.get('/events/stream', events.stream);
 router.use('/categories', catalog.categories);
 router.use('/products', catalog.products);
@@ -62,6 +63,9 @@ router.use('/settings', sys.settings);
 router.use('/search', sys.search);
 router.use('/uploads', sys.uploads);
 router.use('/branches', sys.branches);
+router.use('/reviews', catalog.reviews);
+router.use('/wishlist', catalog.wishlist);
+router.use('/promotions', require('./promotion.routes'));
 router.post('/events/ticket', events.ticket);
 
 module.exports = router;

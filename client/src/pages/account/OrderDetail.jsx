@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { CreditCard, FileText, MessageSquare, PartyPopper, XCircle } from 'lucide-react';
+import { CreditCard, FileText, MessageSquare, PartyPopper, Upload, XCircle } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { Card, PageHeader, ProgressBar } from '../../components/ui/misc';
@@ -10,17 +10,23 @@ import { QueryState } from '../../components/ui/States';
 import OrderTimeline from '../../components/OrderTimeline';
 import ProductImage from '../../components/ProductImage';
 import PayModal from './PayModal';
+import BankAccounts from '../../components/BankAccounts';
+import { usePublicSettings } from '../../components/SettingsLoader';
 import { invoicesApi, messagesApi, ordersApi } from '../../api/endpoints';
 import { fileUrl } from '../../api/client';
 import useMutationToast from '../../hooks/useMutationToast';
 import { date, dateTime, label, money } from '../../utils/format';
+import { useT } from '../../i18n/LanguageContext';
 
 
 export default function OrderDetail() {
+  const t = useT();
   const { id } = useParams();
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const [paying, setPaying] = useState(false);
+  const { data: settings } = usePublicSettings();
+  const hasAccounts = (settings?.bankAccounts || []).length > 0;
   const [cancelling, setCancelling] = useState(false);
   const query = useQuery({ queryKey: ['order', id], queryFn: () => ordersApi.get(id) });
 
@@ -53,12 +59,12 @@ export default function OrderDetail() {
                 )}
                 {o.status !== 'CANCELLED' && (
                   <Button variant="secondary" icon={FileText} loading={invoice.isPending} onClick={() => (o.invoices?.[0] ? navigate(`/account/invoices/${o.invoices[0]._id}`) : invoice.mutate())}>
-                    Invoice
+                    {t('Invoice')}
                   </Button>
                 )}
                 {o.status === 'PENDING' && (
                   <Button variant="ghost" icon={XCircle} onClick={() => setCancelling(true)}>
-                    Cancel
+                    {t('Cancel')}
                   </Button>
                 )}
               </>
@@ -71,7 +77,7 @@ export default function OrderDetail() {
 
           <div className="grid gap-6 lg:grid-cols-3">
             <div className="space-y-6 lg:col-span-2">
-              <Card title="Items" padded={false}>
+              <Card title={t('Items')} padded={false}>
                 <ul className="divide-y divide-stone-100">
                   {o.items.map((i) => (
                     <li key={i._id} className="flex gap-4 p-4">
@@ -90,7 +96,7 @@ export default function OrderDetail() {
               </Card>
 
               {o.production?.length > 0 && (
-                <Card title="Production progress">
+                <Card title={t('Production progress')}>
                   <div className="space-y-5">
                     {o.production.map((job) => (
                       <div key={job._id}>
@@ -103,7 +109,7 @@ export default function OrderDetail() {
                           <div className="mt-3 flex gap-2 overflow-x-auto">
                             {job.images.map((img) => (
                               <a key={img.url} href={fileUrl(img.url)} target="_blank" rel="noreferrer" className="shrink-0">
-                                <img src={fileUrl(img.url)} alt={`Progress: ${label(img.stage)}`} className="h-20 w-20 rounded-lg object-cover" />
+                                <img src={fileUrl(img.url)} alt={`Progress: ${t(label(img.stage))}`} className="h-20 w-20 rounded-lg object-cover" />
                               </a>
                             ))}
                           </div>
@@ -115,7 +121,7 @@ export default function OrderDetail() {
               )}
 
               {o.deliveries?.length > 0 && (
-                <Card title="Delivery">
+                <Card title={t('Delivery')}>
                   {o.deliveries.map((d) => (
                     <div key={d._id} className="flex flex-wrap items-center justify-between gap-2 text-sm">
                       <span>
@@ -130,7 +136,20 @@ export default function OrderDetail() {
             </div>
 
             <div className="space-y-6">
-              <Card title="Payment">
+              {o.balance > 0 && o.status !== 'CANCELLED' && hasAccounts && (
+                <Card title={t('How to pay')}>
+                  <p className="mb-3 text-sm text-stone-600">
+                    {t('Transfer {amount} to one of our accounts, then upload your receipt and the transaction reference.', {
+                      amount: money(o.status === 'PENDING' ? Math.max(o.depositRequired - o.amountPaid, 0) || o.balance : o.balance),
+                    })}
+                  </p>
+                  <BankAccounts title={null} compact />
+                  <Button block icon={Upload} className="mt-4" onClick={() => setPaying('manual')}>
+                    {t("I've paid — upload receipt")}
+                  </Button>
+                </Card>
+              )}
+              <Card title={t('Payment')}>
                 <dl className="space-y-2 text-sm">
                   {[
                     ['Subtotal', o.subtotal],
@@ -148,7 +167,7 @@ export default function OrderDetail() {
                       </div>
                     ))}
                   <div className="flex justify-between border-t border-stone-100 pt-2 text-base font-semibold">
-                    <dt>Balance</dt>
+                    <dt>{t('Balance')}</dt>
                     <dd className="tabular-nums">{money(o.balance)}</dd>
                   </div>
                 </dl>
@@ -156,16 +175,31 @@ export default function OrderDetail() {
                 {o.payments?.length > 0 && (
                   <ul className="mt-4 space-y-2 border-t border-stone-100 pt-4 text-sm">
                     {o.payments.map((p) => (
-                      <li key={p._id} className="flex items-center justify-between gap-2">
-                        <span>
+                      <li key={p._id} className="flex items-start justify-between gap-2">
+                        <span className="min-w-0">
                           {dateTime(p.paidAt)}
-                          <span className="block text-xs text-stone-500">{label(p.method)}</span>
+                          <span className="block text-xs text-stone-500">
+                            {t(label(p.method))}
+                            {p.reference && ` · ${t('Ref')} ${p.reference}`}
+                          </span>
+                          {p.screenshot && (
+                            <a href={fileUrl(p.screenshot)} target="_blank" rel="noreferrer" className="text-xs text-walnut-700 hover:underline">
+                              {t('Your receipt')}
+                            </a>
+                          )}
+                          {p.status === 'PENDING_VERIFICATION' && <span className="block text-xs text-amber-700">{t('Our accounts team is checking this payment.')}</span>}
+                          {p.status === 'REJECTED' && (
+                            <span className="block text-xs text-red-600">
+                              {t('Not verified')}
+                              {p.rejectionReason && `: ${p.rejectionReason}`}
+                            </span>
+                          )}
                         </span>
                         <span className="text-right">
                           <span className="block tabular-nums">{money(p.amount)}</span>
                           {p.status === 'COMPLETED' && p.receiptNumber ? (
                             <Link to={`/account/receipts/${p._id}`} className="text-xs text-walnut-700 hover:underline">
-                              Receipt
+                              {t('Receipt')}
                             </Link>
                           ) : (
                             <StatusBadge status={p.status} />
@@ -177,7 +211,7 @@ export default function OrderDetail() {
                 )}
               </Card>
 
-              <Card title="Delivery details">
+              <Card title={t('Delivery details')}>
                 <p className="text-sm text-stone-700">{o.deliveryMethod === 'PICKUP' ? 'Collect from our showroom' : [o.deliveryAddress?.street, o.deliveryAddress?.city].filter(Boolean).join(', ')}</p>
                 <p className="mt-1 text-sm text-stone-500">Expected ready: {date(o.expectedCompletionDate)}</p>
                 <Button
@@ -188,19 +222,19 @@ export default function OrderDetail() {
                   loading={contact.isPending}
                   onClick={() => contact.mutate({ order: o._id, body: `Hello, I have a question about order ${o.orderNumber}.` })}
                 >
-                  Ask about this order
+                  {t('Ask about this order')}
                 </Button>
               </Card>
             </div>
           </div>
 
-          <PayModal order={o} open={paying} onClose={() => setPaying(false)} />
+          <PayModal order={o} open={Boolean(paying)} initialTab={paying === 'manual' ? 'manual' : undefined} onClose={() => setPaying(false)} />
           <ConfirmDialog
             open={cancelling}
             onClose={() => setCancelling(false)}
-            title="Cancel this order?"
+            title={t('Cancel this order?')}
             message="You can cancel while the order is awaiting its deposit."
-            confirmLabel="Cancel order"
+            confirmLabel={t('Cancel order')}
             requireReason
             loading={cancel.isPending}
             onConfirm={(reason) => cancel.mutate(reason)}

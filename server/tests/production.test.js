@@ -27,7 +27,7 @@ describe('production workflow', () => {
 
   async function confirmedJob(quantity = 1) {
     const { product, wood, glue } = await createCatalog({ quantity: 0 });
-    const order = await api(customer.token).post('/api/orders', { items: [{ product: String(product._id), quantity }], deliveryMethod: 'DELIVERY', deliveryAddress: { city: 'Arusha' } });
+    const order = await api(customer.token).post('/api/orders', { items: [{ product: String(product._id), quantity }], deliveryMethod: 'DELIVERY', deliveryAddress: { city: 'Bahir Dar' } });
     await api(accountant.token).post('/api/payments/customer', { order: order.body.data._id, amount: order.body.data.depositRequired, method: 'CASH' });
     const job = await models.ProductionJob.findOne({ order: order.body.data._id });
     return { job, orderId: order.body.data._id, wood, glue, total: order.body.data.total };

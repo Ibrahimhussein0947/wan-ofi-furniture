@@ -36,6 +36,7 @@ async function createStaffUser(input, actor) {
         hireDate: worker.hireDate || new Date(),
         wageType: worker.wageType,
         wageRate: worker.wageRate,
+        taxRate: worker.taxRate,
         skills: worker.skills,
       });
     } catch (err) {
@@ -70,6 +71,11 @@ async function updateUser(id, changes, actor) {
     if (invalid.length) throw ApiError.badRequest(`Unknown permissions: ${invalid.join(', ')}`);
   }
 
+  if (changes.email && changes.email.toLowerCase() !== user.email) {
+    if (user.role === ROLES.CUSTOMER) throw ApiError.badRequest('Customers change their own email from their account.');
+    if (await User.exists({ email: changes.email.toLowerCase(), _id: { $ne: user._id } })) throw ApiError.conflict('An account with this email already exists.');
+    user.email = changes.email;
+  }
   ['name', 'phone', 'role', 'workerRole', 'permissions', 'isActive', 'branch'].forEach((k) => {
     if (changes[k] !== undefined) user[k] = changes[k];
   });
@@ -97,7 +103,7 @@ async function updateUser(id, changes, actor) {
     entity: 'User',
     entityId: user._id,
     reference: user.email,
-    changes: diff(before, user.toObject(), ['name', 'phone', 'role', 'workerRole', 'permissions', 'isActive']),
+    changes: diff(before, user.toObject(), ['name', 'email', 'phone', 'role', 'workerRole', 'permissions', 'isActive']),
   });
   return user;
 }

@@ -1,4 +1,15 @@
-const { z, objectId, money, positiveMoney, intQuantity, trimmed, optionalText, optionalDate, address, dimensions } = require('./common');
+const {
+  z,
+  objectId,
+  money,
+  positiveMoney,
+  intQuantity,
+  trimmed,
+  optionalText,
+  optionalDate,
+  address,
+  dimensions,
+} = require('./common');
 const { ORDER_STATUS, DELIVERY_METHODS, PAYMENT_METHODS } = require('../config/constants');
 
 const orderItem = z.object({
@@ -15,6 +26,12 @@ const customerOrder = z.object({
   deliveryAddress: address,
   contactPhone: optionalText(30),
   notes: optionalText(2000),
+  promoCode: z
+    .string()
+    .trim()
+    .max(30)
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
 });
 
 const staffOrder = customerOrder.extend({
@@ -23,7 +40,11 @@ const staffOrder = customerOrder.extend({
   deliveryFee: money.optional(),
   internalNotes: optionalText(2000),
   autoConfirm: z.boolean().optional(),
-  branch: z.string().regex(/^[a-f\d]{24}$/i).optional().or(z.literal('').transform(() => undefined)),
+  branch: z
+    .string()
+    .regex(/^[a-f\d]{24}$/i)
+    .optional()
+    .or(z.literal('').transform(() => undefined)),
 });
 
 const orderStatus = z.object({
@@ -37,7 +58,10 @@ const updateItems = z.object({
 });
 
 const cancel = z.object({ reason: trimmed(500).min(3, 'Please give a reason') });
-const discount = z.object({ discount: money, reason: trimmed(500).min(3, 'Please give a reason for the discount') });
+const discount = z.object({
+  discount: money,
+  reason: trimmed(500).min(3, 'Please give a reason for the discount'),
+});
 
 const updateOrder = z.object({
   notes: optionalText(2000),
@@ -57,7 +81,10 @@ const customRequest = z.object({
   designRequirements: optionalText(5000),
   quantity: intQuantity.default(1),
   budget: money.optional(),
-  requiredDate: optionalDate.refine((d) => !d || d > new Date(), 'Delivery date must be in the future'),
+  requiredDate: optionalDate.refine(
+    (d) => !d || d > new Date(),
+    'Delivery date must be in the future',
+  ),
   additionalNotes: optionalText(2000),
   deliveryMethod: z.enum(Object.values(DELIVERY_METHODS)).optional(),
 });
@@ -86,8 +113,11 @@ const customerPayment = z.object({
   order: objectId,
   amount: positiveMoney,
   method: z.enum(Object.values(PAYMENT_METHODS)),
-  reference: optionalText(120),
+  // The bank / mobile-money transaction reference staff match against their statement.
+  reference: trimmed(120).min(3, 'Enter the transaction reference from your receipt'),
   notes: optionalText(1000),
+  // Set automatically from the uploaded receipt (required by the controller).
+  screenshot: optionalText(300),
 });
 
 module.exports = {

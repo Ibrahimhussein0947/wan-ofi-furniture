@@ -34,7 +34,7 @@ async function initiatePayment({ order: orderId, amount, network, phone }, custo
   }
 
   const msisdn = normalisePhone(phone);
-  if (!msisdn || !/^\+255\d{9}$/.test(msisdn)) throw ApiError.badRequest('Enter a valid Tanzanian mobile number, e.g. 0712 345 678.');
+  if (!msisdn || !/^\+251\d{9}$/.test(msisdn)) throw ApiError.badRequest('Enter a valid Ethiopian mobile number, e.g. 0911 345 678.');
 
   const settings = await getSettings();
   const intent = await PaymentIntent.create({

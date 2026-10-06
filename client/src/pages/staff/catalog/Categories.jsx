@@ -11,8 +11,10 @@ import { Checkbox, Input, Textarea } from '../../../components/ui/Field';
 import { Badge } from '../../../components/ui/Badge';
 import { categoriesApi } from '../../../api/endpoints';
 import useMutationToast from '../../../hooks/useMutationToast';
+import { useT } from '../../../i18n/LanguageContext';
 
 function CategoryModal({ open, onClose, category }) {
+  const t = useT();
   const form = useForm({ values: { name: category?.name || '', description: category?.description || '', sortOrder: category?.sortOrder ?? 0, isActive: category?.isActive ?? true } });
   const save = useMutationToast((body) => (category ? categoriesApi.update(category._id, body) : categoriesApi.create(body)), { success: 'Category saved', invalidate: ['categories'], onSuccess: onClose });
   return (
@@ -22,21 +24,22 @@ function CategoryModal({ open, onClose, category }) {
       title={category ? 'Edit category' : 'New category'}
       footer={
         <Button loading={save.isPending} onClick={form.handleSubmit((v) => save.mutate({ ...v, sortOrder: Number(v.sortOrder) }))}>
-          Save
+          {t('Save')}
         </Button>
       }
     >
       <div className="space-y-4">
-        <Input label="Name" required {...form.register('name', { required: true })} />
-        <Textarea label="Description" rows={2} {...form.register('description')} />
-        <Input label="Sort order" type="number" {...form.register('sortOrder')} />
-        <Checkbox label="Visible in the shop" {...form.register('isActive')} />
+        <Input label={t('Name')} required {...form.register('name', { required: true })} />
+        <Textarea label={t('Description')} rows={2} {...form.register('description')} />
+        <Input label={t('Sort order')} type="number" {...form.register('sortOrder')} />
+        <Checkbox label={t('Visible in the shop')} {...form.register('isActive')} />
       </div>
     </Modal>
   );
 }
 
 export default function Categories() {
+  const t = useT();
   const [editing, setEditing] = useState(null);
   const [deleting, setDeleting] = useState(null);
   const query = useQuery({ queryKey: ['categories', 'staff'], queryFn: () => categoriesApi.list().then((r) => r.items) });
@@ -44,7 +47,7 @@ export default function Categories() {
 
   return (
     <div>
-      <PageHeader title="Categories" actions={<Button icon={Plus} onClick={() => setEditing({})}>New category</Button>} />
+      <PageHeader title={t('Categories')} actions={<Button icon={Plus} onClick={() => setEditing({})}>{t('New category')}</Button>} />
       <DataTable
         loading={query.isLoading}
         error={query.error}
@@ -54,7 +57,7 @@ export default function Categories() {
           { key: 'slug', header: 'Slug', mobile: false },
           { key: 'productCount', header: 'Products', align: 'right' },
           { key: 'sortOrder', header: 'Order', align: 'right', mobile: false },
-          { key: 'isActive', header: 'Visible', render: (c) => (c.isActive ? <Badge tone="green">Visible</Badge> : <Badge>Hidden</Badge>) },
+          { key: 'isActive', header: 'Visible', render: (c) => (c.isActive ? <Badge tone="green">{t('Visible')}</Badge> : <Badge>{t('Hidden')}</Badge>) },
           {
             key: 'actions',
             header: '',
@@ -73,7 +76,7 @@ export default function Categories() {
         ]}
       />
       <CategoryModal open={Boolean(editing)} onClose={() => setEditing(null)} category={editing?._id ? editing : null} />
-      <ConfirmDialog open={Boolean(deleting)} onClose={() => setDeleting(null)} title={`Remove ${deleting?.name}?`} message="Categories that still contain products cannot be removed." confirmLabel="Remove" loading={remove.isPending} onConfirm={() => remove.mutate(deleting._id)} />
+      <ConfirmDialog open={Boolean(deleting)} onClose={() => setDeleting(null)} title={`Remove ${deleting?.name}?`} message={t('Categories that still contain products cannot be removed.')} confirmLabel={t('Remove')} loading={remove.isPending} onConfirm={() => remove.mutate(deleting._id)} />
     </div>
   );
 }

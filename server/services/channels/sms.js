@@ -3,13 +3,13 @@ const logger = require('../../utils/logger');
 
 const outbox = [];
 
-/** Normalises Tanzanian numbers to international format: 0712… → +255712… */
+/** Normalises Ethiopian numbers to international format: 0911… → +251911… */
 function normalisePhone(phone) {
   if (!phone) return null;
   const digits = String(phone).replace(/[^\d+]/g, '');
   if (digits.startsWith('+')) return digits;
-  if (digits.startsWith('255')) return `+${digits}`;
-  if (digits.startsWith('0') && digits.length === 10) return `+255${digits.slice(1)}`;
+  if (digits.startsWith('251')) return `+${digits}`;
+  if (digits.startsWith('0') && digits.length === 10) return `+251${digits.slice(1)}`;
   return digits.length >= 9 ? `+${digits}` : null;
 }
 

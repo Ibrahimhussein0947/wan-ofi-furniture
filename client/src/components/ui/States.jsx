@@ -2,9 +2,11 @@ import clsx from 'clsx';
 import { AlertCircle, Inbox, Loader2, RefreshCw } from 'lucide-react';
 import Button from './Button';
 import { errorMessage } from '../../api/client';
+import { useT } from '../../i18n/LanguageContext';
 
 export function Spinner({ className }) {
-  return <Loader2 className={clsx('h-5 w-5 animate-spin text-walnut-600', className)} aria-label="Loading" />;
+  const t = useT();
+  return <Loader2 className={clsx('h-5 w-5 animate-spin text-walnut-600', className)} aria-label={t('Loading')} />;
 }
 
 export function PageLoader({ label = 'Loading…' }) {
@@ -17,7 +19,7 @@ export function PageLoader({ label = 'Loading…' }) {
 }
 
 export function Skeleton({ className }) {
-  return <div className={clsx('animate-pulse rounded-md bg-stone-200/70', className)} aria-hidden />;
+  return <div className={clsx('skeleton', className)} aria-hidden />;
 }
 
 export function EmptyState({ icon: Icon = Inbox, title = 'Nothing here yet', message, action, className }) {
@@ -34,6 +36,7 @@ export function EmptyState({ icon: Icon = Inbox, title = 'Nothing here yet', mes
 }
 
 export function ErrorState({ error, onRetry, title = "Couldn't load this" }) {
+  const t = useT();
   return (
     <div className="flex flex-col items-center justify-center px-6 py-12 text-center" role="alert">
       <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-red-50 text-red-600">
@@ -43,7 +46,7 @@ export function ErrorState({ error, onRetry, title = "Couldn't load this" }) {
       <p className="mt-1 max-w-sm text-sm text-stone-500">{errorMessage(error)}</p>
       {onRetry && (
         <Button variant="secondary" size="sm" icon={RefreshCw} className="mt-4" onClick={onRetry}>
-          Try again
+          {t('Try again')}
         </Button>
       )}
     </div>

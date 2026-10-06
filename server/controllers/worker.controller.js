@@ -4,6 +4,8 @@ const { asyncHandler, sendSuccess } = require('../utils/http');
 const { paginate, pickFilters, escapeRegex } = require('../utils/query');
 const { assertFound } = require('./helpers');
 const { AUDIT_ACTIONS, PRODUCTION_STAGES: S } = require('../config/constants');
+const ApiError = require('../utils/ApiError');
+const userService = require('../services/user.service');
 
 const CLOSED = [S.READY_FOR_DELIVERY, S.DELIVERED, S.CANCELLED];
 
@@ -31,7 +33,12 @@ exports.get = asyncHandler(async (req, res) => {
   const worker = assertFound(await Worker.findById(req.params.id).populate('user', 'name email phone isActive lastLoginAt').lean(), 'Worker not found.');
   const [jobs, payments, performance] = await Promise.all([
     ProductionJob.find({ assignedWorkers: worker.user._id }).sort({ updatedAt: -1 }).limit(30).select('jobNumber title stage progress expectedCompletionDate actualCompletionDate reworkCount').lean(),
-    Payment.find({ worker: worker._id }).sort({ paidAt: -1 }).limit(30).select('paymentNumber paidAt amount method kind notes').lean(),
+    Payment.find({ worker: worker._id })
+      .sort({ paidAt: -1 })
+      .limit(200)
+      .select('paymentNumber receiptNumber paidAt amount method kind notes reference payPeriod receivedBy')
+      .populate('receivedBy', 'name')
+      .lean(),
     ProductionJob.aggregate([
       { $match: { assignedWorkers: worker.user._id, stage: { $ne: S.CANCELLED } } },
       {
@@ -59,6 +66,16 @@ exports.get = asyncHandler(async (req, res) => {
   });
 });
 
+/** Removes a worker: their login is disabled and they leave the active team; payments and work history stay. */
+exports.remove = asyncHandler(async (req, res) => {
+  const worker = await Worker.findById(req.params.id).select('user').lean();
+  if (!worker) throw ApiError.notFound('Worker not found.');
+  const activeJobs = await ProductionJob.countDocuments({ assignedWorkers: worker.user, stage: { $nin: CLOSED } });
+  if (activeJobs) throw ApiError.conflict(`This worker is on ${activeJobs} unfinished production job(s). Reassign those jobs first.`);
+  await userService.deleteUser(worker.user, actorFrom(req));
+  sendSuccess(res, { message: 'Worker removed' });
+});
+
 exports.update = asyncHandler(async (req, res) => {
   const worker = assertFound(await Worker.findById(req.params.id), 'Worker not found.');
   const before = worker.toObject();
@@ -73,7 +90,7 @@ exports.update = asyncHandler(async (req, res) => {
     entity: 'Worker',
     entityId: worker._id,
     reference: worker.employeeCode,
-    changes: diff(before, worker.toObject(), ['position', 'wageType', 'wageRate', 'isActive', 'skills']),
+    changes: diff(before, worker.toObject(), ['position', 'wageType', 'wageRate', 'taxRate', 'isActive', 'skills']),
   });
   sendSuccess(res, { data: worker, message: 'Worker updated' });
 });

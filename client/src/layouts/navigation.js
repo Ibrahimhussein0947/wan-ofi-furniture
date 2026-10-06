@@ -25,6 +25,9 @@ import {
   PackageOpen,
   BookOpen,
   PencilRuler,
+  MessageSquareQuote,
+  TicketPercent,
+  Banknote,
 } from 'lucide-react';
 
 /**
@@ -61,6 +64,7 @@ export const STAFF_NAV = [
     items: [
       { to: '/app/products', label: 'Products', icon: Sofa, perms: ['products:write'] },
       { to: '/app/categories', label: 'Categories', icon: FolderTree, perms: ['categories:write'] },
+      { to: '/app/reviews', label: 'Reviews', icon: MessageSquareQuote, perms: ['products:write'] },
       { to: '/app/inventory', label: 'Inventory', icon: Warehouse, perms: ['inventory:read'] },
       { to: '/app/materials', label: 'Materials', icon: Boxes, perms: ['materials:read'] },
       { to: '/app/bom', label: 'Bill of materials', icon: Layers, perms: ['bom:read'] },
@@ -74,6 +78,7 @@ export const STAFF_NAV = [
       { to: '/app/payments', label: 'Payments', icon: CreditCard, perms: ['payments:read'] },
       { to: '/app/invoices', label: 'Invoices', icon: FileText, perms: ['invoices:read'] },
       { to: '/app/expenses', label: 'Expenses', icon: Receipt, perms: ['expenses:read'] },
+      { to: '/app/promotions', label: 'Promo codes', icon: TicketPercent, perms: ['discounts:write'] },
       { to: '/app/accounting', label: 'Ledger', icon: BookOpen, perms: ['accounting:read'] },
       { to: '/app/reports', label: 'Reports', icon: Wallet, perms: ['reports:financial', 'reports:operations'] },
     ],
@@ -82,6 +87,7 @@ export const STAFF_NAV = [
     section: 'Administration',
     items: [
       { to: '/app/workers', label: 'Workers', icon: UserCog, perms: ['workers:read'] },
+      { to: '/app/payroll', label: 'Payroll', icon: Banknote, perms: ['payments:read'] },
       { to: '/app/users', label: 'Users & roles', icon: ShieldCheck, perms: ['users:read'] },
       { to: '/app/audit-logs', label: 'Audit log', icon: ScrollText, perms: ['audit:read'] },
       { to: '/app/branches', label: 'Branches', icon: Building2, perms: ['settings:manage'] },

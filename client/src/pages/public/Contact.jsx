@@ -8,6 +8,10 @@ import { Input, Textarea } from '../../components/ui/Field';
 import { publicApi } from '../../api/endpoints';
 import { errorMessage } from '../../api/client';
 import { usePublicSettings } from '../../components/SettingsLoader';
+import SocialIcon from '../../components/SocialIcon';
+import { socialLinks } from '../../utils/social';
+import { useT } from '../../i18n/LanguageContext';
+import usePageMeta from '../../hooks/usePageMeta';
 
 const schema = z.object({
   name: z.string().trim().min(2, 'Please enter your name'),
@@ -18,6 +22,8 @@ const schema = z.object({
 });
 
 export default function Contact() {
+  const t = useT();
+  usePageMeta({ title: t('Contact us'), description: t("Questions about an order, a custom piece or a visit? We're happy to help.") });
   const { data: company } = usePublicSettings();
   const {
     register,
@@ -38,35 +44,44 @@ export default function Contact() {
 
   return (
     <div className="container-page py-12">
-      <h1 className="font-display text-4xl font-semibold text-walnut-950">Contact us</h1>
-      <p className="mt-2 text-stone-600">Questions about an order, a custom piece or a visit? We're happy to help.</p>
+      <h1 className="font-display text-4xl font-semibold text-walnut-950">{t('Contact us')}</h1>
+      <p className="mt-2 text-stone-600">{t("Questions about an order, a custom piece or a visit? We're happy to help.")}</p>
       <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_360px]">
         <form onSubmit={handleSubmit(onSubmit)} className="card space-y-4 p-6" noValidate>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Input label="Your name" required error={errors.name?.message} {...register('name')} />
-            <Input label="Email" type="email" required error={errors.email?.message} {...register('email')} />
-            <Input label="Phone" type="tel" {...register('phone')} />
-            <Input label="Subject" {...register('subject')} />
+            <Input label={t('Your name')} required error={errors.name?.message} {...register('name')} />
+            <Input label={t('Email')} type="email" required error={errors.email?.message} {...register('email')} />
+            <Input label={t('Phone')} type="tel" {...register('phone')} />
+            <Input label={t('Subject')} {...register('subject')} />
           </div>
-          <Textarea label="Message" rows={6} required error={errors.message?.message} {...register('message')} />
+          <Textarea label={t('Message')} rows={6} required error={errors.message?.message} {...register('message')} />
           <Button type="submit" icon={Send} loading={isSubmitting}>
-            Send message
+            {t('Send message')}
           </Button>
         </form>
-        <aside className="space-y-4 rounded-2xl bg-walnut-900 p-6 text-walnut-100">
+        <aside className="theme-static space-y-4 rounded-2xl bg-walnut-900 p-6 text-walnut-100">
           {[
             [MapPin, 'Showroom & workshop', company?.companyAddress],
             [Phone, 'Phone', company?.companyPhone],
             [Mail, 'Email', company?.companyEmail],
             [Clock, 'Opening hours', 'Mon–Sat, 8:00 – 18:00'],
-          ].map(([Icon, t, v]) => (
-            <div key={t} className="flex gap-3">
+          ].map(([Icon, label, v]) => (
+            <div key={label} className="flex gap-3">
               <Icon className="mt-0.5 h-5 w-5 text-brass-300" />
               <div>
-                <p className="text-sm font-semibold text-white">{t}</p>
-                <p className="text-sm">{v || '—'}</p>
+                <p className="text-sm font-semibold text-white">{t(label)}</p>
+                <p className="text-sm">{label === 'Opening hours' ? t(v) : v || '—'}</p>
               </div>
             </div>
+          ))}
+          {socialLinks(company?.socialLinks).map((s) => (
+            <a key={s.key} href={s.href} target="_blank" rel="noopener noreferrer" className="flex gap-3 hover:text-white">
+              <SocialIcon name={s.key} className="mt-0.5 h-5 w-5 shrink-0 text-brass-300" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white">{s.label}</p>
+                <p className="break-all text-sm">{s.text}</p>
+              </div>
+            </a>
           ))}
         </aside>
       </div>

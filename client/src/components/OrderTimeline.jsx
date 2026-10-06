@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import { Check } from 'lucide-react';
+import { useT } from '../i18n/LanguageContext';
 
 const STEPS = [
   ['Order placed', ['PENDING']],
@@ -13,6 +14,7 @@ const STEPS = [
 
 /** Customer-facing progress of an order through the workflow. */
 export default function OrderTimeline({ order }) {
+  const t = useT();
   if (order.status === 'CANCELLED') {
     return <p className="rounded-lg bg-stone-100 px-4 py-3 text-sm text-stone-600">This order was cancelled{order.cancellationReason ? `: ${order.cancellationReason}` : '.'}</p>;
   }
@@ -20,7 +22,7 @@ export default function OrderTimeline({ order }) {
   const current = steps.findIndex(([, statuses]) => statuses.includes(order.status));
 
   return (
-    <ol className="flex flex-col gap-4 sm:flex-row sm:gap-0" aria-label="Order progress">
+    <ol className="flex flex-col gap-4 sm:flex-row sm:gap-0" aria-label={t('Order progress')}>
       {steps.map(([name], i) => {
         const done = i < current || order.status === 'COMPLETED';
         const active = i === current && order.status !== 'COMPLETED';

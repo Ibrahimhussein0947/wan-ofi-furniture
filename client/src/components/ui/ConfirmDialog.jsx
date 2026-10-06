@@ -3,6 +3,7 @@ import { AlertTriangle } from 'lucide-react';
 import Modal from './Modal';
 import Button from './Button';
 import { Textarea } from './Field';
+import { useT } from '../../i18n/LanguageContext';
 
 /**
  * Confirmation for irreversible or important actions.
@@ -20,6 +21,7 @@ export default function ConfirmDialog({
   requireReason = false,
   reasonLabel = 'Reason',
 }) {
+  const t = useT();
   const [reason, setReason] = useState('');
   useEffect(() => {
     if (open) setReason('');
@@ -35,7 +37,7 @@ export default function ConfirmDialog({
       footer={
         <>
           <Button variant="secondary" onClick={onClose} disabled={loading}>
-            Cancel
+            {t('Cancel')}
           </Button>
           <Button variant={tone === 'danger' ? 'danger' : 'primary'} onClick={() => onConfirm(reason.trim())} loading={loading} disabled={invalid}>
             {confirmLabel}

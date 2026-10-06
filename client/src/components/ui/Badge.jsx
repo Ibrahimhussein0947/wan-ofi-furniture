@@ -1,6 +1,7 @@
 import clsx from 'clsx';
 import { STATUS_TONES } from '../../utils/constants';
 import { label as toLabel } from '../../utils/format';
+import { useT } from '../../i18n/LanguageContext';
 
 const TONES = {
   stone: 'bg-stone-100 text-stone-700 ring-stone-200',
@@ -10,7 +11,7 @@ const TONES = {
   teal: 'bg-teal-50 text-teal-800 ring-teal-200',
   green: 'bg-emerald-50 text-emerald-800 ring-emerald-200',
   red: 'bg-red-50 text-red-700 ring-red-200',
-  brass: 'bg-brass-50 text-brass-800 ring-brass-200',
+  brass: 'bg-gradient-to-br from-brass-100 to-brass-50 text-brass-800 ring-brass-300',
 };
 
 export function Badge({ tone = 'stone', children, className, dot }) {
@@ -23,10 +24,11 @@ export function Badge({ tone = 'stone', children, className, dot }) {
 }
 
 export function StatusBadge({ status, className }) {
+  const t = useT();
   if (!status) return null;
   return (
     <Badge tone={STATUS_TONES[status] || 'stone'} className={className} dot>
-      {toLabel(status)}
+      {t(toLabel(status))}
     </Badge>
   );
 }

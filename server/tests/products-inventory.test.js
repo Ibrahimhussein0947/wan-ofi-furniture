@@ -10,7 +10,7 @@ describe('products', () => {
   });
 
   const productBody = (over = {}) => ({
-    name: 'Serengeti Bed',
+    name: 'Simien Bed',
     sku: 'BED-001',
     category: String(category._id),
     price: 1500000,
@@ -25,7 +25,7 @@ describe('products', () => {
   test('owner creates a product; opening stock is recorded as an inventory transaction', async () => {
     const res = await api(owner.token).post('/api/products', productBody());
     expect(res.status).toBe(201);
-    expect(res.body.data.slug).toBe('serengeti-bed');
+    expect(res.body.data.slug).toBe('simien-bed');
     const tx = await models.InventoryTransaction.findOne({ product: res.body.data._id });
     expect(tx).toMatchObject({ type: 'STOCK_IN', quantity: 3, balanceAfter: 3 });
   });
@@ -46,7 +46,7 @@ describe('products', () => {
   });
 
   test('public listing filters by category, price and search', async () => {
-    const res = await api().get(`/api/products?category=beds&minPrice=1000000&search=serengeti`);
+    const res = await api().get(`/api/products?category=beds&minPrice=1000000&search=simien`);
     expect(res.status).toBe(200);
     expect(res.body.pagination).toMatchObject({ page: 1 });
     expect(res.body.data.every((p) => p.sellingPrice >= 1000000)).toBe(true);

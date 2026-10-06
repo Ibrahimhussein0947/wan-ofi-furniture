@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { CheckCircle2, MapPin, Navigation, Phone, Truck, XCircle, Upload } from 'lucide-react';
+import { CheckCircle2, MapPin, Navigation, Phone, Truck, XCircle, Upload, Printer } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 import ConfirmDialog from '../../../components/ui/ConfirmDialog';
 import Modal from '../../../components/ui/Modal';
@@ -15,10 +15,12 @@ import { deliveriesApi } from '../../../api/endpoints';
 import { fileUrl } from '../../../api/client';
 import useMutationToast from '../../../hooks/useMutationToast';
 import { date, dateTime, label, money, toInputDate } from '../../../utils/format';
+import { useT } from '../../../i18n/LanguageContext';
 
 const KEYS = ['delivery', 'deliveries', 'order', 'orders', 'dashboard'];
 
 export default function DeliveryDetail() {
+  const t = useT();
   const { id } = useParams();
   const [modal, setModal] = useState(null);
   const [photos, setPhotos] = useState([]);
@@ -27,7 +29,7 @@ export default function DeliveryDetail() {
   const [newDate, setNewDate] = useState(toInputDate(new Date(Date.now() + 86400000)));
   const query = useQuery({ queryKey: ['delivery', id], queryFn: () => deliveriesApi.get(id) });
 
-  const update = useMutationToast((body) => deliveriesApi.update(id, body), { success: (d) => `Delivery ${label(d.status).toLowerCase()}`, invalidate: KEYS, onSuccess: () => setModal(null) });
+  const update = useMutationToast((body) => deliveriesApi.update(id, body), { success: (d) => `Delivery ${t(label(d.status)).toLowerCase()}`, invalidate: KEYS, onSuccess: () => setModal(null) });
 
   const complete = useMutationToast(
     async () => {
@@ -44,7 +46,16 @@ export default function DeliveryDetail() {
         const address = [d.address?.street, d.address?.city, d.address?.region].filter(Boolean).join(', ');
         return (
           <div className="mx-auto max-w-4xl space-y-6">
-            <PageHeader back="/app/deliveries" title={`Delivery ${d.deliveryNumber}`} subtitle={<StatusBadge status={d.status} />} />
+            <PageHeader
+              back="/app/deliveries"
+              title={`Delivery ${d.deliveryNumber}`}
+              subtitle={<StatusBadge status={d.status} />}
+              actions={
+                <Button to={`/app/deliveries/${d._id}/note`} variant="secondary" icon={Printer}>
+                  {t('Delivery note')}
+                </Button>
+              }
+            />
 
             {/* Large action buttons for drivers on their phones */}
             <div className="grid gap-3 sm:grid-cols-2">
@@ -55,24 +66,24 @@ export default function DeliveryDetail() {
               )}
               {d.status === 'SCHEDULED' && (
                 <Button size="xl" icon={Truck} loading={update.isPending} onClick={() => update.mutate({ status: 'OUT_FOR_DELIVERY' })}>
-                  Start delivery
+                  {t('Start delivery')}
                 </Button>
               )}
               {d.status === 'OUT_FOR_DELIVERY' && (
                 <Button size="xl" variant="success" icon={CheckCircle2} onClick={() => setModal('complete')}>
-                  Delivered
+                  {t('Delivered')}
                 </Button>
               )}
               {['SCHEDULED', 'OUT_FOR_DELIVERY'].includes(d.status) && (
                 <Button size="xl" variant="secondary" icon={XCircle} onClick={() => setModal('fail')}>
-                  Delivery failed
+                  {t('Delivery failed')}
                 </Button>
               )}
             </div>
             {d.order?.balance > 0 && d.status === 'SCHEDULED' && <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-900">Balance of {money(d.order.balance)} must be paid before dispatch.</p>}
 
             <div className="grid gap-6 md:grid-cols-2">
-              <Card title="Customer & address">
+              <Card title={t('Customer & address')}>
                 <p className="font-semibold">{d.customer?.name}</p>
                 <p className="mt-2 flex items-start gap-2 text-sm text-stone-700">
                   <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brass-600" /> {address || 'No address'}
@@ -85,12 +96,12 @@ export default function DeliveryDetail() {
                   )}
                   {address && (
                     <Button href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`} target="_blank" rel="noreferrer" variant="secondary" icon={Navigation}>
-                      Directions
+                      {t('Directions')}
                     </Button>
                   )}
                 </div>
               </Card>
-              <Card title="Details">
+              <Card title={t('Details')}>
                 <DetailList
                   columns={1}
                   items={[
@@ -107,7 +118,7 @@ export default function DeliveryDetail() {
               </Card>
             </div>
 
-            <Card title="Items">
+            <Card title={t('Items')}>
               <ul className="space-y-1 text-sm">
                 {d.order?.items?.map((i) => (
                   <li key={i._id}>
@@ -118,23 +129,23 @@ export default function DeliveryDetail() {
             </Card>
 
             {(d.proofImages?.length > 0 || d.signatureImage) && (
-              <Card title="Proof of delivery">
+              <Card title={t('Proof of delivery')}>
                 <div className="flex flex-wrap gap-3">
                   {d.signatureImage && <img src={fileUrl(d.signatureImage)} alt="Customer signature" className="h-28 rounded-lg border border-stone-200 bg-white p-1" />}
                   {d.proofImages.map((src) => (
                     <a key={src} href={fileUrl(src)} target="_blank" rel="noreferrer">
-                      <img src={fileUrl(src)} alt="Proof of delivery" className="h-28 w-28 rounded-lg object-cover" />
+                      <img src={fileUrl(src)} alt={t('Proof of delivery')} className="h-28 w-28 rounded-lg object-cover" />
                     </a>
                   ))}
                 </div>
               </Card>
             )}
 
-            <Card title="History">
+            <Card title={t('History')}>
               <ol className="space-y-2 text-sm">
                 {d.history.map((h, i) => (
                   <li key={i}>
-                    <span className="font-medium">{label(h.status)}</span> · {dateTime(h.at)} {h.by?.name && `· ${h.by.name}`} {h.note && `— ${h.note}`}
+                    <span className="font-medium">{t(label(h.status))}</span> · {dateTime(h.at)} {h.by?.name && `· ${h.by.name}`} {h.note && `— ${h.note}`}
                   </li>
                 ))}
               </ol>
@@ -143,43 +154,43 @@ export default function DeliveryDetail() {
             <Modal
               open={modal === 'complete'}
               onClose={() => setModal(null)}
-              title="Confirm delivery"
+              title={t('Confirm delivery')}
               footer={
                 <>
                   <Button variant="secondary" onClick={() => setModal(null)}>
-                    Cancel
+                    {t('Cancel')}
                   </Button>
                   <Button variant="success" icon={Upload} loading={complete.isPending} onClick={() => complete.mutate()}>
-                    Confirm delivered
+                    {t('Confirm delivered')}
                   </Button>
                 </>
               }
             >
               <div className="space-y-4">
-                <Input label="Received by" value={receivedBy} onChange={(e) => setReceivedBy(e.target.value)} placeholder="Name of the person who received it" />
+                <Input label={t('Received by')} value={receivedBy} onChange={(e) => setReceivedBy(e.target.value)} placeholder={t('Name of the person who received it')} />
                 <div>
-                  <p className="label">Signature</p>
+                  <p className="label">{t('Signature')}</p>
                   <SignaturePad onChange={setSignature} />
                 </div>
                 <div>
-                  <p className="label">Photos</p>
-                  <ImagePicker files={photos} onChange={setPhotos} max={5} capture label="Take photo" />
+                  <p className="label">{t('Photos')}</p>
+                  <ImagePicker files={photos} onChange={setPhotos} max={5} capture label={t('Take photo')} />
                 </div>
               </div>
             </Modal>
-            <ConfirmDialog open={modal === 'fail'} onClose={() => setModal(null)} title="Delivery failed" message="The order returns to 'Ready' so it can be rescheduled." confirmLabel="Mark failed" requireReason loading={update.isPending} onConfirm={(failureReason) => update.mutate({ status: 'FAILED', failureReason })} />
+            <ConfirmDialog open={modal === 'fail'} onClose={() => setModal(null)} title={t('Delivery failed')} message="The order returns to 'Ready' so it can be rescheduled." confirmLabel={t('Mark failed')} requireReason loading={update.isPending} onConfirm={(failureReason) => update.mutate({ status: 'FAILED', failureReason })} />
             <Modal
               open={modal === 'schedule'}
               onClose={() => setModal(null)}
-              title="Schedule delivery"
+              title={t('Schedule delivery')}
               size="sm"
               footer={
                 <Button loading={update.isPending} onClick={() => update.mutate({ status: 'SCHEDULED', scheduledDate: newDate })}>
-                  Save
+                  {t('Save')}
                 </Button>
               }
             >
-              <Input label="Delivery date" type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} />
+              <Input label={t('Delivery date')} type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} />
             </Modal>
           </div>
         );

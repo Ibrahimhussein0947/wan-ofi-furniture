@@ -15,10 +15,12 @@ import { useAuth } from '../../../context/AuthContext';
 import useMutationToast from '../../../hooks/useMutationToast';
 import { usePublicSettings } from '../../../components/SettingsLoader';
 import { date, dateTime, label, money, toInputDate } from '../../../utils/format';
+import { useT } from '../../../i18n/LanguageContext';
 
 const OPEN = ['SUBMITTED', 'UNDER_REVIEW', 'ESTIMATED', 'QUOTED'];
 
 function EstimateQuoteForms({ r }) {
+  const t = useT();
   const { data: settings } = usePublicSettings();
   const keys = ['custom-order', 'custom-orders'];
   const est = useForm({
@@ -49,27 +51,27 @@ function EstimateQuoteForms({ r }) {
 
   return (
     <>
-      <Card title="Estimate" subtitle="Internal only — never shown to the customer">
+      <Card title={t('Estimate')} subtitle={t('Internal only — never shown to the customer')}>
         <form
           className="grid gap-4 sm:grid-cols-2"
           onSubmit={est.handleSubmit((v) => saveEstimate.mutate({ ...v, materialCost: Number(v.materialCost), laborCost: Number(v.laborCost), otherCost: Number(v.otherCost), productionDays: Number(v.productionDays) }))}
         >
-          <Input label="Material cost" type="number" min="0" {...est.register('materialCost')} />
-          <Input label="Labour cost" type="number" min="0" {...est.register('laborCost')} />
-          <Input label="Other costs" type="number" min="0" {...est.register('otherCost')} />
-          <Input label="Production days" type="number" min="1" {...est.register('productionDays')} />
-          <Textarea label="Estimate notes" containerClassName="sm:col-span-2" rows={2} {...est.register('notes')} />
+          <Input label={t('Material cost')} type="number" min="0" {...est.register('materialCost')} />
+          <Input label={t('Labour cost')} type="number" min="0" {...est.register('laborCost')} />
+          <Input label={t('Other costs')} type="number" min="0" {...est.register('otherCost')} />
+          <Input label={t('Production days')} type="number" min="1" {...est.register('productionDays')} />
+          <Textarea label={t('Estimate notes')} containerClassName="sm:col-span-2" rows={2} {...est.register('notes')} />
           <div className="flex items-center justify-between sm:col-span-2">
             <p className="text-sm">
-              Estimated cost: <strong>{money(totalCost)}</strong>
+              {t('Estimated cost:')} <strong>{money(totalCost)}</strong>
             </p>
             <Button type="submit" variant="secondary" icon={Calculator} loading={saveEstimate.isPending}>
-              Save estimate
+              {t('Save estimate')}
             </Button>
           </div>
         </form>
       </Card>
-      <Card title="Price proposal">
+      <Card title={t('Price proposal')}>
         <form
           className="grid gap-4 sm:grid-cols-2"
           onSubmit={quote.handleSubmit((v) =>
@@ -82,14 +84,14 @@ function EstimateQuoteForms({ r }) {
             })
           )}
         >
-          <Input label="Quoted price (total)" type="number" min="1" required {...quote.register('quotedPrice', { required: true })} />
-          <Input label="Deposit required" type="number" min="0" placeholder={`Default ${settings?.depositPercent ?? 40}%: ${money((price * (settings?.depositPercent ?? 40)) / 100)}`} {...quote.register('depositRequired')} />
-          <Input label="Valid until" type="date" {...quote.register('quoteValidUntil')} />
+          <Input label={t('Quoted price (total)')} type="number" min="1" required {...quote.register('quotedPrice', { required: true })} />
+          <Input label={t('Deposit required')} type="number" min="0" placeholder={`Default ${settings?.depositPercent ?? 40}%: ${money((price * (settings?.depositPercent ?? 40)) / 100)}`} {...quote.register('depositRequired')} />
+          <Input label={t('Valid until')} type="date" {...quote.register('quoteValidUntil')} />
           <div className="rounded-lg bg-stone-50 p-3 text-sm">
-            Margin: <strong className={price - cost < 0 ? 'text-red-600' : 'text-emerald-700'}>{money(price - cost)}</strong>
+            {t('Margin:')} <strong className={price - cost < 0 ? 'text-red-600' : 'text-emerald-700'}>{money(price - cost)}</strong>
             {price > 0 && ` (${Math.round(((price - cost) / price) * 100)}%)`}
           </div>
-          <Textarea label="Message to customer" containerClassName="sm:col-span-2" rows={3} placeholder="What's included, delivery, warranty…" {...quote.register('quoteNotes')} />
+          <Textarea label={t('Message to customer')} containerClassName="sm:col-span-2" rows={3} placeholder="What's included, delivery, warranty…" {...quote.register('quoteNotes')} />
           <div className="sm:col-span-2">
             <Button type="submit" icon={Send} loading={sendQuote.isPending}>
               {r.status === 'QUOTED' ? 'Update quote' : 'Send quote to customer'}
@@ -102,6 +104,7 @@ function EstimateQuoteForms({ r }) {
 }
 
 export default function CustomRequestDetail() {
+  const t = useT();
   const { id } = useParams();
   const { can } = useAuth();
   const [rejecting, setRejecting] = useState(false);
@@ -114,7 +117,7 @@ export default function CustomRequestDetail() {
     <QueryState query={query}>
       {(r) => {
         const d = r.dimensions || {};
-        const dims = ['width', 'height', 'length', 'depth'].filter((k) => d[k]).map((k) => `${label(k)} ${d[k]}`).join(' × ');
+        const dims = ['width', 'height', 'length', 'depth'].filter((k) => d[k]).map((k) => `${t(label(k))} ${d[k]}`).join(' × ');
         return (
           <div className="space-y-6">
             <PageHeader
@@ -131,11 +134,11 @@ export default function CustomRequestDetail() {
                   <>
                     {r.status === 'SUBMITTED' && (
                       <Button variant="secondary" icon={Eye} loading={review.isPending} onClick={() => review.mutate()}>
-                        Start review
+                        {t('Start review')}
                       </Button>
                     )}
                     <Button variant="ghost" icon={XCircle} className="text-red-600" onClick={() => setRejecting(true)}>
-                      Reject
+                      {t('Reject')}
                     </Button>
                   </>
                 )
@@ -154,9 +157,9 @@ export default function CustomRequestDetail() {
             )}
             <div className="grid gap-6 xl:grid-cols-3">
               <div className="space-y-6 xl:col-span-2">
-                <Card title="Customer requirements">
+                <Card title={t('Customer requirements')}>
                   <p className="whitespace-pre-wrap text-sm text-stone-700">{r.description}</p>
-                  {r.designRequirements && <p className="mt-3 whitespace-pre-wrap text-sm text-stone-700"><strong>Design:</strong> {r.designRequirements}</p>}
+                  {r.designRequirements && <p className="mt-3 whitespace-pre-wrap text-sm text-stone-700"><strong>{t('Design:')}</strong> {r.designRequirements}</p>}
                   <div className="mt-5">
                     <DetailList
                       columns={3}
@@ -167,7 +170,7 @@ export default function CustomRequestDetail() {
                         { label: 'Fabric', value: r.fabric || '—' },
                         { label: 'Budget', value: r.budget ? money(r.budget) : '—' },
                         { label: 'Needed by', value: date(r.requiredDate) },
-                        { label: 'Delivery', value: label(r.deliveryMethod) },
+                        { label: 'Delivery', value: t(label(r.deliveryMethod)) },
                         { label: 'Notes', value: r.additionalNotes || '—' },
                       ]}
                     />
@@ -184,23 +187,23 @@ export default function CustomRequestDetail() {
                 </Card>
                 {manage && OPEN.includes(r.status) && <EstimateQuoteForms r={r} />}
                 {!OPEN.includes(r.status) && r.quotedPrice && (
-                  <Card title="Quote">
+                  <Card title={t('Quote')}>
                     <DetailList items={[{ label: 'Quoted price', value: money(r.quotedPrice) }, { label: 'Deposit', value: money(r.depositRequired) }, { label: 'Estimated cost', value: money(r.estimate?.totalCost) }, { label: 'Customer note', value: r.customerResponseNote || '—' }]} />
                   </Card>
                 )}
               </div>
               <div className="space-y-6">
-                <Card title="Customer">
+                <Card title={t('Customer')}>
                   <p className="font-medium">{r.customer?.name}</p>
                   <p className="text-sm text-stone-600">{r.customer?.phone}</p>
                   <p className="text-sm text-stone-600">{r.customer?.email}</p>
                 </Card>
-                <Card title="History">
+                <Card title={t('History')}>
                   <ol className="space-y-3 border-l-2 border-walnut-100 pl-4">
                     {r.history.map((h, i) => (
                       <li key={i} className="relative text-sm">
                         <span className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-walnut-600" />
-                        <span className="font-medium">{label(h.status)}</span>
+                        <span className="font-medium">{t(label(h.status))}</span>
                         {h.note && <p className="text-stone-600">{h.note}</p>}
                         <p className="text-xs text-stone-500">
                           {dateTime(h.at)} {h.by?.name && `· ${h.by.name}`}
@@ -211,7 +214,7 @@ export default function CustomRequestDetail() {
                 </Card>
               </div>
             </div>
-            <ConfirmDialog open={rejecting} onClose={() => setRejecting(false)} title="Reject this request?" message="The customer will be notified with your reason." confirmLabel="Reject request" requireReason loading={reject.isPending} onConfirm={(reason) => reject.mutate(reason)} />
+            <ConfirmDialog open={rejecting} onClose={() => setRejecting(false)} title={t('Reject this request?')} message={t('The customer will be notified with your reason.')} confirmLabel={t('Reject request')} requireReason loading={reject.isPending} onConfirm={(reason) => reject.mutate(reason)} />
           </div>
         );
       }}

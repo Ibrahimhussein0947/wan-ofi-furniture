@@ -2,6 +2,7 @@ const { Material, Product, ProductionJob, ProductionTask, Order } = require('../
 const notify = require('../services/notification.service');
 const { sendLowStockAlert } = require('../services/inventory.service');
 const { getSettings } = require('../services/settings.service');
+const { sendBalanceReminder } = require('../services/payment.service');
 const { PRODUCTION_STAGES: S, ORDER_STATUS: O } = require('../config/constants');
 
 const DAY = 24 * 3600 * 1000;
@@ -64,18 +65,20 @@ async function checkTaskDeadlines() {
   return tasks.length;
 }
 
-/** Weekly reminder to customers whose furniture is ready or delivered but not fully paid. */
+/**
+ * Reminds customers who still owe money, at most once a week per order: anyone who has paid part
+ * (e.g. 25,000 of 100,000 → reminded of the 75,000 left), and anyone whose furniture is ready or delivered.
+ */
 async function sendPaymentReminders() {
-  const { currency } = await getSettings();
-  const orders = await Order.find({ balance: { $gt: 0 }, status: { $in: [O.READY, O.DELIVERED] } }).lean();
-  for (const order of orders) {
-    await notify.notifyCustomer(order.customer, {
-      type: 'PAYMENT_REMINDER',
-      title: `Payment reminder — ${order.orderNumber}`,
-      message: `A balance of ${order.balance.toLocaleString()} ${currency} is outstanding on your order.`,
-      link: `/account/orders/${order._id}`,
-    });
-  }
+  const orders = await Order.find({
+    balance: { $gt: 0 },
+    status: { $ne: O.CANCELLED },
+    $and: [
+      { $or: [{ amountPaid: { $gt: 0 } }, { status: { $in: [O.READY, O.DELIVERED] } }] },
+      { $or: [{ lastPaymentReminderAt: null }, { lastPaymentReminderAt: { $lt: new Date(Date.now() - 7 * DAY + 3600 * 1000) } }] },
+    ],
+  }).lean();
+  for (const order of orders) await sendBalanceReminder(order);
   return orders.length;
 }
 

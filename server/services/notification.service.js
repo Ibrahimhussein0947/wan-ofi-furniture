@@ -5,6 +5,8 @@ const env = require('../config/env');
 const { ROLES, WORKER_ROLES } = require('../config/constants');
 const { sendEmail } = require('./channels/email');
 const { sendSms } = require('./channels/sms');
+const { sendTelegram } = require('./channels/telegram');
+const { sendWhatsApp } = require('./channels/whatsapp');
 const { publish } = require('./events.service');
 const logger = require('../utils/logger');
 
@@ -29,7 +31,8 @@ const EXTERNAL = {
 async function deliverExternally(recipients, { type, title, message, link }) {
   const channels = EXTERNAL[type];
   if (!channels) return;
-  const users = await User.find({ _id: { $in: recipients }, isActive: true }).select('email phone notificationPrefs').lean();
+  const users = await User.find({ _id: { $in: recipients }, isActive: true }).select('email phone notificationPrefs +telegramChatId').lean();
+  const url = link ? `${env.APP_URL}${link}` : undefined;
   await Promise.all(
     users.flatMap((u) => {
       const jobs = [];
@@ -38,6 +41,13 @@ async function deliverExternally(recipients, { type, title, message, link }) {
       }
       if (channels.sms && u.notificationPrefs?.sms !== false && u.phone) {
         jobs.push(sendSms({ to: u.phone, message: `Wan Ofi: ${title}${message ? ` - ${message}` : ''}` }));
+      }
+      // Chat apps get every event that goes out externally, when the user has them switched on.
+      if (u.telegramChatId && u.notificationPrefs?.telegram !== false) {
+        jobs.push(sendTelegram({ chatId: u.telegramChatId, title, message, url }));
+      }
+      if (u.phone && u.notificationPrefs?.whatsapp === true) {
+        jobs.push(sendWhatsApp({ to: u.phone, title, message }));
       }
       return jobs;
     })

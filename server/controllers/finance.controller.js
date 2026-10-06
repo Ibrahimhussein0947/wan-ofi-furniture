@@ -6,7 +6,7 @@ const onlinePayments = require('../services/onlinePayment.service');
 const invoiceService = require('../services/invoice.service');
 const expenseService = require('../services/expense.service');
 const { recordLedgerEntry } = require('../services/ledger.service');
-const { getSettings } = require('../services/settings.service');
+const { getSettings, customerBankAccounts } = require('../services/settings.service');
 const { audit, actorFrom } = require('../services/audit.service');
 const { asyncHandler, sendSuccess, sendCreated } = require('../utils/http');
 const { paginate, pickFilters, dateRangeFilter, searchFilter } = require('../utils/query');
@@ -17,7 +17,11 @@ const { AUDIT_ACTIONS, TRANSACTION_TYPES } = require('../config/constants');
 // ---------- Payments ----------
 exports.listPayments = asyncHandler(async (req, res) => {
   const filter = {
-    ...pickFilters(req.query, ['category', 'method', 'status', 'kind', 'order', 'customer', 'supplier', 'worker'], ['order', 'customer', 'supplier', 'worker']),
+    ...pickFilters(
+      req.query,
+      ['category', 'method', 'status', 'kind', 'order', 'customer', 'supplier', 'worker'],
+      ['order', 'customer', 'supplier', 'worker'],
+    ),
     ...dateRangeFilter('paidAt', req.query.from, req.query.to),
     ...searchFilter(req.query.search, ['paymentNumber', 'receiptNumber', 'reference']),
   };
@@ -36,7 +40,10 @@ exports.listPayments = asyncHandler(async (req, res) => {
     allowedSort: ['paidAt', 'amount'],
     sort: { paidAt: -1 },
   });
-  sendSuccess(res, { data: isCustomer(req) ? items.map(({ receivedBy, worker, supplier, ...p }) => p) : items, pagination });
+  sendSuccess(res, {
+    data: isCustomer(req) ? items.map(({ receivedBy, worker, supplier, ...p }) => p) : items,
+    pagination,
+  });
 });
 
 // Payment receipt (customers can open their own).
@@ -48,25 +55,43 @@ exports.getPayment = asyncHandler(async (req, res) => {
       .populate('order', 'orderNumber total amountPaid balance')
       .populate('customer', 'name phone email address')
       .populate('supplier', 'name phone')
-      .populate({ path: 'worker', select: 'employeeCode user', populate: { path: 'user', select: 'name' } })
+      .populate({
+        path: 'worker',
+        select: 'employeeCode user',
+        populate: { path: 'user', select: 'name' },
+      })
       .populate('receivedBy', 'name')
       .populate('purchaseOrder', 'poNumber')
       .lean(),
-    'Payment not found.'
+    'Payment not found.',
   );
   sendSuccess(res, { data: { ...payment, company: await companyInfo() } });
 });
 
 exports.recordCustomerPayment = asyncHandler(async (req, res) => {
   const { payment, order } = await paymentService.recordCustomerPayment(req.body, actorFrom(req));
-  sendCreated(res, { payment, order }, `Payment recorded. Remaining balance: ${order.balance.toLocaleString()}`);
+  sendCreated(
+    res,
+    { payment, order },
+    `Payment recorded. Remaining balance: ${order.balance.toLocaleString()}`,
+  );
 });
 
 exports.submitPayment = asyncHandler(async (req, res) => {
   await assertVerifiedCustomer(req);
   const customer = await customerOf(req);
-  const payment = await paymentService.submitCustomerPayment(req.body, customer._id, actorFrom(req));
-  sendCreated(res, payment, 'Payment submitted. It will reflect on your order once our accounts team verifies it.');
+  const screenshot = req.uploadedFiles?.[0];
+  if (!screenshot) throw ApiError.badRequest('Please attach a photo or screenshot of your payment receipt.');
+  const payment = await paymentService.submitCustomerPayment(
+    { ...req.body, screenshot },
+    customer._id,
+    actorFrom(req),
+  );
+  sendCreated(
+    res,
+    payment,
+    'Payment submitted. It will reflect on your order once our accounts team verifies it.',
+  );
 });
 
 exports.initiateMobilePayment = asyncHandler(async (req, res) => {
@@ -85,22 +110,42 @@ exports.getMobilePayment = asyncHandler(async (req, res) => {
 exports.paymentWebhook = asyncHandler(async (req, res) => {
   const expected = Buffer.from(env.PAYMENT_WEBHOOK_SECRET || '');
   const given = Buffer.from(String(req.params.secret || ''));
-  if (!expected.length || expected.length !== given.length || !crypto.timingSafeEqual(expected, given)) throw ApiError.notFound('Route not found.');
+  if (
+    !expected.length ||
+    expected.length !== given.length ||
+    !crypto.timingSafeEqual(expected, given)
+  )
+    throw ApiError.notFound('Route not found.');
   const intent = await onlinePayments.handleCallback(req.params.gateway, req.body);
   sendSuccess(res, { data: { reference: intent.reference, status: intent.status } });
 });
 
 exports.verifyPayment = asyncHandler(async (req, res) => {
-  const result = await paymentService.verifyCustomerPayment(req.params.id, req.body, actorFrom(req));
-  sendSuccess(res, { data: result, message: req.body.approve ? 'Payment verified and applied' : 'Payment rejected' });
+  const result = await paymentService.verifyCustomerPayment(
+    req.params.id,
+    req.body,
+    actorFrom(req),
+  );
+  sendSuccess(res, {
+    data: result,
+    message: req.body.approve ? 'Payment verified and applied' : 'Payment rejected',
+  });
 });
 
 exports.recordSupplierPayment = asyncHandler(async (req, res) => {
-  sendCreated(res, await paymentService.recordSupplierPayment(req.body, actorFrom(req)), 'Supplier payment recorded');
+  sendCreated(
+    res,
+    await paymentService.recordSupplierPayment(req.body, actorFrom(req)),
+    'Supplier payment recorded',
+  );
 });
 
 exports.recordWorkerPayment = asyncHandler(async (req, res) => {
-  sendCreated(res, await paymentService.recordWorkerPayment(req.body, actorFrom(req)), 'Worker payment recorded');
+  sendCreated(
+    res,
+    await paymentService.recordWorkerPayment(req.body, actorFrom(req)),
+    'Worker payment recorded',
+  );
 });
 
 exports.recordRefund = asyncHandler(async (req, res) => {
@@ -110,7 +155,15 @@ exports.recordRefund = asyncHandler(async (req, res) => {
 // ---------- Invoices ----------
 async function companyInfo() {
   const s = await getSettings();
-  return { name: s.companyName, email: s.companyEmail, phone: s.companyPhone, address: s.companyAddress, currency: s.currency, paymentInstructions: s.paymentInstructions };
+  return {
+    name: s.companyName,
+    email: s.companyEmail,
+    phone: s.companyPhone,
+    address: s.companyAddress,
+    currency: s.currency,
+    paymentInstructions: s.paymentInstructions,
+    bankAccounts: customerBankAccounts(s),
+  };
 }
 
 exports.listInvoices = asyncHandler(async (req, res) => {
@@ -139,10 +192,17 @@ exports.getInvoice = asyncHandler(async (req, res) => {
   const filter = { _id: req.params.id };
   if (isCustomer(req)) filter.customer = (await customerOf(req))._id;
   const invoice = assertFound(
-    await Invoice.findOne(filter).populate('customer', 'name phone email address customerCode').populate('order', 'orderNumber orderDate deliveryAddress').lean(),
-    'Invoice not found.'
+    await Invoice.findOne(filter)
+      .populate('customer', 'name phone email address customerCode')
+      .populate('order', 'orderNumber orderDate deliveryAddress')
+      .lean(),
+    'Invoice not found.',
   );
-  const payments = await Payment.find({ order: invoice.order._id, status: 'COMPLETED', category: 'CUSTOMER_PAYMENT' })
+  const payments = await Payment.find({
+    order: invoice.order._id,
+    status: 'COMPLETED',
+    category: 'CUSTOMER_PAYMENT',
+  })
     .select('receiptNumber paidAt amount method')
     .sort({ paidAt: 1 })
     .lean();
@@ -157,13 +217,19 @@ exports.createInvoice = asyncHandler(async (req, res) => {
 // Customers can generate the invoice for their own order.
 exports.customerInvoice = asyncHandler(async (req, res) => {
   const customer = await customerOf(req);
-  assertFound(await Order.exists({ _id: req.body.order, customer: customer._id }), 'Order not found.');
+  assertFound(
+    await Order.exists({ _id: req.body.order, customer: customer._id }),
+    'Order not found.',
+  );
   const invoice = await invoiceService.issueInvoice(req.body.order, {}, null);
   sendSuccess(res, { data: invoice });
 });
 
 exports.voidInvoice = asyncHandler(async (req, res) => {
-  sendSuccess(res, { data: await invoiceService.voidInvoice(req.params.id, req.body.reason, actorFrom(req)), message: 'Invoice voided' });
+  sendSuccess(res, {
+    data: await invoiceService.voidInvoice(req.params.id, req.body.reason, actorFrom(req)),
+    message: 'Invoice voided',
+  });
 });
 
 // ---------- Expenses ----------
@@ -186,17 +252,30 @@ exports.listExpenses = asyncHandler(async (req, res) => {
 });
 
 exports.getExpense = asyncHandler(async (req, res) => {
-  const expense = assertFound(await Expense.findById(req.params.id).populate('createdBy approvedBy', 'name').lean(), 'Expense not found.');
+  const expense = assertFound(
+    await Expense.findById(req.params.id).populate('createdBy approvedBy', 'name').lean(),
+    'Expense not found.',
+  );
   sendSuccess(res, { data: expense });
 });
 
 exports.createExpense = asyncHandler(async (req, res) => {
-  const expense = await expenseService.createExpense({ ...req.body, receiptImage: req.uploadedFiles?.[0] }, actorFrom(req));
-  sendCreated(res, expense, expense.status === 'PENDING' ? 'Expense submitted for owner approval' : 'Expense recorded');
+  const expense = await expenseService.createExpense(
+    { ...req.body, receiptImage: req.uploadedFiles?.[0] },
+    actorFrom(req),
+  );
+  sendCreated(
+    res,
+    expense,
+    expense.status === 'PENDING' ? 'Expense submitted for owner approval' : 'Expense recorded',
+  );
 });
 
 exports.updateExpense = asyncHandler(async (req, res) => {
-  sendSuccess(res, { data: await expenseService.updateExpense(req.params.id, req.body, actorFrom(req)), message: 'Expense updated' });
+  sendSuccess(res, {
+    data: await expenseService.updateExpense(req.params.id, req.body, actorFrom(req)),
+    message: 'Expense updated',
+  });
 });
 
 exports.decideExpense = asyncHandler(async (req, res) => {
@@ -212,7 +291,11 @@ exports.deleteExpense = asyncHandler(async (req, res) => {
 // ---------- Ledger ----------
 exports.listTransactions = asyncHandler(async (req, res) => {
   const filter = {
-    ...pickFilters(req.query, ['type', 'direction', 'method', 'customer', 'order', 'supplier'], ['customer', 'order', 'supplier']),
+    ...pickFilters(
+      req.query,
+      ['type', 'direction', 'method', 'customer', 'order', 'supplier'],
+      ['customer', 'order', 'supplier'],
+    ),
     ...dateRangeFilter('date', req.query.from, req.query.to),
     ...searchFilter(req.query.search, ['transactionNumber', 'description']),
   };
@@ -230,8 +313,23 @@ exports.listTransactions = asyncHandler(async (req, res) => {
 });
 
 exports.recordOtherIncome = asyncHandler(async (req, res) => {
-  const entry = await recordLedgerEntry({ ...req.body, type: TRANSACTION_TYPES.OTHER_INCOME, customer: req.body.customer || undefined, createdBy: req.user._id }, null);
-  await audit(actorFrom(req), { action: AUDIT_ACTIONS.CREATE, entity: 'FinancialTransaction', entityId: entry._id, reference: entry.transactionNumber, amount: entry.amount, description: entry.description });
+  const entry = await recordLedgerEntry(
+    {
+      ...req.body,
+      type: TRANSACTION_TYPES.OTHER_INCOME,
+      customer: req.body.customer || undefined,
+      createdBy: req.user._id,
+    },
+    null,
+  );
+  await audit(actorFrom(req), {
+    action: AUDIT_ACTIONS.CREATE,
+    entity: 'FinancialTransaction',
+    entityId: entry._id,
+    reference: entry.transactionNumber,
+    amount: entry.amount,
+    description: entry.description,
+  });
   sendCreated(res, entry, 'Income recorded');
 });
 

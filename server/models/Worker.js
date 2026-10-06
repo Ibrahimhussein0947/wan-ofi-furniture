@@ -10,8 +10,10 @@ const workerSchema = new mongoose.Schema(
     skills: [{ type: String, trim: true, maxlength: 60 }],
     phone: { type: String, trim: true, maxlength: 30 },
     hireDate: Date,
-    wageType: { type: String, enum: ['DAILY', 'WEEKLY', 'MONTHLY', 'PER_JOB'], default: 'MONTHLY' },
+    wageType: { type: String, enum: ['HOURLY', 'DAILY', 'WEEKLY', 'MONTHLY', 'PER_JOB'], default: 'MONTHLY' },
     wageRate: { type: Number, min: 0, default: 0 },
+    // Admin-assigned income tax withheld from the worker's earnings (percent, 0–100).
+    taxRate: { type: Number, min: 0, max: 100, default: 0 },
     // Running total of wages recorded as paid (updated with each worker payment).
     totalPaid: { type: Number, min: 0, default: 0 },
     isActive: { type: Boolean, default: true },

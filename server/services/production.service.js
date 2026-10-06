@@ -194,6 +194,12 @@ function applyStage(job, to, { by, note }) {
   return from;
 }
 
+/** Materials for a job come from (and go back to) the branch of the order it was made for. */
+async function jobBranch(job, session) {
+  const order = await Order.findById(job.order).select('branch').session(session || null).lean();
+  return order?.branch || undefined;
+}
+
 async function loadJob(jobId, session) {
   const job = await ProductionJob.findById(jobId).session(session);
   if (!job) throw ApiError.notFound('Production job not found.');
@@ -324,8 +330,10 @@ async function issueMaterials(jobId, { items }, actor) {
             .filter((m) => m.quantity > 0);
     if (!toIssue.length) throw ApiError.badRequest('There are no outstanding materials to issue.');
 
+    const branch = await jobBranch(job, session);
     for (const { material, quantity } of toIssue) {
       const result = await adjustStock({
+        branch,
         itemType: 'MATERIAL',
         itemId: material,
         delta: -quantity,
@@ -393,6 +401,7 @@ async function returnMaterials(jobId, { items }, actor) {
         throw ApiError.badRequest(`Cannot return more than was issued (${outstanding} ${line?.unit || ''}).`);
       }
       await adjustStock({
+        branch: await jobBranch(job, session),
         itemType: 'MATERIAL',
         itemId: material,
         delta: quantity,
@@ -463,6 +472,18 @@ async function addNote(jobId, text, actor) {
   const job = await loadJob(jobId);
   assertJobAccess(job, actor.user);
   job.notes.push({ text, by: actor.user._id });
+  await job.save();
+  return job;
+}
+
+/** Workers log their own hours; production managers may log for any assigned worker. */
+async function logHours(jobId, { hours, date, note, worker }, actor) {
+  const job = await loadJob(jobId);
+  assertJobAccess(job, actor.user);
+  const workerId = worker && isManager(actor.user) ? worker : actor.user._id;
+  if (!isAssigned(job, { _id: workerId })) throw ApiError.badRequest('Hours can only be logged for workers assigned to this job.');
+  if (date && new Date(date) > new Date()) throw ApiError.badRequest('Hours cannot be logged for a future date.');
+  job.laborLog.push({ worker: workerId, hours, date: date || new Date(), note, by: actor.user._id });
   await job.save();
   return job;
 }
@@ -586,6 +607,7 @@ async function getJob(jobId, user) {
     .populate('materialRequests.material', 'name unit quantity')
     .populate('materialRequests.requestedBy', 'name')
     .populate('stageHistory.by', 'name')
+    .populate('laborLog.worker', 'name')
     .populate('customRequest')
     .lean();
   if (!job) throw ApiError.notFound('Production job not found.');
@@ -604,6 +626,7 @@ async function customerProgress(orderId) {
 }
 
 module.exports = {
+  logHours,
   STAGE_ORDER,
   STAGE_PROGRESS,
   TRANSITIONS,

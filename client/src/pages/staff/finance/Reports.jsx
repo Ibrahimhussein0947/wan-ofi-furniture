@@ -14,6 +14,7 @@ import { EXPENSE_CATEGORIES, PAYMENT_METHODS, TRANSACTION_TYPES } from '../../..
 import { date, label } from '../../../utils/format';
 import { REPORTS } from './reportConfigs';
 import BranchSelect from '../../../components/BranchSelect';
+import { useT } from '../../../i18n/LanguageContext';
 
 function ReportChart({ config, data }) {
   const c = config.chart;
@@ -29,6 +30,7 @@ function ReportChart({ config, data }) {
 }
 
 export default function Reports() {
+  const t = useT();
   const { can } = useAuth();
   const available = REPORTS.filter((r) => can(r.perm));
   const [params, set] = useListParams();
@@ -46,9 +48,9 @@ export default function Reports() {
 
   return (
     <div>
-      <PageHeader title="Reports" subtitle="Filter, then export to CSV/Excel or PDF, or print." />
+      <PageHeader title={t('Reports')} subtitle={t('Filter, then export to CSV/Excel or PDF, or print.')} />
       <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
-        <nav className="no-print space-y-4" aria-label="Reports">
+        <nav className="no-print space-y-4" aria-label={t('Reports')}>
           {groups.map((g) => (
             <div key={g}>
               <p className="mb-1 px-3 text-[11px] font-semibold uppercase tracking-wider text-stone-400">{g}</p>
@@ -85,21 +87,21 @@ export default function Reports() {
 
           <FilterBar className="no-print">
             {has('period') && (
-              <Select label="Group by" value={filters.period || (config.key === 'profit-loss' ? 'monthly' : 'daily')} onChange={(e) => set({ period: e.target.value })} options={['daily', 'weekly', 'monthly', 'annual'].map((p) => ({ value: p, label: label(p) }))} containerClassName="sm:w-36" />
+              <Select label={t('Group by')} value={filters.period || (config.key === 'profit-loss' ? 'monthly' : 'daily')} onChange={(e) => set({ period: e.target.value })} options={['daily', 'weekly', 'monthly', 'annual'].map((p) => ({ value: p, label: t(label(p)) }))} containerClassName="sm:w-36" />
             )}
             {has('dates') || has('period') ? (
               <>
-                <Input label="From" type="date" value={filters.from || ''} onChange={(e) => set({ from: e.target.value })} containerClassName="sm:w-40" />
+                <Input label={t('From')} type="date" value={filters.from || ''} onChange={(e) => set({ from: e.target.value })} containerClassName="sm:w-40" />
                 <Input label="To" type="date" value={filters.to || ''} onChange={(e) => set({ to: e.target.value })} containerClassName="sm:w-40" />
               </>
             ) : null}
-            {has('customer') && customers.data && <Select label="Customer" value={filters.customer || ''} onChange={(e) => set({ customer: e.target.value })} options={customers.data.map((c) => ({ value: c._id, label: c.name }))} placeholder="All customers" containerClassName="sm:w-48" />}
-            {has('product') && <Select label="Product" value={filters.product || ''} onChange={(e) => set({ product: e.target.value })} options={(products.data || []).map((p) => ({ value: p._id, label: p.name }))} placeholder="All products" containerClassName="sm:w-52" />}
-            {has('branch') && <BranchSelect label="Branch" value={filters.branch || ''} onChange={(e) => set({ branch: e.target.value })} containerClassName="sm:w-48" />}
-            {has('method') && <Select label="Payment method" value={filters.method || ''} onChange={(e) => set({ method: e.target.value })} options={PAYMENT_METHODS.map((m) => ({ value: m, label: label(m) }))} placeholder="All methods" containerClassName="sm:w-44" />}
-            {has('expenseCategory') && <Select label="Category" value={filters.category || ''} onChange={(e) => set({ category: e.target.value })} options={EXPENSE_CATEGORIES.map((c) => ({ value: c, label: label(c) }))} placeholder="All categories" containerClassName="sm:w-44" />}
-            {has('paymentCategory') && <Select label="Type" value={filters.category || ''} onChange={(e) => set({ category: e.target.value })} options={['CUSTOMER_PAYMENT', 'SUPPLIER_PAYMENT', 'WORKER_PAYMENT', 'REFUND'].map((c) => ({ value: c, label: label(c) }))} placeholder="All types" containerClassName="sm:w-48" />}
-            {has('transactionType') && <Select label="Transaction type" value={filters.type || ''} onChange={(e) => set({ type: e.target.value })} options={TRANSACTION_TYPES.map((t) => ({ value: t, label: label(t) }))} placeholder="All types" containerClassName="sm:w-48" />}
+            {has('customer') && customers.data && <Select label={t('Customer')} value={filters.customer || ''} onChange={(e) => set({ customer: e.target.value })} options={customers.data.map((c) => ({ value: c._id, label: c.name }))} placeholder={t('All customers')} containerClassName="sm:w-48" />}
+            {has('product') && <Select label={t('Product')} value={filters.product || ''} onChange={(e) => set({ product: e.target.value })} options={(products.data || []).map((p) => ({ value: p._id, label: p.name }))} placeholder={t('All products')} containerClassName="sm:w-52" />}
+            {has('branch') && <BranchSelect label={t('Branch')} value={filters.branch || ''} onChange={(e) => set({ branch: e.target.value })} containerClassName="sm:w-48" />}
+            {has('method') && <Select label={t('Payment method')} value={filters.method || ''} onChange={(e) => set({ method: e.target.value })} options={PAYMENT_METHODS.map((m) => ({ value: m, label: t(label(m)) }))} placeholder={t('All methods')} containerClassName="sm:w-44" />}
+            {has('expenseCategory') && <Select label={t('Category')} value={filters.category || ''} onChange={(e) => set({ category: e.target.value })} options={EXPENSE_CATEGORIES.map((c) => ({ value: c, label: t(label(c)) }))} placeholder={t('All categories')} containerClassName="sm:w-44" />}
+            {has('paymentCategory') && <Select label={t('Type')} value={filters.category || ''} onChange={(e) => set({ category: e.target.value })} options={['CUSTOMER_PAYMENT', 'SUPPLIER_PAYMENT', 'WORKER_PAYMENT', 'REFUND'].map((c) => ({ value: c, label: t(label(c)) }))} placeholder={t('All types')} containerClassName="sm:w-48" />}
+            {has('transactionType') && <Select label={t('Transaction type')} value={filters.type || ''} onChange={(e) => set({ type: e.target.value })} options={TRANSACTION_TYPES.map((type) => ({ value: type, label: t(label(type)) }))} placeholder={t('All types')} containerClassName="sm:w-48" />}
           </FilterBar>
 
           <QueryState query={query}>

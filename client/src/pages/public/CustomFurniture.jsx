@@ -11,6 +11,8 @@ import ImagePicker from '../../components/ui/ImagePicker';
 import { useAuth } from '../../context/AuthContext';
 import { customOrdersApi } from '../../api/endpoints';
 import { errorMessage } from '../../api/client';
+import { useT } from '../../i18n/LanguageContext';
+import usePageMeta from '../../hooks/usePageMeta';
 
 const optionalNumber = z.preprocess((v) => (v === '' || v === null || v === undefined || Number.isNaN(Number(v)) ? undefined : Number(v)), z.number().min(0).optional());
 
@@ -39,6 +41,8 @@ export const customRequestSchema = z.object({
 const TYPES = ['Bed', 'Sofa', 'Chair', 'Dining table', 'Coffee table', 'Wardrobe', 'Kitchen cabinets', 'TV stand', 'Office desk', 'Bookshelf', 'Other'];
 
 export default function CustomFurniture() {
+  const t = useT();
+  usePageMeta({ title: t('Custom furniture'), description: t('Tell us what you need. Include measurements and photos if you have them — the more detail, the more accurate your quote.') });
   const { user } = useAuth();
   const navigate = useNavigate();
   const [images, setImages] = useState([]);
@@ -72,11 +76,11 @@ export default function CustomFurniture() {
       <div className="container-page flex flex-col items-center py-20 text-center">
         <CheckCircle2 className="h-16 w-16 text-sage-600" />
         <h1 className="mt-4 font-display text-3xl font-semibold text-walnut-950">Request {submitted.requestNumber} received</h1>
-        <p className="mt-2 max-w-md text-stone-600">Our designers will review it and send you a price proposal, usually within 48 hours. You'll get a notification when it's ready.</p>
+        <p className="mt-2 max-w-md text-stone-600">{t("Our designers will review it and send you a price proposal, usually within 48 hours. You'll get a notification when it's ready.")}</p>
         <div className="mt-6 flex gap-3">
-          <Button to={`/account/custom-requests/${submitted._id}`}>Track my request</Button>
+          <Button to={`/account/custom-requests/${submitted._id}`}>{t('Track my request')}</Button>
           <Button variant="secondary" onClick={() => setSubmitted(null)}>
-            Send another
+            {t('Send another')}
           </Button>
         </div>
       </div>
@@ -89,62 +93,62 @@ export default function CustomFurniture() {
     <div className="container-page py-10">
       <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brass-600">Custom furniture</p>
-          <h1 className="mt-2 font-display text-4xl font-semibold text-walnut-950">Design your own piece</h1>
-          <p className="mt-3 max-w-2xl text-stone-600">Tell us what you need. Include measurements and photos if you have them — the more detail, the more accurate your quote.</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-brass-600">{t('Custom furniture')}</p>
+          <h1 className="mt-2 font-display text-4xl font-semibold text-walnut-950">{t('Design your own piece')}</h1>
+          <p className="mt-3 max-w-2xl text-stone-600">{t('Tell us what you need. Include measurements and photos if you have them — the more detail, the more accurate your quote.')}</p>
 
-          {user && !isCustomer && <p className="mt-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">You're signed in as staff. Custom requests are submitted by customers from their accounts.</p>}
+          {user && !isCustomer && <p className="mt-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">{t("You're signed in as staff. Custom requests are submitted by customers from their accounts.")}</p>}
 
           <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-8" noValidate>
             <section className="card space-y-4 p-6">
-              <h2 className="font-semibold text-walnut-950">1. What should we make?</h2>
+              <h2 className="font-semibold text-walnut-950">{t('1. What should we make?')}</h2>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Input label="Furniture type" list="furniture-types" required error={errors.furnitureType?.message} {...register('furnitureType')} />
+                <Input label={t('Furniture type')} list="furniture-types" required error={errors.furnitureType?.message} {...register('furnitureType')} />
                 <datalist id="furniture-types">
-                  {TYPES.map((t) => (
-                    <option key={t} value={t} />
+                  {TYPES.map((type) => (
+                    <option key={type} value={type} />
                   ))}
                 </datalist>
-                <Input label="Quantity" type="number" min="1" required error={errors.quantity?.message} {...register('quantity')} />
+                <Input label={t('Quantity')} type="number" min="1" required error={errors.quantity?.message} {...register('quantity')} />
               </div>
-              <Textarea label="Describe your piece" rows={4} required placeholder="Style, how you'll use it, where it will go…" error={errors.description?.message} {...register('description')} />
-              <Textarea label="Design requirements" rows={3} placeholder="Drawers, doors, shelves, legs, headboard style…" {...register('designRequirements')} />
+              <Textarea label={t('Describe your piece')} rows={4} required placeholder={t("Style, how you'll use it, where it will go…")} error={errors.description?.message} {...register('description')} />
+              <Textarea label={t('Design requirements')} rows={3} placeholder={t('Drawers, doors, shelves, legs, headboard style…')} {...register('designRequirements')} />
             </section>
 
             <section className="card space-y-4 p-6">
               <h2 className="flex items-center gap-2 font-semibold text-walnut-950">
-                <PencilRuler className="h-4 w-4 text-brass-600" /> 2. Measurements
+                <PencilRuler className="h-4 w-4 text-brass-600" /> {t('2. Measurements')}
               </h2>
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
-                <Input label="Width" type="number" step="0.1" min="0" error={errors.width?.message} {...register('width')} />
-                <Input label="Height" type="number" step="0.1" min="0" error={errors.height?.message} {...register('height')} />
-                <Input label="Length" type="number" step="0.1" min="0" error={errors.length?.message} {...register('length')} />
-                <Input label="Depth" type="number" step="0.1" min="0" error={errors.depth?.message} {...register('depth')} />
-                <Select label="Unit" options={['cm', 'mm', 'm', 'in', 'ft']} {...register('unit')} />
+                <Input label={t('Width')} type="number" step="0.1" min="0" error={errors.width?.message} {...register('width')} />
+                <Input label={t('Height')} type="number" step="0.1" min="0" error={errors.height?.message} {...register('height')} />
+                <Input label={t('Length')} type="number" step="0.1" min="0" error={errors.length?.message} {...register('length')} />
+                <Input label={t('Depth')} type="number" step="0.1" min="0" error={errors.depth?.message} {...register('depth')} />
+                <Select label={t('Unit')} options={['cm', 'mm', 'm', 'in', 'ft']} {...register('unit')} />
               </div>
             </section>
 
             <section className="card space-y-4 p-6">
-              <h2 className="font-semibold text-walnut-950">3. Materials & finish</h2>
+              <h2 className="font-semibold text-walnut-950">{t('3. Materials & finish')}</h2>
               <div className="grid gap-4 sm:grid-cols-3">
-                <Input label="Preferred material" placeholder="e.g. Mahogany" {...register('preferredMaterial')} />
-                <Input label="Colour" placeholder="e.g. Dark walnut" {...register('preferredColor')} />
-                <Input label="Fabric" placeholder="e.g. Grey linen" {...register('fabric')} />
+                <Input label={t('Preferred material')} placeholder={t('e.g. Eucalyptus')} {...register('preferredMaterial')} />
+                <Input label={t('Colour')} placeholder={t('e.g. Dark walnut')} {...register('preferredColor')} />
+                <Input label={t('Fabric')} placeholder={t('e.g. Grey linen')} {...register('fabric')} />
               </div>
               <div>
-                <p className="label">Reference images</p>
-                <ImagePicker files={images} onChange={setImages} max={6} label="Add photos" />
-                <p className="mt-1 text-xs text-stone-500">JPG, PNG or WEBP, up to 5 MB each.</p>
+                <p className="label">{t('Reference images')}</p>
+                <ImagePicker files={images} onChange={setImages} max={6} label={t('Add photos')} />
+                <p className="mt-1 text-xs text-stone-500">{t('JPG, PNG or WEBP, up to 5 MB each.')}</p>
               </div>
             </section>
 
             <section className="card space-y-4 p-6">
-              <h2 className="font-semibold text-walnut-950">4. Budget & delivery</h2>
+              <h2 className="font-semibold text-walnut-950">{t('4. Budget & delivery')}</h2>
               <div className="grid gap-4 sm:grid-cols-3">
-                <Input label="Budget (optional)" type="number" min="0" error={errors.budget?.message} {...register('budget')} />
-                <Input label="Needed by" type="date" error={errors.requiredDate?.message} {...register('requiredDate')} />
+                <Input label={t('Budget (optional)')} type="number" min="0" error={errors.budget?.message} {...register('budget')} />
+                <Input label={t('Needed by')} type="date" error={errors.requiredDate?.message} {...register('requiredDate')} />
                 <Select
-                  label="Delivery method"
+                  label={t('Delivery method')}
                   options={[
                     { value: 'DELIVERY', label: 'Deliver to me' },
                     { value: 'PICKUP', label: 'I will collect' },
@@ -152,23 +156,23 @@ export default function CustomFurniture() {
                   {...register('deliveryMethod')}
                 />
               </div>
-              <Textarea label="Anything else?" rows={2} {...register('additionalNotes')} />
+              <Textarea label={t('Anything else?')} rows={2} {...register('additionalNotes')} />
             </section>
 
             <Button type="submit" size="lg" loading={isSubmitting} disabled={user && !isCustomer} icon={user ? undefined : LogIn}>
-              {user ? 'Send request for a quote' : 'Log in to send request'}
+              {user ? t('Send request for a quote') : t('Log in to send request')}
             </Button>
           </form>
         </div>
 
         <aside className="space-y-4 lg:pt-24">
-          <div className="rounded-2xl bg-walnut-900 p-6 text-white">
-            <h2 className="font-display text-xl font-semibold">How it works</h2>
+          <div className="theme-static rounded-2xl bg-walnut-900 p-6 text-white">
+            <h2 className="font-display text-xl font-semibold">{t('How it works')}</h2>
             <ol className="mt-4 space-y-4 text-sm text-walnut-100">
               {['Request', 'Review by our designers', 'Estimate & price proposal', 'You approve the quote', 'Pay the deposit', 'Production & quality check', 'Delivery & completion'].map((s, i) => (
                 <li key={s} className="flex gap-3">
                   <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brass-500 text-xs font-bold text-walnut-950">{i + 1}</span>
-                  {s}
+                  {t(s)}
                 </li>
               ))}
             </ol>

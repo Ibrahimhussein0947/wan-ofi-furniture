@@ -8,6 +8,9 @@ const v = require('../validators/people.validator');
 const users = require('../controllers/user.controller');
 const customers = require('../controllers/customer.controller');
 const workers = require('../controllers/worker.controller');
+const payrollService = require('../services/payroll.service');
+const { z } = require('zod');
+const { asyncHandler, sendSuccess } = require('../utils/http');
 
 const id = validate({ params: idParam });
 const list = validate({ query: listQuery });
@@ -37,7 +40,15 @@ customerRoutes.delete('/:id', requirePermission(P.CUSTOMERS_WRITE), id, customer
 const workerRoutes = express.Router();
 // Accountants list workers to record wage payments.
 workerRoutes.get('/', requirePermission(P.WORKERS_READ, P.PAYMENTS_WRITE), list, workers.list);
+// Monthly pay calculated from each worker's wage type, tasks and logged hours.
+workerRoutes.get(
+  '/payroll',
+  requirePermission(P.PAYMENTS_READ),
+  validate({ query: z.object({ month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'Month must look like 2026-09') }) }),
+  asyncHandler(async (req, res) => sendSuccess(res, { data: await payrollService.monthlyPayroll(req.query.month) }))
+);
 workerRoutes.get('/:id', requirePermission(P.WORKERS_READ), id, workers.get);
 workerRoutes.patch('/:id', requirePermission(P.WORKERS_WRITE), id, validate({ body: v.updateWorker }), workers.update);
+workerRoutes.delete('/:id', requirePermission(P.USERS_WRITE), id, workers.remove);
 
 module.exports = { users: userRoutes, customers: customerRoutes, workers: workerRoutes };

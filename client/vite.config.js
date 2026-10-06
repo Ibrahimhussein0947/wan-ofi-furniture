@@ -6,10 +6,14 @@ const apiTarget = process.env.VITE_DEV_API_TARGET || 'http://localhost:5050';
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5173,
+    // 5173 is taken by another app on this machine; strictPort keeps the address fixed.
+    port: Number(process.env.PORT) || 5174,
+    strictPort: true,
     proxy: {
       '/api': apiTarget,
       '/uploads': apiTarget,
+      '/robots.txt': apiTarget,
+      '/sitemap.xml': apiTarget,
     },
   },
   build: {

@@ -3,7 +3,13 @@ const { nextNumber } = require('../models/Counter');
 const ApiError = require('../utils/ApiError');
 const { round2, paymentStatusFor } = require('../utils/money');
 const { withTransaction } = require('../utils/transaction');
-const { ORDER_STATUS: O, AUDIT_ACTIONS, TRANSACTION_TYPES, PAYMENT_CATEGORIES } = require('../config/constants');
+const { escapeRegex } = require('../utils/query');
+const {
+  ORDER_STATUS: O,
+  AUDIT_ACTIONS,
+  TRANSACTION_TYPES,
+  PAYMENT_CATEGORIES,
+} = require('../config/constants');
 const { getSettings } = require('./settings.service');
 const { recordLedgerEntry } = require('./ledger.service');
 const { confirmOrderInTransaction } = require('./order.service');
@@ -17,7 +23,7 @@ async function syncInvoices(order, session) {
   await Invoice.updateMany(
     { order: order._id, status: { $ne: 'VOID' } },
     { $set: { amountPaid: order.amountPaid, balance: order.balance, total: order.total, status } },
-    { session }
+    { session },
   );
 }
 
@@ -34,12 +40,19 @@ function paymentKind(order, amount) {
  * PAID + REMAINING = TOTAL is preserved, overpayment is rejected (unless enabled),
  * the order auto-confirms once the deposit is reached, and the ledger is updated.
  */
-async function applyCustomerPayment(order, { amount, method, reference, notes, paidAt }, { session, actor, afterCommit, existingPayment }) {
+async function applyCustomerPayment(
+  order,
+  { amount, method, reference, notes, paidAt },
+  { session, actor, afterCommit, existingPayment },
+) {
   const settings = await getSettings();
-  if (order.status === O.CANCELLED) throw ApiError.badRequest('Payments cannot be recorded on a cancelled order.');
+  if (order.status === O.CANCELLED)
+    throw ApiError.badRequest('Payments cannot be recorded on a cancelled order.');
   if (order.balance <= 0) throw ApiError.badRequest('This order is already fully paid.');
   if (amount - order.balance > EPS && !settings.allowOverpayment) {
-    throw ApiError.badRequest(`Payment exceeds remaining balance (${order.balance.toLocaleString()}).`);
+    throw ApiError.badRequest(
+      `Payment exceeds remaining balance (${order.balance.toLocaleString()}).`,
+    );
   }
 
   const kind = paymentKind(order, amount);
@@ -50,12 +63,25 @@ async function applyCustomerPayment(order, { amount, method, reference, notes, p
   // Optimistic concurrency: the write only succeeds if nobody changed amountPaid meanwhile.
   const updated = await Order.findOneAndUpdate(
     { _id: order._id, amountPaid: previousPaid, status: { $ne: O.CANCELLED } },
-    { $set: { amountPaid: newPaid, balance: newBalance, paymentStatus: paymentStatusFor(order.total, newPaid) } },
-    { new: true, session }
+    {
+      $set: {
+        amountPaid: newPaid,
+        balance: newBalance,
+        paymentStatus: paymentStatusFor(order.total, newPaid),
+        // The payment notice below already tells the customer what is left, so it counts as a reminder.
+        lastPaymentReminderAt: new Date(),
+      },
+    },
+    { new: true, session },
   );
-  if (!updated) throw ApiError.conflict('The order was updated at the same time. Please refresh and try again.');
+  if (!updated)
+    throw ApiError.conflict(
+      'The order was updated at the same time. Please refresh and try again.',
+    );
 
-  const invoice = await Invoice.findOne({ order: order._id, status: { $ne: 'VOID' } }).session(session).lean();
+  const invoice = await Invoice.findOne({ order: order._id, status: { $ne: 'VOID' } })
+    .session(session)
+    .lean();
   let payment = existingPayment;
   if (payment) {
     payment.status = 'COMPLETED';
@@ -83,7 +109,7 @@ async function applyCustomerPayment(order, { amount, method, reference, notes, p
           receivedBy: actor.user._id,
         },
       ],
-      { session }
+      { session },
     );
   }
 
@@ -99,12 +125,17 @@ async function applyCustomerPayment(order, { amount, method, reference, notes, p
       description: `${kind.toLowerCase()} payment for ${order.orderNumber}`,
       createdBy: actor.user._id,
     },
-    session
+    session,
   );
 
   // Lifecycle effects of the payment.
   if (updated.status === O.PENDING && newPaid + EPS >= updated.depositRequired) {
-    await confirmOrderInTransaction(updated, { session, actor, afterCommit, note: 'Confirmed automatically on deposit payment' });
+    await confirmOrderInTransaction(updated, {
+      session,
+      actor,
+      afterCommit,
+      note: 'Confirmed automatically on deposit payment',
+    });
   } else if (updated.status === O.CONFIRMED && updated.paymentStatus === 'PAID') {
     updated.status = O.PAID;
     updated.statusHistory.push({ status: O.PAID, note: 'Paid in full', changedBy: actor.user._id });
@@ -112,7 +143,11 @@ async function applyCustomerPayment(order, { amount, method, reference, notes, p
   } else if (updated.status === O.DELIVERED && updated.balance <= 0) {
     updated.status = O.COMPLETED;
     updated.completedAt = new Date();
-    updated.statusHistory.push({ status: O.COMPLETED, note: 'Final balance paid', changedBy: actor.user._id });
+    updated.statusHistory.push({
+      status: O.COMPLETED,
+      note: 'Final balance paid',
+      changedBy: actor.user._id,
+    });
     await updated.save({ session });
   }
   await syncInvoices(updated, session);
@@ -130,7 +165,7 @@ async function applyCustomerPayment(order, { amount, method, reference, notes, p
     await notify.notifyCustomer(updated.customer, {
       type: 'PAYMENT_RECEIVED',
       title: `Payment received — ${updated.orderNumber}`,
-      message: `We received ${amount.toLocaleString()} ${currency}. Remaining balance: ${updated.balance.toLocaleString()} ${currency}.`,
+      message: `We received ${amount.toLocaleString()} ${currency}. Paid so far: ${updated.amountPaid.toLocaleString()} of ${updated.total.toLocaleString()} ${currency}. Remaining balance: ${updated.balance.toLocaleString()} ${currency}.`,
       link: `/account/orders/${updated._id}`,
     });
     await notify.notifyFinance({
@@ -144,6 +179,41 @@ async function applyCustomerPayment(order, { amount, method, reference, notes, p
   return { payment, order: updated };
 }
 
+/**
+ * Reminds the customer what is still owed on an order (in-app, email and SMS) and stamps the order,
+ * so the weekly job doesn't remind the same customer again within a week.
+ */
+async function sendBalanceReminder(orderOrId, actor) {
+  const order = orderOrId._id ? orderOrId : await Order.findById(orderOrId).lean();
+  if (!order) throw ApiError.notFound('Order not found.');
+  if (order.status === O.CANCELLED) throw ApiError.badRequest('This order is cancelled.');
+  if (!(order.balance > 0)) throw ApiError.badRequest('This order is fully paid.');
+  const { currency } = await getSettings();
+  const fmt = (n) => `${round2(n).toLocaleString()} ${currency}`;
+  await notify.notifyCustomer(order.customer, {
+    type: 'PAYMENT_REMINDER',
+    title: `Payment reminder — ${order.orderNumber}`,
+    message:
+      order.amountPaid > 0
+        ? `You have paid ${fmt(order.amountPaid)} of ${fmt(order.total)}. Remaining balance: ${fmt(order.balance)}.`
+        : `A balance of ${fmt(order.balance)} is outstanding on your order.`,
+    link: `/account/orders/${order._id}`,
+  });
+  const remindedAt = new Date();
+  await Order.updateOne({ _id: order._id }, { $set: { lastPaymentReminderAt: remindedAt } });
+  if (actor) {
+    await audit(actor, {
+      action: AUDIT_ACTIONS.UPDATE,
+      entity: 'Order',
+      entityId: order._id,
+      reference: order.orderNumber,
+      amount: order.balance,
+      description: 'Payment reminder sent to customer',
+    });
+  }
+  return { remindedAt, balance: order.balance };
+}
+
 async function recordCustomerPayment(input, actor) {
   return withTransaction(async (session, afterCommit) => {
     const order = await Order.findById(input.order).session(session);
@@ -153,10 +223,21 @@ async function recordCustomerPayment(input, actor) {
 }
 
 /** A customer reports a payment made by bank/mobile transfer; staff verify it before it counts. */
-async function submitCustomerPayment({ order: orderId, amount, method, reference, notes }, customerId, actor) {
+async function submitCustomerPayment(
+  { order: orderId, amount, method, reference, notes, screenshot },
+  customerId,
+  actor,
+) {
   const order = await Order.findOne({ _id: orderId, customer: customerId });
   if (!order) throw ApiError.notFound('Order not found.');
   if (order.status === O.CANCELLED) throw ApiError.badRequest('This order was cancelled.');
+  // The same bank reference can't pay twice (unless an earlier submission was rejected).
+  const duplicate = await Payment.exists({
+    category: PAYMENT_CATEGORIES.CUSTOMER_PAYMENT,
+    reference: new RegExp(`^${escapeRegex(reference.trim())}$`, 'i'),
+    status: { $ne: 'REJECTED' },
+  });
+  if (duplicate) throw ApiError.conflict('This transaction reference has already been submitted. Check the number on your receipt.');
   const settings = await getSettings();
   const pending = await Payment.aggregate([
     { $match: { order: order._id, status: 'PENDING_VERIFICATION' } },
@@ -173,12 +254,20 @@ async function submitCustomerPayment({ order: orderId, amount, method, reference
     method,
     reference,
     notes,
+    screenshot,
     order: order._id,
     customer: customerId,
     status: 'PENDING_VERIFICATION',
     submittedByCustomer: true,
   });
-  await audit(actor, { action: AUDIT_ACTIONS.CREATE, entity: 'Payment', entityId: payment._id, reference: order.orderNumber, amount, description: 'Customer submitted payment for verification' });
+  await audit(actor, {
+    action: AUDIT_ACTIONS.CREATE,
+    entity: 'Payment',
+    entityId: payment._id,
+    reference: order.orderNumber,
+    amount,
+    description: 'Customer submitted payment for verification',
+  });
   await notify.notifyFinance({
     type: 'PAYMENT_RECEIVED',
     title: `Payment to verify: ${order.orderNumber}`,
@@ -192,8 +281,8 @@ async function verifyCustomerPayment(paymentId, { approve, reason }, actor) {
   if (!approve) {
     const payment = await Payment.findOneAndUpdate(
       { _id: paymentId, status: 'PENDING_VERIFICATION' },
-      { $set: { status: 'REJECTED', notes: reason, receivedBy: actor.user._id } },
-      { new: true }
+      { $set: { status: 'REJECTED', rejectionReason: reason, receivedBy: actor.user._id } },
+      { new: true },
     );
     if (!payment) throw ApiError.badRequest('This payment is not awaiting verification.');
     await notify.notifyCustomer(payment.customer, {
@@ -202,14 +291,28 @@ async function verifyCustomerPayment(paymentId, { approve, reason }, actor) {
       message: reason || 'Please contact us about your payment.',
       link: `/account/orders/${payment.order}`,
     });
-    await audit(actor, { action: AUDIT_ACTIONS.UPDATE, entity: 'Payment', entityId: payment._id, amount: payment.amount, description: `Payment rejected: ${reason || ''}` });
+    await audit(actor, {
+      action: AUDIT_ACTIONS.UPDATE,
+      entity: 'Payment',
+      entityId: payment._id,
+      amount: payment.amount,
+      description: `Payment rejected: ${reason || ''}`,
+    });
     return { payment };
   }
   return withTransaction(async (session, afterCommit) => {
-    const payment = await Payment.findOne({ _id: paymentId, status: 'PENDING_VERIFICATION' }).session(session);
+    const payment = await Payment.findOne({
+      _id: paymentId,
+      status: 'PENDING_VERIFICATION',
+    }).session(session);
     if (!payment) throw ApiError.badRequest('This payment is not awaiting verification.');
     const order = await Order.findById(payment.order).session(session);
-    return applyCustomerPayment(order, payment, { session, actor, afterCommit, existingPayment: payment });
+    return applyCustomerPayment(order, payment, {
+      session,
+      actor,
+      afterCommit,
+      existingPayment: payment,
+    });
   });
 }
 
@@ -218,7 +321,10 @@ async function recordRefund({ order: orderId, amount, method, reference, reason 
   return withTransaction(async (session, afterCommit) => {
     const order = await Order.findById(orderId).session(session);
     if (!order) throw ApiError.notFound('Order not found.');
-    if (amount - order.amountPaid > EPS) throw ApiError.badRequest(`Refund exceeds the amount paid (${order.amountPaid.toLocaleString()}).`);
+    if (amount - order.amountPaid > EPS)
+      throw ApiError.badRequest(
+        `Refund exceeds the amount paid (${order.amountPaid.toLocaleString()}).`,
+      );
 
     const previousPaid = order.amountPaid;
     const newPaid = round2(previousPaid - amount);
@@ -230,13 +336,23 @@ async function recordRefund({ order: orderId, amount, method, reference, reason 
         $set: {
           amountPaid: newPaid,
           balance: newBalance,
-          paymentStatus: cancelled && newPaid <= 0 ? 'REFUNDED' : paymentStatusFor(order.total, newPaid),
+          paymentStatus:
+            cancelled && newPaid <= 0 ? 'REFUNDED' : paymentStatusFor(order.total, newPaid),
         },
-        $push: { statusHistory: { status: order.status, note: `Refund of ${amount}: ${reason}`, changedBy: actor.user._id } },
+        $push: {
+          statusHistory: {
+            status: order.status,
+            note: `Refund of ${amount}: ${reason}`,
+            changedBy: actor.user._id,
+          },
+        },
       },
-      { new: true, session }
+      { new: true, session },
     );
-    if (!updated) throw ApiError.conflict('The order was updated at the same time. Please refresh and try again.');
+    if (!updated)
+      throw ApiError.conflict(
+        'The order was updated at the same time. Please refresh and try again.',
+      );
 
     const [payment] = await Payment.create(
       [
@@ -254,7 +370,7 @@ async function recordRefund({ order: orderId, amount, method, reference, reason 
           receivedBy: actor.user._id,
         },
       ],
-      { session }
+      { session },
     );
     await recordLedgerEntry(
       {
@@ -267,12 +383,19 @@ async function recordRefund({ order: orderId, amount, method, reference, reason 
         description: `Refund on ${order.orderNumber}: ${reason}`,
         createdBy: actor.user._id,
       },
-      session
+      session,
     );
     if (!cancelled) await syncInvoices(updated, session);
 
     afterCommit(async () => {
-      await audit(actor, { action: AUDIT_ACTIONS.REFUND, entity: 'Payment', entityId: payment._id, reference: order.orderNumber, amount, description: reason });
+      await audit(actor, {
+        action: AUDIT_ACTIONS.REFUND,
+        entity: 'Payment',
+        entityId: payment._id,
+        reference: order.orderNumber,
+        amount,
+        description: reason,
+      });
       await notify.notifyCustomer(order.customer, {
         type: 'GENERAL',
         title: `Refund issued — ${order.orderNumber}`,
@@ -284,7 +407,10 @@ async function recordRefund({ order: orderId, amount, method, reference, reason 
   });
 }
 
-async function recordSupplierPayment({ supplier: supplierId, purchaseOrder: poId, amount, method, reference, notes, paidAt }, actor) {
+async function recordSupplierPayment(
+  { supplier: supplierId, purchaseOrder: poId, amount, method, reference, notes, paidAt },
+  actor,
+) {
   const settings = await getSettings();
   return withTransaction(async (session, afterCommit) => {
     const supplier = await Supplier.findById(supplierId).session(session);
@@ -294,14 +420,20 @@ async function recordSupplierPayment({ supplier: supplierId, purchaseOrder: poId
     if (poId) {
       po = await PurchaseOrder.findOne({ _id: poId, supplier: supplier._id }).session(session);
       if (!po) throw ApiError.notFound('Purchase order not found for this supplier.');
-      if (po.status === 'CANCELLED') throw ApiError.badRequest('Cannot pay a cancelled purchase order.');
+      if (po.status === 'CANCELLED')
+        throw ApiError.badRequest('Cannot pay a cancelled purchase order.');
       const outstanding = round2(po.total - po.amountPaid);
-      if (amount - outstanding > EPS) throw ApiError.badRequest(`Payment exceeds the purchase order balance (${outstanding.toLocaleString()}).`);
+      if (amount - outstanding > EPS)
+        throw ApiError.badRequest(
+          `Payment exceeds the purchase order balance (${outstanding.toLocaleString()}).`,
+        );
       po.amountPaid = round2(po.amountPaid + amount);
       po.paymentStatus = paymentStatusFor(po.total, po.amountPaid);
       await po.save({ session });
     } else if (amount - supplier.balance > EPS && !settings.allowOverpayment) {
-      throw ApiError.badRequest(`Payment exceeds the amount owed to this supplier (${supplier.balance.toLocaleString()}).`);
+      throw ApiError.badRequest(
+        `Payment exceeds the amount owed to this supplier (${supplier.balance.toLocaleString()}).`,
+      );
     }
 
     supplier.balance = round2(supplier.balance - amount);
@@ -324,7 +456,7 @@ async function recordSupplierPayment({ supplier: supplierId, purchaseOrder: poId
           receivedBy: actor.user._id,
         },
       ],
-      { session }
+      { session },
     );
     await recordLedgerEntry(
       {
@@ -338,10 +470,17 @@ async function recordSupplierPayment({ supplier: supplierId, purchaseOrder: poId
         description: `Payment to ${supplier.name}${po ? ` for ${po.poNumber}` : ''}`,
         createdBy: actor.user._id,
       },
-      session
+      session,
     );
     afterCommit(async () => {
-      await audit(actor, { action: AUDIT_ACTIONS.PAYMENT, entity: 'Payment', entityId: payment._id, reference: po?.poNumber || supplier.name, amount, description: `Supplier payment to ${supplier.name}` });
+      await audit(actor, {
+        action: AUDIT_ACTIONS.PAYMENT,
+        entity: 'Payment',
+        entityId: payment._id,
+        reference: po?.poNumber || supplier.name,
+        amount,
+        description: `Supplier payment to ${supplier.name}`,
+      });
       await notify.notifyFinance({
         type: 'SUPPLIER_PAYMENT',
         title: `Supplier paid: ${supplier.name}`,
@@ -353,7 +492,10 @@ async function recordSupplierPayment({ supplier: supplierId, purchaseOrder: poId
   });
 }
 
-async function recordWorkerPayment({ worker: workerId, amount, method, kind = 'WAGE', reference, notes, paidAt, period }, actor) {
+async function recordWorkerPayment(
+  { worker: workerId, amount, method, kind = 'WAGE', reference, notes, paidAt, period, payPeriod },
+  actor,
+) {
   return withTransaction(async (session, afterCommit) => {
     const worker = await Worker.findById(workerId).populate('user', 'name').session(session);
     if (!worker) throw ApiError.notFound('Worker not found.');
@@ -372,11 +514,12 @@ async function recordWorkerPayment({ worker: workerId, amount, method, kind = 'W
           reference,
           notes: [period && `Period: ${period}`, notes].filter(Boolean).join(' — '),
           paidAt: paidAt || new Date(),
+          payPeriod,
           worker: worker._id,
           receivedBy: actor.user._id,
         },
       ],
-      { session }
+      { session },
     );
     await recordLedgerEntry(
       {
@@ -389,10 +532,17 @@ async function recordWorkerPayment({ worker: workerId, amount, method, kind = 'W
         description: `${kind.toLowerCase()} payment to ${worker.user?.name || worker.employeeCode}${period ? ` (${period})` : ''}`,
         createdBy: actor.user._id,
       },
-      session
+      session,
     );
     afterCommit(() =>
-      audit(actor, { action: AUDIT_ACTIONS.PAYMENT, entity: 'Payment', entityId: payment._id, reference: worker.employeeCode, amount, description: `Worker ${kind.toLowerCase()} payment` })
+      audit(actor, {
+        action: AUDIT_ACTIONS.PAYMENT,
+        entity: 'Payment',
+        entityId: payment._id,
+        reference: worker.employeeCode,
+        amount,
+        description: `Worker ${kind.toLowerCase()} payment`,
+      }),
     );
     return { payment, worker };
   });
@@ -400,6 +550,7 @@ async function recordWorkerPayment({ worker: workerId, amount, method, kind = 'W
 
 module.exports = {
   applyCustomerPayment,
+  sendBalanceReminder,
   recordCustomerPayment,
   submitCustomerPayment,
   verifyCustomerPayment,

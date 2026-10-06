@@ -9,18 +9,20 @@ import { Badge } from '../../../components/ui/Badge';
 import { auditApi } from '../../../api/endpoints';
 import useListParams from '../../../hooks/useListParams';
 import { dateTime, label, money } from '../../../utils/format';
+import { useT } from '../../../i18n/LanguageContext';
 
 const ACTIONS = ['LOGIN', 'LOGOUT', 'LOGIN_FAILED', 'CREATE', 'UPDATE', 'DELETE', 'PAYMENT', 'REFUND', 'STATUS_CHANGE', 'INVENTORY_CHANGE', 'PRODUCTION_CHANGE', 'PERMISSION_CHANGE', 'APPROVAL'];
 const TONE = { DELETE: 'red', LOGIN_FAILED: 'red', PAYMENT: 'green', REFUND: 'amber', PERMISSION_CHANGE: 'violet', APPROVAL: 'blue', INVENTORY_CHANGE: 'teal', PRODUCTION_CHANGE: 'violet' };
 
 export default function AuditLogs() {
+  const t = useT();
   const [params, set] = useListParams({ limit: 50 });
   const [detail, setDetail] = useState(null);
   const query = useQuery({ queryKey: ['audit', params], queryFn: () => auditApi.list(params), placeholderData: keepPreviousData });
   const columns = [
     { key: 'createdAt', header: 'Time', render: (l) => dateTime(l.createdAt), exportValue: (l) => dateTime(l.createdAt) },
-    { key: 'user', header: 'User', render: (l) => (l.userName ? <span>{l.userName} <span className="text-xs text-stone-500">({label(l.userRole)})</span></span> : 'System'), exportValue: (l) => l.userName },
-    { key: 'action', header: 'Action', render: (l) => <Badge tone={TONE[l.action] || 'stone'}>{label(l.action)}</Badge>, exportValue: (l) => l.action },
+    { key: 'user', header: 'User', render: (l) => (l.userName ? <span>{l.userName} <span className="text-xs text-stone-500">({t(label(l.userRole))})</span></span> : 'System'), exportValue: (l) => l.userName },
+    { key: 'action', header: 'Action', render: (l) => <Badge tone={TONE[l.action] || 'stone'}>{t(label(l.action))}</Badge>, exportValue: (l) => l.action },
     { key: 'entity', header: 'Record', render: (l) => `${l.entity || ''} ${l.reference ? `· ${l.reference}` : ''}`, exportValue: (l) => `${l.entity} ${l.reference || ''}` },
     { key: 'description', header: 'Details', render: (l) => <span className="block max-w-sm truncate">{l.description || (l.changes ? 'Field changes' : '')}</span> },
     { key: 'amount', header: 'Amount', align: 'right', render: (l) => (l.amount !== null && l.amount !== undefined ? money(l.amount) : ''), exportValue: (l) => l.amount },
@@ -28,20 +30,20 @@ export default function AuditLogs() {
   ];
   return (
     <div>
-      <PageHeader title="Audit log" subtitle="Who did what, and when" actions={<ExportMenu filename="audit-log" title="Audit log" columns={columns} rows={query.data?.items} />} />
+      <PageHeader title={t('Audit log')} subtitle={t('Who did what, and when')} actions={<ExportMenu filename="audit-log" title={t('Audit log')} columns={columns} rows={query.data?.items} />} />
       <FilterBar>
-        <SearchInput value={params.search} onChange={(search) => set({ search })} placeholder="Reference, user, details…" className="sm:w-72" />
-        <Select value={params.action || ''} onChange={(e) => set({ action: e.target.value })} options={ACTIONS.map((a) => ({ value: a, label: label(a) }))} placeholder="All actions" aria-label="Action" containerClassName="sm:w-48" />
-        <Select value={params.userRole || ''} onChange={(e) => set({ userRole: e.target.value })} options={['OWNER', 'ACCOUNTANT', 'WORKER', 'CUSTOMER'].map((r) => ({ value: r, label: label(r) }))} placeholder="All roles" aria-label="Role" containerClassName="sm:w-40" />
-        <Input type="date" value={params.from || ''} onChange={(e) => set({ from: e.target.value })} aria-label="From" containerClassName="sm:w-40" />
+        <SearchInput value={params.search} onChange={(search) => set({ search })} placeholder={t('Reference, user, details…')} className="sm:w-72" />
+        <Select value={params.action || ''} onChange={(e) => set({ action: e.target.value })} options={ACTIONS.map((a) => ({ value: a, label: t(label(a)) }))} placeholder={t('All actions')} aria-label={t('Action')} containerClassName="sm:w-48" />
+        <Select value={params.userRole || ''} onChange={(e) => set({ userRole: e.target.value })} options={['OWNER', 'ACCOUNTANT', 'WORKER', 'CUSTOMER'].map((r) => ({ value: r, label: t(label(r)) }))} placeholder={t('All roles')} aria-label={t('Role')} containerClassName="sm:w-40" />
+        <Input type="date" value={params.from || ''} onChange={(e) => set({ from: e.target.value })} aria-label={t('From')} containerClassName="sm:w-40" />
         <Input type="date" value={params.to || ''} onChange={(e) => set({ to: e.target.value })} aria-label="To" containerClassName="sm:w-40" />
       </FilterBar>
       <DataTable dense columns={columns} loading={query.isLoading} error={query.error} rows={query.data?.items} pagination={query.data?.pagination} onPageChange={(page) => set({ page })} onRowClick={setDetail} />
-      <Modal open={Boolean(detail)} onClose={() => setDetail(null)} title={detail && `${label(detail.action)} · ${detail.entity || ''}`} size="lg">
+      <Modal open={Boolean(detail)} onClose={() => setDetail(null)} title={detail && `${t(label(detail.action))} · ${detail.entity || ''}`} size="lg">
         {detail && (
           <div className="space-y-3 text-sm">
             <p>
-              <strong>{detail.userName || 'System'}</strong> ({label(detail.userRole)}) · {dateTime(detail.createdAt)} · {detail.ip}
+              <strong>{detail.userName || 'System'}</strong> ({t(label(detail.userRole))}) · {dateTime(detail.createdAt)} · {detail.ip}
             </p>
             {detail.reference && <p>Reference: {detail.reference}</p>}
             {detail.description && <p>{detail.description}</p>}

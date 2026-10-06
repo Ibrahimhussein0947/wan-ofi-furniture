@@ -25,7 +25,14 @@ const userSchema = new mongoose.Schema(
     notificationPrefs: {
       email: { type: Boolean, default: true },
       sms: { type: Boolean, default: true },
+      telegram: { type: Boolean, default: true },
+      // WhatsApp requires an explicit opt-in.
+      whatsapp: { type: Boolean, default: false },
     },
+    // Set when the user links their account to the Telegram bot.
+    telegramChatId: { type: String, select: false },
+    telegramLinkCode: { type: String, select: false, index: { sparse: true } },
+    telegramLinkExpires: { type: Date, select: false },
     lastLoginAt: Date,
     passwordChangedAt: Date,
     failedLoginAttempts: { type: Number, default: 0, select: false },

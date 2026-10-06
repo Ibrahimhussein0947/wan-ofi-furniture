@@ -21,7 +21,7 @@ import Checkout from '../pages/public/Checkout';
 import { exportCSV } from '../utils/export';
 
 beforeEach(() => {
-  publicApi.settings.mockResolvedValue({ currency: 'TZS', taxRate: 18, depositPercent: 40, defaultDeliveryFee: 0, onlinePayments: true, mobileNetworks: ['MPESA', 'TIGO', 'AIRTEL'] });
+  publicApi.settings.mockResolvedValue({ currency: 'ETB', taxRate: 15, depositPercent: 40, defaultDeliveryFee: 0, onlinePayments: true, mobileNetworks: ['TELEBIRR', 'CBE_BIRR', 'AMOLE'] });
   branchesApi.list.mockResolvedValue([]);
 });
 
@@ -71,17 +71,17 @@ describe('email verification banner', () => {
 
 describe('mobile money payment', () => {
   test('sends a prompt and shows success once the provider confirms', async () => {
-    paymentsApi.mobile.mockResolvedValue({ reference: 'WOPABC123', status: 'PENDING', network: 'MPESA', phone: '+255754123456', amount: 40000 });
-    paymentsApi.mobileStatus.mockResolvedValue({ reference: 'WOPABC123', status: 'SUCCEEDED', network: 'MPESA', phone: '+255754123456', amount: 40000 });
+    paymentsApi.mobile.mockResolvedValue({ reference: 'WOPABC123', status: 'PENDING', network: 'TELEBIRR', phone: '+251913123456', amount: 40000 });
+    paymentsApi.mobileStatus.mockResolvedValue({ reference: 'WOPABC123', status: 'SUCCEEDED', network: 'TELEBIRR', phone: '+251913123456', amount: 40000 });
     renderWithProviders(<PayModal open onClose={() => {}} order={{ _id: 'o1', balance: 100000, depositRequired: 40000, amountPaid: 0, status: 'PENDING' }} />, { user: makeUser('CUSTOMER') });
 
     await screen.findByText('Mobile money');
     // The customer's saved number is pre-filled; they pay from a different phone here.
-    expect(screen.getByLabelText(/mobile number/i)).toHaveValue('+255700000000');
+    expect(screen.getByLabelText(/mobile number/i)).toHaveValue('+251900000000');
     await userEvent.clear(screen.getByLabelText(/mobile number/i));
-    await userEvent.type(screen.getByLabelText(/mobile number/i), '0754123456');
+    await userEvent.type(screen.getByLabelText(/mobile number/i), '0913123456');
     await userEvent.click(screen.getByRole('button', { name: /send payment prompt/i }));
-    await waitFor(() => expect(paymentsApi.mobile).toHaveBeenCalledWith({ order: 'o1', network: 'MPESA', phone: '0754123456', amount: 40000 }));
+    await waitFor(() => expect(paymentsApi.mobile).toHaveBeenCalledWith({ order: 'o1', network: 'TELEBIRR', phone: '0913123456', amount: 40000 }));
     expect(await screen.findByText('Check your phone')).toBeInTheDocument();
     expect(await screen.findByText(/received/, {}, { timeout: 5000 })).toBeInTheDocument();
   });
@@ -91,10 +91,34 @@ describe('tax at checkout', () => {
   test('VAT is shown and included in the total and deposit', async () => {
     localStorage.setItem('wanofi.cart', JSON.stringify([{ productId: 'p1', name: 'Bed', price: 100000, quantity: 1 }]));
     renderWithProviders(<Checkout />, { user: makeUser('CUSTOMER') });
-    expect(await screen.findByText('VAT (18%)')).toBeInTheDocument();
-    expect(screen.getByText('TZS 18,000')).toBeInTheDocument();
-    expect(screen.getByText('TZS 118,000')).toBeInTheDocument();
-    expect(screen.getByText('TZS 47,200')).toBeInTheDocument(); // 40% deposit of the VAT-inclusive total
+    expect(await screen.findByText('VAT (15%)')).toBeInTheDocument();
+    expect(screen.getByText('ETB 15,000')).toBeInTheDocument();
+    expect(screen.getByText('ETB 115,000')).toBeInTheDocument();
+    expect(screen.getByText('ETB 46,000')).toBeInTheDocument(); // 40% deposit of the VAT-inclusive total
+  });
+});
+
+describe('bank accounts in the payment dialog', () => {
+  test('the customer sees the accounts the admin configured, with a copy button', async () => {
+    publicApi.settings.mockResolvedValue({
+      currency: 'ETB',
+      depositPercent: 40,
+      onlinePayments: false,
+      paymentInstructions: 'Submit your reference after transferring.',
+      bankAccounts: [
+        { type: 'BANK', bankName: 'Commercial Bank of Ethiopia', accountName: 'Wan Ofi Furniture Ltd', accountNumber: '0150-000000-00', branch: 'Bole' },
+        { type: 'MOBILE_WALLET', bankName: 'Telebirr', accountName: 'Wan Ofi Furniture', accountNumber: '0900 111 222' },
+      ],
+    });
+    renderWithProviders(<PayModal open onClose={() => {}} order={{ _id: 'o1', balance: 100000, depositRequired: 40000, amountPaid: 0, status: 'PENDING' }} />, { user: makeUser('CUSTOMER') });
+
+    expect(await screen.findByText(/commercial bank of ethiopia/i)).toBeInTheDocument();
+    expect(screen.getByText('Commercial Bank of Ethiopia · Bole')).toBeInTheDocument();
+    expect(screen.getByText('Wan Ofi Furniture Ltd')).toBeInTheDocument();
+    expect(screen.getByText('0150-000000-00')).toBeInTheDocument();
+    expect(screen.getByText('Telebirr')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /copy/i })).toHaveLength(2);
+    expect(screen.getByText('Submit your reference after transferring.')).toBeInTheDocument();
   });
 });
 

@@ -40,10 +40,12 @@ const productBase = z.object({
   status: z.enum(Object.values(PRODUCT_STATUS)).optional(),
   isFeatured: z.boolean().optional(),
   madeToOrder: z.boolean().optional(),
+  warrantyMonths: z.coerce.number().int().min(0).max(120).optional(),
+  warrantyTerms: optionalText(500),
 });
 
 // Opening stock is allowed on create; afterwards stock only changes through inventory transactions.
-const createProduct = productBase.extend({ quantity: money.optional(), allowLoss: z.boolean().optional() }).refine((p) => p.sellingPrice >= p.costPrice || p.allowLoss, {
+const createProduct = productBase.extend({ quantity: money.optional(), allowLoss: z.boolean().optional(), branch: optionalId }).refine((p) => p.sellingPrice >= p.costPrice || p.allowLoss, {
   message: 'Selling price is below cost price',
   path: ['sellingPrice'],
 });
@@ -55,6 +57,7 @@ const material = z.object({
   category: z.enum(MATERIAL_CATEGORIES).optional(),
   unit: trimmed(20).min(1),
   minStock: money.optional(),
+  reorderQuantity: money.optional(),
   unitCost: money.optional(),
   supplier: optionalId,
   purchaseDate: optionalDate,
@@ -62,7 +65,7 @@ const material = z.object({
   location: optionalText(80),
   notes: optionalText(1000),
 });
-const createMaterial = material.extend({ quantity: money.optional() });
+const createMaterial = material.extend({ quantity: money.optional(), branch: optionalId });
 
 const bom = z.object({
   items: z
@@ -86,6 +89,16 @@ const stockAdjustment = z.object({
   quantity: z.coerce.number().refine((n) => n !== 0, 'Quantity must not be zero'),
   unitCost: money.optional(),
   note: trimmed(500).min(3, 'Please give a reason for this stock change'),
+  branch: optionalId,
+});
+
+const stockTransfer = z.object({
+  itemType: z.enum(['PRODUCT', 'MATERIAL']),
+  itemId: objectId,
+  from: objectId,
+  to: objectId,
+  quantity: z.coerce.number().positive('Quantity must be more than zero'),
+  note: optionalText(300),
 });
 
 const supplier = z.object({
@@ -106,13 +119,29 @@ const purchaseOrder = z.object({
   expectedDate: optionalDate,
   notes: optionalText(2000),
   status: z.enum(['DRAFT', 'ORDERED']).optional(),
+  branch: optionalId,
 });
 
 const receivePurchase = z.object({
   items: z.array(z.object({ itemId: objectId, quantity })).optional(),
 });
 
+const review = z.object({
+  rating: z.coerce.number().int().min(1).max(5),
+  title: optionalText(120),
+  comment: optionalText(2000),
+});
+const reviewStatus = z.object({ status: z.enum(['PUBLISHED', 'HIDDEN']) });
+const reviewQuery = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(50).default(10),
+  status: z.enum(['PUBLISHED', 'HIDDEN']).optional(),
+});
+
 module.exports = {
+  review,
+  reviewStatus,
+  reviewQuery,
   category,
   updateCategory: category.partial(),
   createProduct,
@@ -121,6 +150,7 @@ module.exports = {
   updateMaterial: material.partial(),
   bom,
   stockAdjustment,
+  stockTransfer,
   supplier,
   updateSupplier: supplier.partial(),
   purchaseOrder,

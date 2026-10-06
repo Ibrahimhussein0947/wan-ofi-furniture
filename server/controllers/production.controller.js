@@ -69,6 +69,10 @@ exports.addNote = asyncHandler(async (req, res) => {
   sendSuccess(res, { data: await production.addNote(req.params.id, req.body.text, actorFrom(req)), message: 'Note added' });
 });
 
+exports.logHours = asyncHandler(async (req, res) => {
+  sendSuccess(res, { data: await production.logHours(req.params.id, req.body, actorFrom(req)), message: 'Hours logged' });
+});
+
 exports.addImages = asyncHandler(async (req, res) => {
   if (!req.uploadedFiles?.length) throw ApiError.badRequest('Please attach at least one image.');
   sendSuccess(res, { data: await production.addImages(req.params.id, req.uploadedFiles, req.body.caption, actorFrom(req)), message: 'Images uploaded' });
@@ -120,8 +124,8 @@ exports.updateTask = asyncHandler(async (req, res) => {
   const manager = production.isManager(req.user);
   if (!manager) {
     if (String(task.assignedTo) !== String(req.user._id)) throw ApiError.forbidden('This task is not assigned to you.');
-    const extra = Object.keys(req.body).filter((k) => k !== 'status' && req.body[k] !== undefined);
-    if (extra.length) throw ApiError.forbidden('You can only update the status of your tasks.');
+    const extra = Object.keys(req.body).filter((k) => !['status', 'hoursWorked'].includes(k) && req.body[k] !== undefined);
+    if (extra.length) throw ApiError.forbidden('You can only update the status and hours of your tasks.');
   }
   Object.assign(task, req.body);
   if (req.body.status === 'IN_PROGRESS' && !task.startedAt) task.startedAt = new Date();

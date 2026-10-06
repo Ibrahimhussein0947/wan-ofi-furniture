@@ -8,6 +8,7 @@ import Button from '../../components/ui/Button';
 import { Input } from '../../components/ui/Field';
 import { useAuth, homePathFor } from '../../context/AuthContext';
 import { errorMessage } from '../../api/client';
+import { useT } from '../../i18n/LanguageContext';
 
 const schema = z.object({
   email: z.string().trim().email('Enter a valid email address'),
@@ -15,6 +16,7 @@ const schema = z.object({
 });
 
 export default function Login() {
+  const t = useT();
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -42,34 +44,34 @@ export default function Login() {
     <div className="container-page flex justify-center py-16">
       <div className="w-full max-w-md">
         <div className="rounded-2xl bg-white p-8 shadow-card">
-          <h1 className="font-display text-3xl font-semibold text-walnut-950">Welcome back</h1>
-          <p className="mt-1 text-sm text-stone-600">Log in to your Wan Ofi account.</p>
+          <h1 className="font-display text-3xl font-semibold text-walnut-950">{t('Welcome back')}</h1>
+          <p className="mt-1 text-sm text-stone-600">{t('Log in to your Wan Ofi account.')}</p>
           {error && (
             <p className="mt-4 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
               {error}
             </p>
           )}
           <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4" noValidate>
-            <Input label="Email" type="email" autoComplete="email" error={errors.email?.message} {...register('email')} />
+            <Input label={t('Email')} type="email" autoComplete="email" error={errors.email?.message} {...register('email')} />
             <div className="relative">
-              <Input label="Password" type={show ? 'text' : 'password'} autoComplete="current-password" error={errors.password?.message} className="pr-10" {...register('password')} />
-              <button type="button" onClick={() => setShow((s) => !s)} className="absolute right-2 top-8 p-1 text-stone-400 hover:text-stone-600" aria-label={show ? 'Hide password' : 'Show password'}>
+              <Input label={t('Password')} type={show ? 'text' : 'password'} autoComplete="current-password" error={errors.password?.message} className="pr-10" {...register('password')} />
+              <button type="button" onClick={() => setShow((s) => !s)} className="absolute right-2 top-8 p-1 text-stone-400 hover:text-stone-600" aria-label={show ? t('Hide password') : t('Show password')}>
                 {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
             <div className="-mt-1 text-right">
               <Link to="/forgot-password" className="text-sm text-walnut-700 hover:underline">
-                Forgot password?
+                {t('Forgot password?')}
               </Link>
             </div>
             <Button type="submit" block size="lg" loading={isSubmitting} icon={LogIn}>
-              Log in
+              {t('Log in')}
             </Button>
           </form>
           <p className="mt-6 text-center text-sm text-stone-600">
-            New here?{' '}
+            {t('New here?')}{' '}
             <Link to="/register" state={location.state} className="link">
-              Create an account
+              {t('Create an account')}
             </Link>
           </p>
         </div>

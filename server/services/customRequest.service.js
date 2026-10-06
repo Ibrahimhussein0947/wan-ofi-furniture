@@ -167,6 +167,7 @@ async function respondToQuote(id, customerId, { approve, note }, actor) {
         color: request.preferredColor,
         options: [request.preferredMaterial, request.fabric].filter(Boolean).join(', '),
         fulfillment: 'PRODUCTION',
+        warrantyMonths: settings.customWarrantyMonths ?? 12,
       },
     ],
     subtotal: request.quotedPrice,

@@ -1,6 +1,6 @@
 const { Material, Product, InventoryTransaction, BillOfMaterials, Supplier } = require('../models');
 const { audit, actorFrom, diff } = require('../services/audit.service');
-const { adjustStock, sendLowStockAlert, MANUAL_TYPES } = require('../services/inventory.service');
+const { adjustStock, transferStock, sendLowStockAlert, MANUAL_TYPES } = require('../services/inventory.service');
 const { asyncHandler, sendSuccess, sendCreated } = require('../utils/http');
 const { paginate, searchFilter, pickFilters, dateRangeFilter } = require('../utils/query');
 const { round2 } = require('../utils/money');
@@ -40,11 +40,11 @@ exports.getMaterial = asyncHandler(async (req, res) => {
 });
 
 exports.createMaterial = asyncHandler(async (req, res) => {
-  const { quantity = 0, ...data } = req.body;
+  const { quantity = 0, branch, ...data } = req.body;
   if (data.supplier && !(await Supplier.exists({ _id: data.supplier }))) throw ApiError.badRequest('Supplier not found.');
   const material = await Material.create({ ...data, quantity: 0 });
   if (quantity > 0) {
-    await adjustStock({ itemType: 'MATERIAL', itemId: material._id, delta: quantity, type: INVENTORY_TX_TYPES.STOCK_IN, unitCost: material.unitCost, note: 'Opening stock', userId: req.user._id });
+    await adjustStock({ itemType: 'MATERIAL', itemId: material._id, delta: quantity, type: INVENTORY_TX_TYPES.STOCK_IN, unitCost: material.unitCost, note: 'Opening stock', userId: req.user._id, branch: branch || req.user.branch });
     material.quantity = quantity;
   }
   await audit(actorFrom(req), { action: AUDIT_ACTIONS.CREATE, entity: 'Material', entityId: material._id, reference: material.name });
@@ -78,8 +78,8 @@ exports.deleteMaterial = asyncHandler(async (req, res) => {
 // ---------- Inventory ----------
 exports.overview = asyncHandler(async (_req, res) => {
   const [products, materials] = await Promise.all([
-    Product.find().select('name sku quantity minStock soldQuantity damagedQuantity costPrice status madeToOrder images').sort({ name: 1 }).lean(),
-    Material.find().select('name code unit quantity minStock unitCost category').sort({ name: 1 }).lean(),
+    Product.find().select('name sku quantity branchStock minStock soldQuantity damagedQuantity costPrice status madeToOrder images').sort({ name: 1 }).lean(),
+    Material.find().select('name code unit quantity branchStock minStock unitCost category').sort({ name: 1 }).lean(),
   ]);
   sendSuccess(res, {
     data: {
@@ -97,7 +97,7 @@ exports.overview = asyncHandler(async (_req, res) => {
 
 exports.listTransactions = asyncHandler(async (req, res) => {
   const filter = {
-    ...pickFilters(req.query, ['itemType', 'type', 'product', 'material'], ['product', 'material']),
+    ...pickFilters(req.query, ['itemType', 'type', 'product', 'material', 'branch'], ['product', 'material', 'branch']),
     ...dateRangeFilter('createdAt', req.query.from, req.query.to),
   };
   const { items, pagination } = await paginate(InventoryTransaction, filter, req.query, {
@@ -105,17 +105,32 @@ exports.listTransactions = asyncHandler(async (req, res) => {
       { path: 'product', select: 'name sku' },
       { path: 'material', select: 'name unit' },
       { path: 'createdBy', select: 'name' },
+      { path: 'branch', select: 'name code' },
     ],
   });
   sendSuccess(res, { data: items, pagination });
 });
 
+/** Moves stock from one branch to another (both sides ledgered). */
+exports.transfer = asyncHandler(async (req, res) => {
+  const { itemType, itemId, from, to, quantity, note } = req.body;
+  const item = await transferStock({ itemType, itemId, from, to, quantity, note, userId: req.user._id });
+  await audit(actorFrom(req), {
+    action: AUDIT_ACTIONS.INVENTORY_CHANGE,
+    entity: itemType === 'PRODUCT' ? 'Product' : 'Material',
+    entityId: itemId,
+    reference: item.name,
+    description: `Transferred ${quantity} between branches${note ? `: ${note}` : ''}`,
+  });
+  sendSuccess(res, { data: item, message: 'Stock transferred' });
+});
+
 /** Manual stock movements (stock-in, stock-out, damage, returns, corrections). Always ledgered. */
 exports.adjust = asyncHandler(async (req, res) => {
-  const { itemType, itemId, type, quantity, unitCost, note } = req.body;
+  const { itemType, itemId, type, quantity, unitCost, note, branch } = req.body;
   const sign = MANUAL_TYPES[type];
   const delta = sign === 0 ? quantity : sign * Math.abs(quantity);
-  const result = await adjustStock({ itemType, itemId, delta, type, unitCost, note, userId: req.user._id });
+  const result = await adjustStock({ itemType, itemId, delta, type, unitCost, note, userId: req.user._id, branch: branch || req.user.branch });
   if (result.crossedLowStock) await sendLowStockAlert(itemType, result.item);
   await audit(actorFrom(req), {
     action: AUDIT_ACTIONS.INVENTORY_CHANGE,

@@ -14,10 +14,12 @@ import { purchasesApi } from '../../../api/endpoints';
 import { useAuth } from '../../../context/AuthContext';
 import useMutationToast from '../../../hooks/useMutationToast';
 import { date, dateTime, label, money, number } from '../../../utils/format';
+import { useT } from '../../../i18n/LanguageContext';
 
 const KEYS = ['purchase', 'purchases', 'materials', 'inventory', 'supplier'];
 
 export default function PurchaseDetail() {
+  const t = useT();
   const { id } = useParams();
   const { can } = useAuth();
   const [modal, setModal] = useState(null);
@@ -45,28 +47,28 @@ export default function PurchaseDetail() {
               }
               actions={
                 <>
-                  {po.status === 'DRAFT' && can('purchases:write') && <Button icon={Send} loading={place.isPending} onClick={() => place.mutate()}>Place order</Button>}
+                  {po.status === 'DRAFT' && can('purchases:write') && <Button icon={Send} loading={place.isPending} onClick={() => place.mutate()}>{t('Place order')}</Button>}
                   {open && can('purchases:write') && (
                     <Button icon={PackageCheck} onClick={() => { setReceipt(Object.fromEntries(outstanding.map((l) => [l._id, l.outstanding]))); setModal('receive'); }}>
-                      Receive goods
+                      {t('Receive goods')}
                     </Button>
                   )}
-                  {po.status !== 'CANCELLED' && po.amountPaid < po.total && can('payments:write') && <Button variant="secondary" icon={Banknote} onClick={() => setModal('pay')}>Pay</Button>}
-                  {['DRAFT', 'ORDERED'].includes(po.status) && po.amountPaid === 0 && can('purchases:write') && <Button variant="ghost" icon={XCircle} className="text-red-600" onClick={() => setModal('cancel')}>Cancel</Button>}
+                  {po.status !== 'CANCELLED' && po.amountPaid < po.total && can('payments:write') && <Button variant="secondary" icon={Banknote} onClick={() => setModal('pay')}>{t('Pay')}</Button>}
+                  {['DRAFT', 'ORDERED'].includes(po.status) && po.amountPaid === 0 && can('purchases:write') && <Button variant="ghost" icon={XCircle} className="text-red-600" onClick={() => setModal('cancel')}>{t('Cancel')}</Button>}
                 </>
               }
             />
             <div className="grid gap-6 xl:grid-cols-3">
-              <Card title="Items" padded={false} className="xl:col-span-2">
+              <Card title={t('Items')} padded={false} className="xl:col-span-2">
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-stone-100">
                     <thead className="bg-stone-50">
                       <tr>
-                        <th className="table-th">Material</th>
-                        <th className="table-th text-right">Ordered</th>
-                        <th className="table-th">Received</th>
-                        <th className="table-th text-right">Unit cost</th>
-                        <th className="table-th text-right">Total</th>
+                        <th className="table-th">{t('Material')}</th>
+                        <th className="table-th text-right">{t('Ordered')}</th>
+                        <th className="table-th">{t('Received')}</th>
+                        <th className="table-th text-right">{t('Unit cost')}</th>
+                        <th className="table-th text-right">{t('Total')}</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-stone-100">
@@ -91,7 +93,7 @@ export default function PurchaseDetail() {
                 </div>
               </Card>
               <div className="space-y-6">
-                <Card title="Summary">
+                <Card title={t('Summary')}>
                   <DetailList
                     columns={1}
                     items={[
@@ -108,12 +110,12 @@ export default function PurchaseDetail() {
                   />
                 </Card>
                 {po.payments.length > 0 && (
-                  <Card title="Payments">
+                  <Card title={t('Payments')}>
                     <ul className="space-y-2 text-sm">
                       {po.payments.map((p) => (
                         <li key={p._id} className="flex justify-between">
                           <span>
-                            {dateTime(p.paidAt)} · {label(p.method)}
+                            {dateTime(p.paidAt)} · {t(label(p.method))}
                           </span>
                           <span className="tabular-nums">{money(p.amount)}</span>
                         </li>
@@ -127,11 +129,11 @@ export default function PurchaseDetail() {
             <Modal
               open={modal === 'receive'}
               onClose={() => setModal(null)}
-              title="Receive goods"
-              description="Stock is increased and the supplier balance grows by the value received."
+              title={t('Receive goods')}
+              description={t('Stock is increased and the supplier balance grows by the value received.')}
               footer={
                 <Button loading={receive.isPending} onClick={() => receive.mutate(Object.entries(receipt).filter(([, q]) => Number(q) > 0).map(([itemId, q]) => ({ itemId, quantity: Number(q) })))}>
-                  Confirm receipt
+                  {t('Confirm receipt')}
                 </Button>
               }
             >
@@ -153,7 +155,7 @@ export default function PurchaseDetail() {
               </div>
             </Modal>
             <SupplierPaymentModal open={modal === 'pay'} onClose={() => setModal(null)} supplier={po.supplier} />
-            <ConfirmDialog open={modal === 'cancel'} onClose={() => setModal(null)} title="Cancel purchase order?" confirmLabel="Cancel order" requireReason loading={cancel.isPending} onConfirm={(reason) => cancel.mutate(reason)} />
+            <ConfirmDialog open={modal === 'cancel'} onClose={() => setModal(null)} title={t('Cancel purchase order?')} confirmLabel={t('Cancel order')} requireReason loading={cancel.isPending} onConfirm={(reason) => cancel.mutate(reason)} />
           </div>
         );
       }}

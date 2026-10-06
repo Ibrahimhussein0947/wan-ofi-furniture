@@ -1,4 +1,4 @@
-const { api, createUser, createCatalog, models } = require('./helpers');
+const { api, createUser, createCatalog, models, submitPayment } = require('./helpers');
 
 describe('orders and payments', () => {
   let owner;
@@ -17,7 +17,7 @@ describe('orders and payments', () => {
     const res = await api(customer.token).post('/api/orders', {
       items: [{ product: String(catalog.product._id), quantity, color: 'Grey' }],
       deliveryMethod: 'DELIVERY',
-      deliveryAddress: { city: 'Dar es Salaam' },
+      deliveryAddress: { city: 'Addis Ababa' },
       ...extra,
     });
     return { res, ...catalog };
@@ -162,7 +162,7 @@ describe('orders and payments', () => {
   test('customer-submitted payments only count after verification', async () => {
     const { res } = await placeOrder({ quantity: 0 }, 1);
     const orderId = res.body.data._id;
-    const submitted = await api(customer.token).post('/api/payments/submit', { order: orderId, amount: 20000, method: 'BANK_TRANSFER', reference: 'BT-99' });
+    const submitted = await submitPayment(customer.token, { order: orderId, amount: 20000, method: 'BANK_TRANSFER', reference: 'BT-99' });
     expect(submitted.status).toBe(201);
     expect((await models.Order.findById(orderId)).amountPaid).toBe(0);
 

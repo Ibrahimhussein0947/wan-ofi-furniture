@@ -17,6 +17,12 @@ const materialRequest = z.object({ material: objectId, quantity, reason: optiona
 const decision = z.object({ approve: z.boolean() });
 
 const jobNote = z.object({ text: trimmed(2000).min(1, 'Note cannot be empty') });
+const laborHours = z.object({
+  hours: z.coerce.number().min(0.25, 'At least 15 minutes').max(24, 'At most 24 hours a day'),
+  date: optionalDate,
+  note: optionalText(300),
+  worker: optionalId,
+});
 const problem = z.object({ description: trimmed(2000).min(3, 'Describe the problem'), severity: z.enum(['LOW', 'MEDIUM', 'HIGH']).default('MEDIUM') });
 const resolution = z.object({ resolution: trimmed(1000).min(2) });
 
@@ -42,6 +48,7 @@ const updateTask = z.object({
   assignedTo: optionalId,
   dueDate: optionalDate,
   status: z.enum(Object.values(TASK_STATUS)).optional(),
+  hoursWorked: z.coerce.number().min(0).max(200).optional(),
 });
 
 const checkResult = z.object({ passed: z.boolean().nullable().optional(), note: optionalText(500) });
@@ -88,6 +95,7 @@ const contact = z.object({
 });
 
 module.exports = {
+  laborHours,
   stage,
   assign,
   materialLines,

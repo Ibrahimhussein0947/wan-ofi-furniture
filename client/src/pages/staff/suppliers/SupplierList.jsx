@@ -15,8 +15,10 @@ import { useAuth } from '../../../context/AuthContext';
 import useListParams from '../../../hooks/useListParams';
 import useMutationToast from '../../../hooks/useMutationToast';
 import { money } from '../../../utils/format';
+import { useT } from '../../../i18n/LanguageContext';
 
 export function SupplierModal({ open, onClose, supplier }) {
+  const t = useT();
   const form = useForm({
     values: {
       name: supplier?.name || '',
@@ -40,22 +42,23 @@ export function SupplierModal({ open, onClose, supplier }) {
     })
   );
   return (
-    <Modal open={open} onClose={onClose} title={supplier ? 'Edit supplier' : 'New supplier'} size="lg" footer={<Button loading={save.isPending} onClick={submit}>Save</Button>}>
+    <Modal open={open} onClose={onClose} title={supplier ? 'Edit supplier' : 'New supplier'} size="lg" footer={<Button loading={save.isPending} onClick={submit}>{t('Save')}</Button>}>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Input label="Name" required {...form.register('name', { required: true })} />
-        <Input label="Contact person" {...form.register('contactPerson')} />
-        <Input label="Phone" {...form.register('phone')} />
-        <Input label="Email" type="email" {...form.register('email')} />
-        <Input label="Address" containerClassName="sm:col-span-2" {...form.register('address')} />
-        <Input label="Materials supplied" hint="Comma separated" {...form.register('materialsSupplied')} />
-        <Input label="Payment terms" placeholder="e.g. Net 30" {...form.register('paymentTerms')} />
-        <Textarea label="Notes" containerClassName="sm:col-span-2" rows={2} {...form.register('notes')} />
+        <Input label={t('Name')} required {...form.register('name', { required: true })} />
+        <Input label={t('Contact person')} {...form.register('contactPerson')} />
+        <Input label={t('Phone')} {...form.register('phone')} />
+        <Input label={t('Email')} type="email" {...form.register('email')} />
+        <Input label={t('Address')} containerClassName="sm:col-span-2" {...form.register('address')} />
+        <Input label={t('Materials supplied')} hint={t('Comma separated')} {...form.register('materialsSupplied')} />
+        <Input label={t('Payment terms')} placeholder="e.g. Net 30" {...form.register('paymentTerms')} />
+        <Textarea label={t('Notes')} containerClassName="sm:col-span-2" rows={2} {...form.register('notes')} />
       </div>
     </Modal>
   );
 }
 
 export default function SupplierList() {
+  const t = useT();
   const [params, set] = useListParams();
   const [modal, setModal] = useState(null);
   const navigate = useNavigate();
@@ -72,18 +75,18 @@ export default function SupplierList() {
   return (
     <div>
       <PageHeader
-        title="Suppliers"
+        title={t('Suppliers')}
         actions={
           <>
-            <ExportMenu filename="suppliers" title="Suppliers" columns={columns} rows={query.data?.items} />
-            {can('payments:write') && <Button variant="secondary" icon={Banknote} onClick={() => setModal('pay')}>Pay supplier</Button>}
-            {can('suppliers:write') && <Button icon={Plus} onClick={() => setModal('new')}>New supplier</Button>}
+            <ExportMenu filename="suppliers" title={t('Suppliers')} columns={columns} rows={query.data?.items} />
+            {can('payments:write') && <Button variant="secondary" icon={Banknote} onClick={() => setModal('pay')}>{t('Pay supplier')}</Button>}
+            {can('suppliers:write') && <Button icon={Plus} onClick={() => setModal('new')}>{t('New supplier')}</Button>}
           </>
         }
       />
       <FilterBar>
-        <SearchInput value={params.search} onChange={(search) => set({ search })} placeholder="Name, phone, material…" className="sm:w-72" />
-        <Checkbox label="With outstanding balance" checked={params.withBalance === 'true'} onChange={(e) => set({ withBalance: e.target.checked ? 'true' : '' })} />
+        <SearchInput value={params.search} onChange={(search) => set({ search })} placeholder={t('Name, phone, material…')} className="sm:w-72" />
+        <Checkbox label={t('With outstanding balance')} checked={params.withBalance === 'true'} onChange={(e) => set({ withBalance: e.target.checked ? 'true' : '' })} />
       </FilterBar>
       <DataTable columns={columns} loading={query.isLoading} error={query.error} rows={query.data?.items} pagination={query.data?.pagination} onPageChange={(page) => set({ page })} onRowClick={(s) => navigate(`/app/suppliers/${s._id}`)} />
       <SupplierModal open={modal === 'new'} onClose={() => setModal(null)} />

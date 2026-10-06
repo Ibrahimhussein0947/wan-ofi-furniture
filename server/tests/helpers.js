@@ -25,7 +25,7 @@ async function createUser(role = 'OWNER', extra = {}) {
   }
   let customer;
   if (role === 'CUSTOMER') {
-    customer = await models.Customer.create({ user: user._id, customerCode: await nextNumber('CUS', { yearly: false }), name: user.name, email: user.email, phone: '+255700000000', address: { city: 'Dar es Salaam' } });
+    customer = await models.Customer.create({ user: user._id, customerCode: await nextNumber('CUS', { yearly: false }), name: user.name, email: user.email, phone: '+251900000000', address: { city: 'Addis Ababa' } });
   }
   return { user, customer, token: tokenFor(user) };
 }
@@ -63,4 +63,18 @@ const api = (token) => {
   };
 };
 
-module.exports = { app, models, PASSWORD, uid, tokenFor, createUser, createCatalog, api, request };
+// 1×1 transparent PNG, used as an uploaded image (e.g. a payment receipt).
+const PNG = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+  'base64',
+);
+
+/** Submits a customer bank-transfer payment with a receipt image attached. */
+const submitPayment = (token, body) =>
+  request(app)
+    .post('/api/payments/submit')
+    .set('Authorization', `Bearer ${token}`)
+    .field('data', JSON.stringify(body))
+    .attach('screenshot', PNG, { filename: 'receipt.png', contentType: 'image/png' });
+
+module.exports = { app, models, PASSWORD, uid, tokenFor, createUser, createCatalog, api, request, PNG, submitPayment };

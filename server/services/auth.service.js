@@ -240,7 +240,31 @@ async function changePassword(userId, { currentPassword, newPassword }, actor) {
   return buildSession(user, actor);
 }
 
+/**
+ * A user changes their own sign-in email after confirming their password. Customers must
+ * confirm the new address again; staff addresses are managed by the business.
+ */
+async function changeEmail(userId, { email, currentPassword }, actor) {
+  const user = await User.findById(userId).select('+password');
+  if (!user) throw ApiError.notFound('User not found.');
+  if (!(await user.comparePassword(currentPassword))) throw ApiError.badRequest('Current password is incorrect.');
+  const next = email.toLowerCase();
+  if (next === user.email) return user;
+  if (await User.exists({ email: next, _id: { $ne: user._id } })) throw ApiError.conflict('An account with this email already exists.');
+  const previous = user.email;
+  user.email = next;
+  if (user.role === ROLES.CUSTOMER) {
+    user.emailVerified = false;
+    await Customer.updateOne({ user: user._id }, { $set: { email: next } });
+  }
+  await user.save();
+  if (user.role === ROLES.CUSTOMER) await sendVerificationEmail(user);
+  await audit(actor, { action: AUDIT_ACTIONS.UPDATE, entity: 'User', entityId: user._id, reference: next, description: `Email changed from ${previous}` });
+  return user;
+}
+
 module.exports = {
+  changeEmail,
   registerCustomer,
   verifyEmail,
   resendVerification,

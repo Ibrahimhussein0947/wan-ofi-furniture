@@ -8,7 +8,7 @@ const schema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().default(5050),
   MONGO_URI: z.string().min(1, 'MONGO_URI is required'),
-  CLIENT_URL: z.string().default('http://localhost:5173'),
+  CLIENT_URL: z.string().default('http://localhost:5174'),
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
   JWT_REFRESH_SECRET: z.string().min(32, 'JWT_REFRESH_SECRET must be at least 32 characters'),
   JWT_EXPIRES_IN: z.string().default('15m'),
@@ -40,14 +40,25 @@ const schema = z.object({
   AT_USERNAME: z.string().optional(),
   AT_API_KEY: z.string().optional(),
   AT_SENDER_ID: z.string().optional(),
-  // Online payments: manual (staff record/verify) | sandbox (simulated mobile money) | azampay
-  PAYMENT_PROVIDER: z.enum(['manual', 'sandbox', 'azampay']).default('manual'),
+  // Telegram alerts: console | bot (users link their account to the bot from their profile)
+  TELEGRAM_DRIVER: z.enum(['console', 'bot']).default('console'),
+  TELEGRAM_BOT_TOKEN: z.string().optional(),
+  TELEGRAM_BOT_USERNAME: z.string().optional(),
+  TELEGRAM_WEBHOOK_SECRET: z.string().optional(),
+  // WhatsApp alerts via Meta's WhatsApp Cloud API: console | cloud (needs an approved template)
+  WHATSAPP_DRIVER: z.enum(['console', 'cloud']).default('console'),
+  WHATSAPP_TOKEN: z.string().optional(),
+  WHATSAPP_PHONE_NUMBER_ID: z.string().optional(),
+  WHATSAPP_TEMPLATE: z.string().default('wanofi_update'),
+  WHATSAPP_TEMPLATE_LANG: z.string().default('en'),
+  // Online payments: manual (staff record/verify) | sandbox (simulated mobile money) | chapa
+  PAYMENT_PROVIDER: z.enum(['manual', 'sandbox', 'chapa']).default('manual'),
   PAYMENT_WEBHOOK_SECRET: z.string().optional(),
-  AZAMPAY_ENV: z.enum(['sandbox', 'production']).default('sandbox'),
-  AZAMPAY_APP_NAME: z.string().optional(),
-  AZAMPAY_CLIENT_ID: z.string().optional(),
-  AZAMPAY_CLIENT_SECRET: z.string().optional(),
-  AZAMPAY_API_KEY: z.string().optional(),
+  CHAPA_ENV: z.enum(['sandbox', 'production']).default('sandbox'),
+  CHAPA_APP_NAME: z.string().optional(),
+  CHAPA_CLIENT_ID: z.string().optional(),
+  CHAPA_CLIENT_SECRET: z.string().optional(),
+  CHAPA_API_KEY: z.string().optional(),
   ENABLE_CRON: z
     .string()
     .default('true')
@@ -64,9 +75,11 @@ const testOverrides = isTest
       ENABLE_CRON: 'false',
       EMAIL_DRIVER: 'console',
       SMS_DRIVER: 'console',
+      TELEGRAM_DRIVER: 'console',
+      WHATSAPP_DRIVER: 'console',
       PAYMENT_PROVIDER: 'sandbox',
       PAYMENT_WEBHOOK_SECRET: 'test-webhook-secret',
-      APP_URL: 'http://localhost:5173',
+      APP_URL: 'http://localhost:5174',
     }
   : {};
 
@@ -89,6 +102,8 @@ if (env.isProduction) {
   if (env.PAYMENT_PROVIDER === 'sandbox') problems.push('PAYMENT_PROVIDER=sandbox simulates payments and must not be used in production');
   if (env.PAYMENT_PROVIDER !== 'manual' && !env.PAYMENT_WEBHOOK_SECRET) problems.push('PAYMENT_WEBHOOK_SECRET is required for online payments');
   if (env.EMAIL_DRIVER === 'smtp' && !env.SMTP_HOST) problems.push('SMTP_HOST is required when EMAIL_DRIVER=smtp');
+  if (env.TELEGRAM_DRIVER === 'bot' && !(env.TELEGRAM_BOT_TOKEN && env.TELEGRAM_BOT_USERNAME && env.TELEGRAM_WEBHOOK_SECRET)) problems.push('TELEGRAM_BOT_TOKEN, TELEGRAM_BOT_USERNAME and TELEGRAM_WEBHOOK_SECRET are required when TELEGRAM_DRIVER=bot');
+  if (env.WHATSAPP_DRIVER === 'cloud' && !(env.WHATSAPP_TOKEN && env.WHATSAPP_PHONE_NUMBER_ID)) problems.push('WHATSAPP_TOKEN and WHATSAPP_PHONE_NUMBER_ID are required when WHATSAPP_DRIVER=cloud');
   if (problems.length) {
     // eslint-disable-next-line no-console
     console.error(`Invalid production configuration:\n  - ${problems.join('\n  - ')}`);

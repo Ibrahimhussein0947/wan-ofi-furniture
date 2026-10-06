@@ -8,14 +8,16 @@ import { EmptyState } from '../../../components/ui/States';
 import { qualityApi } from '../../../api/endpoints';
 import useListParams from '../../../hooks/useListParams';
 import { dateTime } from '../../../utils/format';
+import { useT } from '../../../i18n/LanguageContext';
 
 export default function QualityList() {
+  const t = useT();
   const [params, set] = useListParams({ status: 'PENDING' });
   const navigate = useNavigate();
   const query = useQuery({ queryKey: ['quality', params], queryFn: () => qualityApi.list({ ...params, status: params.status === 'ALL' ? '' : params.status }) });
   return (
     <div>
-      <PageHeader title="Quality control" subtitle="Nothing is marked ready until it passes inspection" />
+      <PageHeader title={t('Quality control')} subtitle={t('Nothing is marked ready until it passes inspection')} />
       <Tabs
         className="mb-4"
         value={params.status}
@@ -34,7 +36,7 @@ export default function QualityList() {
         pagination={query.data?.pagination}
         onPageChange={(page) => set({ page })}
         onRowClick={(q) => navigate(`/app/quality/${q._id}`)}
-        empty={<EmptyState icon={ClipboardCheck} title="Nothing waiting for inspection" />}
+        empty={<EmptyState icon={ClipboardCheck} title={t('Nothing waiting for inspection')} />}
         columns={[
           { key: 'job', header: 'Job', render: (q) => <span className="font-medium">{q.job?.jobNumber}</span> },
           { key: 'title', header: 'Furniture', render: (q) => q.job?.title },

@@ -26,6 +26,8 @@ const productSchema = new mongoose.Schema(
     costPrice: { type: Number, required: true, min: 0 },
     sellingPrice: { type: Number, required: true, min: 0 },
     quantity: { type: Number, default: 0, min: 0 },
+    // Stock held at each branch; `quantity` is the company-wide total and always equals their sum.
+    branchStock: [{ _id: false, branch: { type: mongoose.Schema.Types.ObjectId, ref: 'Branch', required: true }, quantity: { type: Number, default: 0, min: 0 } }],
     minStock: { type: Number, default: 0, min: 0 },
     soldQuantity: { type: Number, default: 0, min: 0 },
     damagedQuantity: { type: Number, default: 0, min: 0 },
@@ -38,7 +40,12 @@ const productSchema = new mongoose.Schema(
     isFeatured: { type: Boolean, default: false, index: true },
     // Made-to-order products can be ordered even when out of stock.
     madeToOrder: { type: Boolean, default: true },
+    // Average of published reviews; kept in step by the review service.
     rating: { type: Number, min: 0, max: 5, default: 0 },
+    reviewCount: { type: Number, min: 0, default: 0 },
+    // 0 = no warranty. Copied onto each order line when sold, so later edits never change past sales.
+    warrantyMonths: { type: Number, min: 0, max: 120, default: 12 },
+    warrantyTerms: { type: String, trim: true, maxlength: 500 },
   },
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );

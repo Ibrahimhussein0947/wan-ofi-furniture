@@ -25,7 +25,7 @@ export function authValue(user, overrides = {}) {
   const perms = user?.effectivePermissions || [];
   return {
     user,
-    customer: user?.role === 'CUSTOMER' ? { _id: 'c1', name: user.name, address: { street: 'Masaki', city: 'Dar es Salaam' }, phone: '+255700000000' } : null,
+    customer: user?.role === 'CUSTOMER' ? { _id: 'c1', name: user.name, address: { street: 'Bole', city: 'Addis Ababa' }, phone: '+251900000000' } : null,
     status: user ? 'authenticated' : 'anonymous',
     isAuthenticated: Boolean(user),
     isStaff: Boolean(user && user.role !== 'CUSTOMER'),

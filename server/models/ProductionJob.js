@@ -95,6 +95,16 @@ const productionJobSchema = new mongoose.Schema(
         at: { type: Date, default: Date.now },
       },
     ],
+    // Hours each worker spent on the job (feeds hourly pay and labour costing).
+    laborLog: [
+      {
+        worker: { type: ObjectId, ref: 'User', required: true },
+        hours: { type: Number, required: true, min: 0.25, max: 24 },
+        date: { type: Date, default: Date.now },
+        note: { type: String, maxlength: 300 },
+        by: { type: ObjectId, ref: 'User' },
+      },
+    ],
     delayNotifiedAt: Date,
     createdBy: { type: ObjectId, ref: 'User' },
   },

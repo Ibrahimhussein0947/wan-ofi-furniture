@@ -11,6 +11,7 @@ const { apiLimiter } = require('./middleware/rateLimit');
 const { sanitizeRequest } = require('./middleware/sanitize');
 const { notFound, errorHandler } = require('./middleware/errorHandler');
 const { UPLOAD_ROOT } = require('./services/storage.service');
+const seo = require('./controllers/seo.controller');
 
 const app = express();
 
@@ -58,6 +59,10 @@ if (!env.isTest) app.use(morgan(env.isProduction ? 'combined' : 'dev'));
 
 app.get('/api/health', (_req, res) => res.json({ success: true, message: 'OK', data: { uptime: process.uptime() } }));
 app.use('/api', apiLimiter, routes);
+
+// Search-engine files. In development Vite forwards these two paths here.
+app.get('/robots.txt', seo.robots);
+app.get('/sitemap.xml', seo.sitemap);
 
 // Locally stored uploads. Names are random; nosniff prevents content-type confusion.
 app.use(

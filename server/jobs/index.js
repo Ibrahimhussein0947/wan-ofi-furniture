@@ -17,7 +17,7 @@ function startJobs() {
   tasks.push(cron.schedule('0 7 * * *', safe('low-stock', checkLowStock)));
   tasks.push(cron.schedule('30 7 * * *', safe('production-delays', checkProductionDelays)));
   tasks.push(cron.schedule('0 */2 * * *', safe('task-deadlines', checkTaskDeadlines)));
-  tasks.push(cron.schedule('0 9 * * 1', safe('payment-reminders', sendPaymentReminders)));
+  tasks.push(cron.schedule('0 9 * * *', safe('payment-reminders', sendPaymentReminders)));
   tasks.push(cron.schedule('0 8 * * 1', safe('customer-debts', notifyOverdueDebts)));
   logger.info('Background jobs scheduled');
 }

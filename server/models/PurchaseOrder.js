@@ -13,6 +13,7 @@ const purchaseOrderSchema = new mongoose.Schema(
   {
     poNumber: { type: String, unique: true, required: true },
     supplier: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier', required: true, index: true },
+    branch: { type: mongoose.Schema.Types.ObjectId, ref: 'Branch', index: true },
     items: { type: [purchaseItemSchema], validate: (v) => v.length > 0 },
     total: { type: Number, required: true, min: 0 },
     // Value of goods actually received — this is what the supplier is owed.

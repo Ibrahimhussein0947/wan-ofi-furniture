@@ -23,6 +23,7 @@ const stock = express.Router();
 stock.get('/', requirePermission(P.INVENTORY_READ), inventory.overview);
 stock.get('/transactions', requirePermission(P.INVENTORY_READ), list, inventory.listTransactions);
 stock.post('/adjust', requirePermission(P.INVENTORY_WRITE), validate({ body: v.stockAdjustment }), inventory.adjust);
+stock.post('/transfer', requirePermission(P.INVENTORY_WRITE), validate({ body: v.stockTransfer }), inventory.transfer);
 
 const bom = express.Router();
 bom.get('/', requirePermission(P.BOM_READ), inventory.listBoms);
@@ -40,6 +41,7 @@ supplierRoutes.delete('/:id', requirePermission(P.SUPPLIERS_WRITE), id, supplier
 const purchases = express.Router();
 const cancelBody = validate({ body: z.object({ reason: z.string().trim().max(500).optional() }) });
 purchases.get('/', requirePermission(P.PURCHASES_READ), list, suppliers.listPurchases);
+purchases.get('/suggestions', requirePermission(P.PURCHASES_READ), suppliers.reorderSuggestions);
 purchases.get('/:id', requirePermission(P.PURCHASES_READ), id, suppliers.getPurchase);
 purchases.post('/', requirePermission(P.PURCHASES_WRITE), validate({ body: v.purchaseOrder }), suppliers.createPurchase);
 purchases.post('/:id/place', requirePermission(P.PURCHASES_WRITE), id, suppliers.markOrdered);

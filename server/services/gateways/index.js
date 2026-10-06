@@ -38,46 +38,46 @@ const sandbox = {
   },
 };
 
-// AzamPay (Tanzania): M-Pesa, Tigo Pesa, Airtel Money, HaloPesa, AzamPesa.
-// The callback URL is registered in the AzamPay merchant portal:
-//   https://<api-host>/api/payments/webhooks/azampay/<PAYMENT_WEBHOOK_SECRET>
-const AZAM_HOSTS = {
-  sandbox: { auth: 'https://authenticator-sandbox.azampay.co.tz', api: 'https://sandbox.azampay.co.tz' },
-  production: { auth: 'https://authenticator.azampay.co.tz', api: 'https://checkout.azampay.co.tz' },
+// Chapa (Ethiopia): Telebirr, CBE Birr, Amole, M-PESA and Bybils.
+// The callback URL is registered in the Chapa merchant portal:
+//   https://<api-host>/api/payments/webhooks/chapa/<PAYMENT_WEBHOOK_SECRET>
+const CHAPA_HOSTS = {
+  sandbox: { auth: 'https://auth-sandbox.chapa.co', api: 'https://sandbox.chapa.co' },
+  production: { auth: 'https://auth.chapa.co', api: 'https://api.chapa.co' },
 };
-const AZAM_NETWORKS = { MPESA: 'Mpesa', TIGO: 'Tigo', AIRTEL: 'Airtel', HALOPESA: 'Halopesa', AZAMPESA: 'Azampesa' };
-let azamToken = null;
+const CHAPA_NETWORKS = { TELEBIRR: 'Telebirr', CBE_BIRR: 'CBEBirr', AMOLE: 'Amole', MPESA: 'Mpesa', BYBILS: 'Bybils' };
+let chapaToken = null;
 
-async function azamAuth() {
-  if (azamToken && azamToken.expires > Date.now() + 60000) return azamToken.value;
-  const res = await fetch(`${AZAM_HOSTS[env.AZAMPAY_ENV].auth}/AppRegistration/GenerateToken`, {
+async function chapaAuth() {
+  if (chapaToken && chapaToken.expires > Date.now() + 60000) return chapaToken.value;
+  const res = await fetch(`${CHAPA_HOSTS[env.CHAPA_ENV].auth}/AppRegistration/GenerateToken`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ appName: env.AZAMPAY_APP_NAME, clientId: env.AZAMPAY_CLIENT_ID, clientSecret: env.AZAMPAY_CLIENT_SECRET }),
+    body: JSON.stringify({ appName: env.CHAPA_APP_NAME, clientId: env.CHAPA_CLIENT_ID, clientSecret: env.CHAPA_CLIENT_SECRET }),
   });
   const json = await res.json().catch(() => ({}));
-  if (!res.ok || !json?.data?.accessToken) throw new Error(`AzamPay authentication failed (${res.status})`);
-  azamToken = { value: json.data.accessToken, expires: Date.now() + 55 * 60 * 1000 };
-  return azamToken.value;
+  if (!res.ok || !json?.data?.accessToken) throw new Error(`Chapa authentication failed (${res.status})`);
+  chapaToken = { value: json.data.accessToken, expires: Date.now() + 55 * 60 * 1000 };
+  return chapaToken.value;
 }
 
-const azampay = {
-  name: 'azampay',
+const chapa = {
+  name: 'chapa',
   async initiate(intent) {
-    const token = await azamAuth();
-    const res = await fetch(`${AZAM_HOSTS[env.AZAMPAY_ENV].api}/azampay/mno/checkout`, {
+    const token = await chapaAuth();
+    const res = await fetch(`${CHAPA_HOSTS[env.CHAPA_ENV].api}/chapa/mno/checkout`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'X-API-Key': env.AZAMPAY_API_KEY },
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, 'X-API-Key': env.CHAPA_API_KEY },
       body: JSON.stringify({
         accountNumber: intent.phone.replace(/^\+/, ''),
         amount: String(intent.amount),
         currency: intent.currency,
         externalId: intent.reference,
-        provider: AZAM_NETWORKS[intent.network],
+        provider: CHAPA_NETWORKS[intent.network],
       }),
     });
     const json = await res.json().catch(() => ({}));
-    if (!res.ok || json.success === false) throw new Error(json.message || `AzamPay checkout failed (${res.status})`);
+    if (!res.ok || json.success === false) throw new Error(json.message || `Chapa checkout failed (${res.status})`);
     return { providerReference: json.transactionId };
   },
   parseCallback(body) {
@@ -91,10 +91,10 @@ const azampay = {
   },
 };
 
-const GATEWAYS = { sandbox, azampay };
+const GATEWAYS = { sandbox, chapa };
 
 function activeGateway() {
   return GATEWAYS[env.PAYMENT_PROVIDER] || null;
 }
 
-module.exports = { activeGateway, GATEWAYS, AZAM_NETWORKS };
+module.exports = { activeGateway, GATEWAYS, CHAPA_NETWORKS };

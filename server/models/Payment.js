@@ -8,7 +8,12 @@ const paymentSchema = new mongoose.Schema(
   {
     paymentNumber: { type: String, unique: true, required: true },
     receiptNumber: { type: String, unique: true, sparse: true },
-    category: { type: String, enum: Object.values(PAYMENT_CATEGORIES), required: true, index: true },
+    category: {
+      type: String,
+      enum: Object.values(PAYMENT_CATEGORIES),
+      required: true,
+      index: true,
+    },
     amount: { type: Number, required: true, min: 0.01 },
     method: { type: String, enum: Object.values(PAYMENT_METHODS), required: true },
     reference: { type: String, trim: true, maxlength: 120 },
@@ -18,15 +23,39 @@ const paymentSchema = new mongoose.Schema(
     supplier: { type: ObjectId, ref: 'Supplier', index: true },
     purchaseOrder: { type: ObjectId, ref: 'PurchaseOrder' },
     worker: { type: ObjectId, ref: 'Worker', index: true },
-    kind: { type: String, enum: ['DEPOSIT', 'INSTALLMENT', 'FINAL', 'FULL', 'WAGE', 'BONUS', 'ADVANCE', 'SUPPLIER', 'REFUND'] },
+    kind: {
+      type: String,
+      enum: [
+        'DEPOSIT',
+        'INSTALLMENT',
+        'FINAL',
+        'FULL',
+        'WAGE',
+        'BONUS',
+        'ADVANCE',
+        'SUPPLIER',
+        'REFUND',
+      ],
+    },
+    // Payroll month (YYYY-MM) a worker payment covers.
+    payPeriod: { type: String, match: /^\d{4}-\d{2}$/, index: true },
     paidAt: { type: Date, default: Date.now, index: true },
     notes: { type: String, maxlength: 1000 },
     receivedBy: { type: ObjectId, ref: 'User' },
     // Online payments submitted by customers wait for staff verification.
-    status: { type: String, enum: ['COMPLETED', 'PENDING_VERIFICATION', 'REJECTED'], default: 'COMPLETED', index: true },
+    status: {
+      type: String,
+      enum: ['COMPLETED', 'PENDING_VERIFICATION', 'REJECTED'],
+      default: 'COMPLETED',
+      index: true,
+    },
     submittedByCustomer: { type: Boolean, default: false },
+    // Transfer receipt screenshot the customer uploaded with their payment proof.
+    screenshot: { type: String, trim: true, maxlength: 300 },
+    // Why staff rejected a customer-submitted payment (shown to the customer).
+    rejectionReason: { type: String, trim: true, maxlength: 500 },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model('Payment', paymentSchema);

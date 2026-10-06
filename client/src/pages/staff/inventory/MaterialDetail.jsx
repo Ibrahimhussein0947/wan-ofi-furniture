@@ -12,8 +12,10 @@ import { MaterialModal } from './Materials';
 import { materialsApi } from '../../../api/endpoints';
 import { useAuth } from '../../../context/AuthContext';
 import { date, dateTime, label, money, number } from '../../../utils/format';
+import { useT } from '../../../i18n/LanguageContext';
 
 export default function MaterialDetail() {
+  const t = useT();
   const { id } = useParams();
   const { can } = useAuth();
   const [modal, setModal] = useState(null);
@@ -25,20 +27,20 @@ export default function MaterialDetail() {
           <PageHeader
             back="/app/materials"
             title={m.name}
-            subtitle={`${m.code || 'No code'} · ${label(m.category)}`}
+            subtitle={`${m.code || 'No code'} · ${t(label(m.category))}`}
             actions={
               <>
-                {can('inventory:write') && <Button icon={ArrowUpDown} onClick={() => setModal('adjust')}>Adjust stock</Button>}
-                {can('materials:write') && <Button variant="secondary" icon={Pencil} onClick={() => setModal('edit')}>Edit</Button>}
+                {can('inventory:write') && <Button icon={ArrowUpDown} onClick={() => setModal('adjust')}>{t('Adjust stock')}</Button>}
+                {can('materials:write') && <Button variant="secondary" icon={Pencil} onClick={() => setModal('edit')}>{t('Edit')}</Button>}
               </>
             }
           />
           <div className="grid gap-4 sm:grid-cols-3">
-            <StatCard label="In stock" value={`${number(m.quantity)} ${m.unit}`} tone={m.isLowStock ? 'red' : 'green'} hint={m.isLowStock ? `Below minimum (${m.minStock})` : `Minimum ${m.minStock}`} />
-            <StatCard label="Unit cost" value={money(m.unitCost)} tone="brass" />
-            <StatCard label="Stock value" value={money(m.quantity * m.unitCost)} />
+            <StatCard label={t('In stock')} value={`${number(m.quantity)} ${m.unit}`} tone={m.isLowStock ? 'red' : 'green'} hint={m.isLowStock ? `Below minimum (${m.minStock})` : `Minimum ${m.minStock}`} />
+            <StatCard label={t('Unit cost')} value={money(m.unitCost)} tone="brass" />
+            <StatCard label={t('Stock value')} value={money(m.quantity * m.unitCost)} />
           </div>
-          <Card title="Details">
+          <Card title={t('Details')}>
             <DetailList
               columns={3}
               items={[
@@ -52,18 +54,18 @@ export default function MaterialDetail() {
             />
           </Card>
           <div>
-            <h2 className="mb-3 text-lg font-semibold">Stock movements</h2>
+            <h2 className="mb-3 text-lg font-semibold">{t('Stock movements')}</h2>
             <DataTable
               dense
               rows={m.transactions}
               columns={[
-                { key: 'createdAt', header: 'Date', render: (t) => dateTime(t.createdAt) },
-                { key: 'type', header: 'Type', render: (t) => <Badge>{label(t.type)}</Badge> },
-                { key: 'quantity', header: 'Change', align: 'right', render: (t) => <span className={t.quantity < 0 ? 'text-red-600' : 'text-emerald-700'}>{t.quantity > 0 ? '+' : ''}{number(t.quantity)}</span> },
+                { key: 'createdAt', header: 'Date', render: (tx) => dateTime(tx.createdAt) },
+                { key: 'type', header: 'Type', render: (tx) => <Badge>{t(label(tx.type))}</Badge> },
+                { key: 'quantity', header: 'Change', align: 'right', render: (tx) => <span className={tx.quantity < 0 ? 'text-red-600' : 'text-emerald-700'}>{tx.quantity > 0 ? '+' : ''}{number(tx.quantity)}</span> },
                 { key: 'balanceAfter', header: 'Balance', align: 'right' },
                 { key: 'referenceNumber', header: 'Reference' },
                 { key: 'note', header: 'Note', mobile: false },
-                { key: 'by', header: 'By', mobile: false, render: (t) => t.createdBy?.name },
+                { key: 'by', header: 'By', mobile: false, render: (tx) => tx.createdBy?.name },
               ]}
             />
           </div>

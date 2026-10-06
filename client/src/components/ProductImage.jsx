@@ -14,10 +14,12 @@ const ICONS = [
 
 // Soft gradients so products without photos still look intentional.
 const GRADIENTS = [
-  'from-walnut-100 to-brass-100',
-  'from-stone-100 to-walnut-200',
-  'from-brass-50 to-walnut-100',
-  'from-sage-50 to-stone-200',
+  'from-brass-100 via-brass-50 to-walnut-200',
+  'from-walnut-100 via-walnut-50 to-stone-200',
+  'from-brass-50 via-brass-100 to-walnut-300',
+  'from-sage-100 via-stone-100 to-walnut-100',
+  'from-stone-100 via-brass-50 to-brass-200',
+  'from-walnut-200 via-brass-100 to-stone-100',
 ];
 
 export default function ProductImage({ src, name = '', className, iconClassName = 'h-12 w-12' }) {
@@ -26,7 +28,7 @@ export default function ProductImage({ src, name = '', className, iconClassName 
   const gradient = GRADIENTS[[...name].reduce((s, c) => s + c.charCodeAt(0), 0) % GRADIENTS.length];
   return (
     <div className={clsx('flex items-center justify-center bg-gradient-to-br', gradient, className)} role="img" aria-label={name}>
-      <Icon className={clsx('text-walnut-500/70', iconClassName)} strokeWidth={1.25} />
+      <Icon className={clsx('text-walnut-600/60 drop-shadow-sm transition duration-500 group-hover:scale-110', iconClassName)} strokeWidth={1.25} />
     </div>
   );
 }

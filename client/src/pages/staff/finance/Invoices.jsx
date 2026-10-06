@@ -8,8 +8,10 @@ import { StatusBadge } from '../../../components/ui/Badge';
 import { invoicesApi } from '../../../api/endpoints';
 import useListParams from '../../../hooks/useListParams';
 import { date, daysUntil, label, money } from '../../../utils/format';
+import { useT } from '../../../i18n/LanguageContext';
 
 export default function Invoices() {
+  const t = useT();
   const [params, set] = useListParams();
   const navigate = useNavigate();
   const query = useQuery({ queryKey: ['invoices', params], queryFn: () => invoicesApi.list(params), placeholderData: keepPreviousData });
@@ -34,13 +36,13 @@ export default function Invoices() {
   ];
   return (
     <div>
-      <PageHeader title="Invoices" subtitle="Generate invoices from the order page" actions={<ExportMenu filename="invoices" title="Invoices" columns={columns} rows={query.data?.items} />} />
+      <PageHeader title={t('Invoices')} subtitle={t('Generate invoices from the order page')} actions={<ExportMenu filename="invoices" title={t('Invoices')} columns={columns} rows={query.data?.items} />} />
       <FilterBar>
-        <SearchInput value={params.search} onChange={(search) => set({ search })} placeholder="Invoice number…" className="sm:w-56" />
-        <Select value={params.status || ''} onChange={(e) => set({ status: e.target.value })} options={['ISSUED', 'PARTIALLY_PAID', 'PAID', 'VOID'].map((s) => ({ value: s, label: label(s) }))} placeholder="All statuses" aria-label="Status" containerClassName="sm:w-44" />
-        <Input type="date" value={params.from || ''} onChange={(e) => set({ from: e.target.value })} aria-label="From" containerClassName="sm:w-40" />
+        <SearchInput value={params.search} onChange={(search) => set({ search })} placeholder={t('Invoice number…')} className="sm:w-56" />
+        <Select value={params.status || ''} onChange={(e) => set({ status: e.target.value })} options={['ISSUED', 'PARTIALLY_PAID', 'PAID', 'VOID'].map((s) => ({ value: s, label: t(label(s)) }))} placeholder={t('All statuses')} aria-label={t('Status')} containerClassName="sm:w-44" />
+        <Input type="date" value={params.from || ''} onChange={(e) => set({ from: e.target.value })} aria-label={t('From')} containerClassName="sm:w-40" />
         <Input type="date" value={params.to || ''} onChange={(e) => set({ to: e.target.value })} aria-label="To" containerClassName="sm:w-40" />
-        <Checkbox label="Overdue only" checked={params.overdue === 'true'} onChange={(e) => set({ overdue: e.target.checked ? 'true' : '' })} />
+        <Checkbox label={t('Overdue only')} checked={params.overdue === 'true'} onChange={(e) => set({ overdue: e.target.checked ? 'true' : '' })} />
       </FilterBar>
       <DataTable columns={columns} loading={query.isLoading} error={query.error} rows={query.data?.items} pagination={query.data?.pagination} onPageChange={(page) => set({ page })} onRowClick={(i) => navigate(`/app/invoices/${i._id}`)} />
     </div>

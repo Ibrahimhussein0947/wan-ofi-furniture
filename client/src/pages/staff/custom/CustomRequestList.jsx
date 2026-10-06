@@ -8,17 +8,19 @@ import { customOrdersApi } from '../../../api/endpoints';
 import useListParams from '../../../hooks/useListParams';
 import { CUSTOM_REQUEST_STATUSES } from '../../../utils/constants';
 import { date, label, money } from '../../../utils/format';
+import { useT } from '../../../i18n/LanguageContext';
 
 export default function CustomRequestList() {
+  const t = useT();
   const [params, set] = useListParams();
   const navigate = useNavigate();
   const query = useQuery({ queryKey: ['custom-orders', params], queryFn: () => customOrdersApi.list(params), placeholderData: keepPreviousData });
   return (
     <div>
-      <PageHeader title="Custom furniture requests" subtitle="Review, estimate and quote customer designs" />
+      <PageHeader title={t('Custom furniture requests')} subtitle={t('Review, estimate and quote customer designs')} />
       <FilterBar>
-        <SearchInput value={params.search} onChange={(search) => set({ search })} placeholder="Request number, type, description…" className="sm:w-80" />
-        <Select value={params.status || ''} onChange={(e) => set({ status: e.target.value })} options={CUSTOM_REQUEST_STATUSES.map((s) => ({ value: s, label: label(s) }))} placeholder="All statuses" aria-label="Status" containerClassName="sm:w-48" />
+        <SearchInput value={params.search} onChange={(search) => set({ search })} placeholder={t('Request number, type, description…')} className="sm:w-80" />
+        <Select value={params.status || ''} onChange={(e) => set({ status: e.target.value })} options={CUSTOM_REQUEST_STATUSES.map((s) => ({ value: s, label: t(label(s)) }))} placeholder={t('All statuses')} aria-label={t('Status')} containerClassName="sm:w-48" />
       </FilterBar>
       <DataTable
         loading={query.isLoading}

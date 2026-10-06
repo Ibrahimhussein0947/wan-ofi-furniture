@@ -11,6 +11,9 @@ const inventoryTransactionSchema = new mongoose.Schema(
     // Signed change: positive adds stock, negative removes it.
     quantity: { type: Number, required: true },
     balanceAfter: { type: Number, required: true },
+    // Branch whose stock moved, and that branch's balance afterwards.
+    branch: { type: mongoose.Schema.Types.ObjectId, ref: 'Branch', index: true },
+    branchBalanceAfter: Number,
     unitCost: { type: Number, min: 0 },
     referenceModel: { type: String, enum: ['Order', 'PurchaseOrder', 'ProductionJob', null] },
     referenceId: { type: mongoose.Schema.Types.ObjectId },

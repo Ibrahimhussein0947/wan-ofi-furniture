@@ -8,8 +8,8 @@ describe('business rules', () => {
       { quantity: 1, unitPrice: 20000 },
     ];
     expect(calcOrderTotals({ items, discount: 5000 })).toEqual({ subtotal: 50000, tax: 0, total: 45000, balance: 45000 });
-    // Tax applies after the discount: (50,000 - 5,000) × 18% = 8,100.
-    expect(calcOrderTotals({ items, discount: 5000, taxRate: 18 })).toMatchObject({ tax: 8100, total: 53100 });
+    // Tax applies after the discount: (50,000 - 5,000) × 15% = 6,750.
+    expect(calcOrderTotals({ items, discount: 5000, taxRate: 15 })).toMatchObject({ tax: 6750, total: 51750 });
     expect(calcOrderTotals({ items, discount: 5000, deliveryFee: 10000 }).total).toBe(55000);
   });
 

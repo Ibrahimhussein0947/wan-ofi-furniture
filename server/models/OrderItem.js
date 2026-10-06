@@ -22,6 +22,9 @@ const orderItemSchema = new mongoose.Schema({
   fulfillment: { type: String, enum: ['STOCK', 'PRODUCTION'], default: 'PRODUCTION' },
   stockDeducted: { type: Boolean, default: false },
   productionJob: { type: mongoose.Schema.Types.ObjectId, ref: 'ProductionJob', default: null },
+  // Warranty as sold (snapshot of the product's terms at order time).
+  warrantyMonths: { type: Number, min: 0, default: 0 },
+  warrantyTerms: { type: String, maxlength: 500 },
 });
 
 module.exports = orderItemSchema;

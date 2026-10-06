@@ -5,24 +5,110 @@
 @layer base {
   html {
     -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
   }
   body {
     @apply bg-stone-50 text-stone-800 antialiased;
+    /* Hairline top highlight gives the page a subtle physical "paper" edge. */
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.6), transparent 320px);
+  }
+  .dark body {
+    background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 320px);
+  }
+  ::selection {
+    @apply bg-brass-200 text-walnut-950;
   }
   :focus-visible {
     @apply outline-none ring-2 ring-brass-400 ring-offset-2;
   }
+  /* Warm walnut scrollbars with a brass thumb. */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #f2e9df;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #bd8f68, #8f5c3c);
+    border-radius: 999px;
+    border: 2px solid #f2e9df;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #a8734c, #744832);
+  }
+  .dark ::-webkit-scrollbar-track {
+    background: #211a16;
+  }
+  .dark ::-webkit-scrollbar-thumb {
+    border-color: #211a16;
+  }
+  /* Focus-ring gaps match the dark surface instead of flashing white. */
+  .dark * {
+    --tw-ring-offset-color: rgb(var(--c-stone-50));
+  }
+  /* Chart gridlines and hover bands are drawn with fixed light colours by Recharts. */
+  .dark .recharts-cartesian-grid line {
+    stroke: rgb(var(--c-stone-200));
+  }
+  .dark .recharts-tooltip-cursor {
+    fill: rgb(var(--c-stone-100));
+  }
 }
 
 @layer components {
+  /* Frosted surface for sticky headers, menus and overlays. */
+  .glass {
+    @apply border-b border-stone-200/80 bg-white/80 backdrop-blur-xl backdrop-saturate-150;
+  }
+  .dark .glass {
+    @apply border-stone-100/10 bg-stone-50/80;
+  }
+  /* Primary content surface: layered shadow + inner hairline for crispness. */
   .card {
-    @apply rounded-xl border border-stone-200 bg-white shadow-card;
+    @apply rounded-2xl border border-stone-200/80 bg-white shadow-soft transition duration-300 ease-smooth;
+  }
+  /* Same card, but lifts and warms up on hover. */
+  .card-hover {
+    @apply card hover:-translate-y-1 hover:border-brass-300/60 hover:shadow-lift;
+  }
+  /* Sweeping brass highlight; pair with `overflow-hidden` and `relative`. */
+  .sheen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(90deg, transparent, rgba(217, 165, 49, 0.16), transparent);
+    transform: translateX(-120%) skewX(-18deg);
+  }
+  .sheen:hover::after {
+    animation: sheen 1.1s ease-out;
+  }
+  /* Brass gradient text for headlines on dark backgrounds. */
+  .gradient-text {
+    @apply bg-gradient-to-r from-brass-300 via-brass-200 to-brass-400 bg-clip-text text-transparent;
+  }
+  /* Section eyebrow: dark-walnut → brass gradient on light backgrounds. */
+  .eyebrow-gradient {
+    @apply bg-gradient-to-r from-brass-700 via-brass-600 to-brass-500 bg-clip-text text-transparent;
+  }
+  /* Animated brass underline under the active nav item. */
+  .nav-active-underline::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: -6px;
+    height: 2px;
+    width: 1.5rem;
+    transform: translateX(-50%);
+    border-radius: 999px;
+    background: linear-gradient(90deg, #d9a531, #a66a1b);
   }
   .label {
     @apply mb-1 block text-sm font-medium text-stone-700;
   }
   .input {
-    @apply block w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 transition focus:border-walnut-500 focus:outline-none focus:ring-2 focus:ring-walnut-200 disabled:cursor-not-allowed disabled:bg-stone-100;
+    @apply block w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 shadow-sm transition duration-200 placeholder:text-stone-400 hover:border-stone-400 focus:border-walnut-500 focus:outline-none focus:ring-2 focus:ring-walnut-200 disabled:cursor-not-allowed disabled:bg-stone-100;
   }
   .input-error {
     @apply border-red-400 focus:border-red-500 focus:ring-red-100;
@@ -33,11 +119,52 @@
   .table-td {
     @apply whitespace-nowrap px-4 py-3 text-sm text-stone-700;
   }
+  /* Zebra striping for dense data tables. Hover is left to each row so
+     clickable and read-only tables can differ. */
+  .table-zebra tbody tr:nth-child(odd) {
+    @apply bg-stone-50/60;
+  }
+  .table-zebra thead th {
+    @apply border-b border-stone-200;
+  }
   .link {
-    @apply font-medium text-walnut-700 hover:text-walnut-900 hover:underline;
+    @apply font-medium text-walnut-700 transition-colors hover:text-walnut-900 hover:underline;
   }
   .container-page {
     @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+  /* Staggered page entrance for grids and lists. */
+  .stagger > * {
+    animation: fade-in-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .stagger > *:nth-child(1) { animation-delay: 0.02s; }
+  .stagger > *:nth-child(2) { animation-delay: 0.06s; }
+  .stagger > *:nth-child(3) { animation-delay: 0.1s; }
+  .stagger > *:nth-child(4) { animation-delay: 0.14s; }
+  .stagger > *:nth-child(5) { animation-delay: 0.18s; }
+  .stagger > *:nth-child(6) { animation-delay: 0.22s; }
+  .stagger > *:nth-child(n + 7) { animation-delay: 0.26s; }
+  /* Warm radial wash used behind hero/section backgrounds. */
+  .aurora {
+    background-image: radial-gradient(60% 60% at 50% 0%, rgba(196, 138, 34, 0.16), transparent 70%);
+  }
+}
+
+/* Loading placeholder with a travelling highlight. */
+@layer components {
+  .skeleton {
+    @apply relative overflow-hidden rounded-md bg-stone-200/70;
+  }
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+    animation: shimmer 1.8s infinite;
+  }
+  .dark .skeleton::after {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.07), transparent);
   }
 }
 
@@ -51,5 +178,19 @@
   .card {
     box-shadow: none;
     border: none;
+  }
+}
+
+/* Respect the user's motion preference: no floats, lifts or fades. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

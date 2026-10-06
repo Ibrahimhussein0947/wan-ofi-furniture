@@ -14,10 +14,12 @@ async function getSettings({ fresh = false } = {}) {
   return doc;
 }
 
-async function updateSettings(changes, userId) {
+async function updateSettings({ socialLinks, ...changes }, userId) {
+  // Social links are set one by one, so saving only Telegram doesn't clear Facebook.
+  const social = Object.fromEntries(Object.entries(socialLinks || {}).map(([k, v]) => [`socialLinks.${k}`, v]));
   const doc = await Setting.findOneAndUpdate(
     { key: 'global' },
-    { $set: { ...changes, updatedBy: userId } },
+    { $set: { ...changes, ...social, updatedBy: userId } },
     { new: true, upsert: true, runValidators: true }
   ).lean();
   cache = doc;
@@ -33,14 +35,22 @@ async function getPublicSettings() {
     companyEmail: s.companyEmail,
     companyPhone: s.companyPhone,
     companyAddress: s.companyAddress,
+    socialLinks: {
+      facebook: s.socialLinks?.facebook || '',
+      telegram: s.socialLinks?.telegram || '',
+      whatsapp: s.socialLinks?.whatsapp || '',
+      instagram: s.socialLinks?.instagram || '',
+    },
     currency: s.currency,
     depositPercent: s.depositPercent,
     defaultDeliveryFee: s.defaultDeliveryFee,
     paymentInstructions: s.paymentInstructions,
+    bankAccounts: customerBankAccounts(s),
     taxRate: s.taxRate,
+    customWarrantyMonths: s.customWarrantyMonths,
     requireEmailVerification: s.requireEmailVerification,
     onlinePayments: env.PAYMENT_PROVIDER !== 'manual',
-    mobileNetworks: env.PAYMENT_PROVIDER === 'manual' ? [] : ['MPESA', 'TIGO', 'AIRTEL', 'HALOPESA'],
+    mobileNetworks: env.PAYMENT_PROVIDER === 'manual' ? [] : ['TELEBIRR', 'CBE_BIRR', 'AMOLE', 'MPESA'],
   };
 }
 
@@ -48,4 +58,11 @@ const clearSettingsCache = () => {
   cache = null;
 };
 
-module.exports = { getSettings, updateSettings, getPublicSettings, clearSettingsCache };
+// The bank accounts customers may transfer to: active ones only, without internal flags.
+function customerBankAccounts(settings) {
+  return (settings?.bankAccounts || [])
+    .filter((a) => a.isActive !== false)
+    .map(({ type, bankName, accountName, accountNumber, branch, notes }) => ({ type: type || 'BANK', bankName, accountName, accountNumber, branch, notes }));
+}
+
+module.exports = { getSettings, updateSettings, getPublicSettings, clearSettingsCache, customerBankAccounts };

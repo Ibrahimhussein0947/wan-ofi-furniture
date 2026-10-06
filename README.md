@@ -17,10 +17,10 @@ Requires **Node.js 18+**.
 
 ```bash
 npm run install:all      # installs root, server and client dependencies
-npm run dev:memory       # embedded MongoDB + seeded data + API (5050) + client (5173)
+npm run dev:memory       # embedded MongoDB + seeded data + API (5050) + client (5174)
 ```
 
-Open **http://localhost:5173**. The first run seeds realistic data (a year of orders, payments, production, expenses). Data persists in `server/.devdb`; reset it with:
+Open **http://localhost:5174**. The first run seeds realistic data (a year of orders, payments, production, expenses). Data persists in `server/.devdb`; reset it with:
 
 ```bash
 npm run dev:memory --prefix server -- --reset
@@ -60,7 +60,7 @@ All seeded accounts share the password **`Password123!`** (development only — 
 3. Seed (erases the database) and run:
    ```bash
    npm run seed
-   npm run dev          # API on :5050, client on :5173 (Vite proxies /api and /uploads)
+   npm run dev          # API on :5050, client on :5174 (Vite proxies /api and /uploads)
    ```
 
 A standalone (non-replica-set) MongoDB also works: the API detects it and falls back to atomic conditional updates, but you lose all-or-nothing rollback across documents. Use a replica set in production.
@@ -82,9 +82,9 @@ A standalone (non-replica-set) MongoDB also works: the API detects it and falls 
 | `APP_URL` | Public web-app URL used in email links (defaults to the first `CLIENT_URL`) |
 | `EMAIL_DRIVER`, `EMAIL_FROM`, `SMTP_*` | `console` prints emails to the log; `smtp` sends through any SMTP provider (Gmail Workspace, SendGrid, Mailgun, Zoho…) |
 | `SMS_DRIVER`, `AT_USERNAME`, `AT_API_KEY`, `AT_SENDER_ID` | `console` or `africastalking` (Africa's Talking; use username `sandbox` to test) |
-| `PAYMENT_PROVIDER` | `manual` (staff record/verify payments), `sandbox` (simulated mobile money, development only) or `azampay` |
+| `PAYMENT_PROVIDER` | `manual` (staff record/verify payments), `sandbox` (simulated mobile money, development only) or `chapa` |
 | `PAYMENT_WEBHOOK_SECRET` | Secret path segment of the payment callback URL (required for online payments) |
-| `AZAMPAY_ENV`, `AZAMPAY_APP_NAME`, `AZAMPAY_CLIENT_ID`, `AZAMPAY_CLIENT_SECRET`, `AZAMPAY_API_KEY` | AzamPay credentials — M-Pesa, Mixx by Yas (Tigo Pesa), Airtel Money, HaloPesa |
+| `CHAPA_ENV`, `CHAPA_APP_NAME`, `CHAPA_CLIENT_ID`, `CHAPA_CLIENT_SECRET`, `CHAPA_API_KEY` | Chapa credentials — Telebirr, CBE Birr, Amole, M-PESA |
 | `ENABLE_CRON` | Background alerts (low stock, delays, deadlines, payment reminders) |
 
 The API refuses to start in production with `PAYMENT_PROVIDER=sandbox`, or with online payments enabled but no webhook secret.
@@ -191,9 +191,9 @@ The owner can grant individual extra permissions per user. Every rule is enforce
 - **Password reset:** "Forgot password?" emails a single-use link valid for 1 hour. The response never reveals whether an account exists, and a completed reset signs the user out everywhere.
 - **Email & SMS:** important events (order confirmed, payment received, production started/completed, ready, delivered, quotes, payment reminders; low stock, approvals, delays for staff; new jobs by SMS for workers) go out by email and/or SMS. Each user can opt out per channel on their profile page. Delivery runs in the background and never blocks the action.
 - **Live updates:** notifications and messages arrive instantly over Server-Sent Events, with slow polling as a fallback. The event bus runs in-process, so one API instance is assumed. Run several only after switching it to a shared broker such as Redis pub/sub.
-- **Mobile money:** with `PAYMENT_PROVIDER=azampay`, customers pay from the order page. They choose the network, get a PIN prompt on their phone, and the payment is applied automatically when AzamPay calls back. Callbacks are idempotent, amount-checked, and protected by the secret URL. If money arrives but can't be applied (for example, the order was paid meanwhile), the accounts team is alerted to refund it. The AzamPay adapter follows AzamPay's published API but has **not been exercised against a live AzamPay account**, so test it in their sandbox before going live.
-- **VAT:** the tax rate in Settings (18% in the seed data) is added to the discounted goods value on new orders. Each order and invoice keeps the rate it was created with.
-- **Branches:** orders, expenses and staff belong to a branch (showroom/workshop). Order and expense lists and the sales, product-sales and expense reports can be filtered by branch. Stock is shared across branches.
+- **Mobile money:** with `PAYMENT_PROVIDER=chapa`, customers pay from the order page. They choose the network, get a PIN prompt on their phone, and the payment is applied automatically when Chapa calls back. Callbacks are idempotent, amount-checked, and protected by the secret URL. If money arrives but can't be applied (for example, the order was paid meanwhile), the accounts team is alerted to refund it. The Chapa adapter follows Chapa's published API but has **not been exercised against a live Chapa account**, so test it in their sandbox before going live.
+- **VAT:** the tax rate in Settings (15% in the seed data) is added to the discounted goods value on new orders. Each order and invoice keeps the rate it was created with.
+- **Branches:** orders, expenses and staff belong to a branch (showroom/workshop). Order and expense lists and the sales, product-sales and expense reports can be filtered by branch. Stock is kept per branch: sales take stock from the order's branch, purchase orders deliver to a chosen branch, production uses the job's branch, and Inventory → Transfer moves stock between branches. Online orders ship from the default branch. With no branches set up, stock is a single company-wide count.
 
 ### Custom furniture workflow
 

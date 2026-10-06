@@ -42,15 +42,15 @@ const ownerData = {
 
 describe('Owner dashboard', () => {
   test('shows the key business figures and alerts', () => {
-    setCurrency('TZS');
+    setCurrency('ETB');
     renderWithProviders(<OwnerDashboard data={ownerData} />, { user: makeUser('OWNER') });
-    expect(screen.getByText('TZS 87.1M')).toBeInTheDocument();
+    expect(screen.getByText('ETB 87.1M')).toBeInTheDocument();
     expect(screen.getByText('61')).toBeInTheDocument();
     expect(screen.getByText(/1 expense\(s\) awaiting your approval/)).toBeInTheDocument();
     expect(screen.getByText(/5 material\(s\) low on stock/)).toBeInTheDocument();
     expect(screen.getByText('WO-2026-0071')).toBeInTheDocument();
     expect(screen.getByText('Genuine Leather')).toBeInTheDocument();
-    expect(screen.getByText('+TZS 180,000')).toBeInTheDocument();
+    expect(screen.getByText('+ETB 180,000')).toBeInTheDocument();
   });
 });
 
@@ -60,7 +60,7 @@ describe('Worker dashboard', () => {
       <WorkerDashboard
         data={{
           kpis: { assignedJobs: 1, dueSoon: 0, overdue: 1, openTasks: 0, readyForDelivery: 0, deliveries: 0 },
-          jobs: [{ _id: 'j1', jobNumber: 'PJ-2026-0035', title: 'Pemba Accent Chair × 1', stage: 'IN_PRODUCTION', progress: 40, priority: 'NORMAL', openProblems: 1, expectedCompletionDate: new Date(Date.now() - 2 * 86400000).toISOString(), order: { orderNumber: 'WO-2026-0071' } }],
+          jobs: [{ _id: 'j1', jobNumber: 'PJ-2026-0035', title: 'Harar Accent Chair × 1', stage: 'IN_PRODUCTION', progress: 40, priority: 'NORMAL', openProblems: 1, expectedCompletionDate: new Date(Date.now() - 2 * 86400000).toISOString(), order: { orderNumber: 'WO-2026-0071' } }],
           tasks: [],
           materialNeeds: [],
           deliveries: [],
@@ -69,7 +69,7 @@ describe('Worker dashboard', () => {
       />,
       { user: makeUser('WORKER', { workerRole: 'UPHOLSTERER' }) }
     );
-    expect(screen.getByText('Pemba Accent Chair × 1')).toBeInTheDocument();
+    expect(screen.getByText('Harar Accent Chair × 1')).toBeInTheDocument();
     expect(screen.getByText(/overdue/)).toBeInTheDocument();
     expect(screen.getByText('1 open problem(s)')).toBeInTheDocument();
     // Regular workers don't see the production board button.

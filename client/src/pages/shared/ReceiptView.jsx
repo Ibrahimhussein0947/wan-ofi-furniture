@@ -7,10 +7,12 @@ import { DocumentHeader } from './InvoiceView';
 import { paymentsApi } from '../../api/endpoints';
 import { useAuth } from '../../context/AuthContext';
 import { dateTime, label, money } from '../../utils/format';
+import { useT } from '../../i18n/LanguageContext';
 
 const TITLES = { CUSTOMER_PAYMENT: 'Receipt', REFUND: 'Refund note', SUPPLIER_PAYMENT: 'Payment voucher', WORKER_PAYMENT: 'Payment voucher' };
 
 export default function ReceiptView() {
+  const t = useT();
   const { id } = useParams();
   const { user } = useAuth();
   const query = useQuery({ queryKey: ['payment', id], queryFn: () => paymentsApi.get(id) });
@@ -26,7 +28,7 @@ export default function ReceiptView() {
                 ← Back
               </Button>
               <Button variant="secondary" size="sm" icon={Printer} onClick={() => window.print()}>
-                Print / Save PDF
+                {t('Print / Save PDF')}
               </Button>
             </div>
             <article className="card p-6 sm:p-10">
@@ -35,11 +37,11 @@ export default function ReceiptView() {
                 {[
                   [p.category === 'CUSTOMER_PAYMENT' ? 'Received from' : 'Paid to', party],
                   ['Date', dateTime(p.paidAt)],
-                  ['Method', label(p.method)],
+                  ['Method', t(label(p.method))],
                   ['Reference', p.reference || '—'],
                   p.order && ['Order', p.order.orderNumber],
                   p.purchaseOrder && ['Purchase order', p.purchaseOrder.poNumber],
-                  p.kind && ['Payment type', label(p.kind)],
+                  p.kind && ['Payment type', t(label(p.kind))],
                   p.receivedBy && ['Recorded by', p.receivedBy.name],
                 ]
                   .filter(Boolean)
@@ -51,21 +53,21 @@ export default function ReceiptView() {
                   ))}
               </dl>
               <div className="rounded-xl bg-walnut-50 p-5 text-center">
-                <p className="text-sm text-stone-600">Amount</p>
+                <p className="text-sm text-stone-600">{t('Amount')}</p>
                 <p className="mt-1 text-3xl font-semibold tabular-nums text-walnut-900">{money(p.amount)}</p>
               </div>
               {p.order && p.category === 'CUSTOMER_PAYMENT' && (
                 <dl className="mt-6 space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <dt className="text-stone-500">Order total</dt>
+                    <dt className="text-stone-500">{t('Order total')}</dt>
                     <dd className="tabular-nums">{money(p.order.total)}</dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-stone-500">Total paid to date</dt>
+                    <dt className="text-stone-500">{t('Total paid to date')}</dt>
                     <dd className="tabular-nums">{money(p.order.amountPaid)}</dd>
                   </div>
                   <div className="flex justify-between font-semibold">
-                    <dt>Remaining balance</dt>
+                    <dt>{t('Remaining balance')}</dt>
                     <dd className="tabular-nums">{money(p.order.balance)}</dd>
                   </div>
                 </dl>

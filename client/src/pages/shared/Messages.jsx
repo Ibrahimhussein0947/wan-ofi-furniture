@@ -13,8 +13,10 @@ import { fileUrl } from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import useMutationToast from '../../hooks/useMutationToast';
 import { label, timeAgo, dateTime } from '../../utils/format';
+import { useT } from '../../i18n/LanguageContext';
 
 export default function Messages() {
+  const t = useT();
   const { user } = useAuth();
   const [params, setParams] = useSearchParams();
   const activeId = params.get('with');
@@ -60,17 +62,17 @@ export default function Messages() {
   const list = (
     <div className="flex h-full flex-col">
       <div className="flex items-center justify-between border-b border-stone-100 p-4">
-        <h1 className="text-lg font-semibold">Messages</h1>
+        <h1 className="text-lg font-semibold">{t('Messages')}</h1>
         <Button size="sm" variant="secondary" icon={MessageSquarePlus} onClick={() => setComposing(true)}>
-          New
+          {t('New')}
         </Button>
       </div>
       {composing && (
         <div className="border-b border-stone-100 p-4">
           <Select
-            label="Send to"
+            label={t('Send to')}
             placeholder={contacts.isLoading ? 'Loading…' : 'Choose a person'}
-            options={(contacts.data || []).map((c) => ({ value: c._id, label: `${c.name}${isCustomer ? '' : ` — ${label(c.workerRole || c.role)}`}` }))}
+            options={(contacts.data || []).map((c) => ({ value: c._id, label: `${c.name}${isCustomer ? '' : ` — ${t(label(c.workerRole || c.role))}`}` }))}
             onChange={(e) => {
               if (e.target.value) {
                 setParams({ with: e.target.value });
@@ -80,7 +82,7 @@ export default function Messages() {
           />
           {isCustomer && (
             <button type="button" className="mt-2 text-sm text-walnut-700 hover:underline" onClick={() => { setParams({}); setComposing(false); }}>
-              Or write to the Wan Ofi team
+              {t('Or write to the Wan Ofi team')}
             </button>
           )}
         </div>
@@ -91,7 +93,7 @@ export default function Messages() {
             <Spinner />
           </li>
         )}
-        {conversations.data?.length === 0 && <li className="p-6 text-center text-sm text-stone-500">No conversations yet.</li>}
+        {conversations.data?.length === 0 && <li className="p-6 text-center text-sm text-stone-500">{t('No conversations yet.')}</li>}
         {conversations.data?.map((c) => (
           <li key={c.key}>
             <button
@@ -124,7 +126,7 @@ export default function Messages() {
   const chat = (
     <div className="flex h-full flex-col">
       <div className="flex items-center gap-3 border-b border-stone-100 p-4">
-        <button type="button" className="rounded p-1 md:hidden" onClick={() => setParams({})} aria-label="Back to conversations">
+        <button type="button" className="rounded p-1 md:hidden" onClick={() => setParams({})} aria-label={t('Back to conversations')}>
           <ArrowLeft className="h-5 w-5" />
         </button>
         {activeId ? (
@@ -132,7 +134,7 @@ export default function Messages() {
             <Avatar name={other?.name} />
             <div>
               <p className="font-semibold">{other?.name || '…'}</p>
-              {other && <p className="text-xs text-stone-500">{label(other.workerRole || other.role)}</p>}
+              {other && <p className="text-xs text-stone-500">{t(label(other.workerRole || other.role))}</p>}
             </div>
           </>
         ) : (
@@ -140,8 +142,8 @@ export default function Messages() {
         )}
       </div>
       <div className="flex-1 space-y-3 overflow-y-auto bg-stone-50/60 p-4" aria-live="polite">
-        {!activeId && !isCustomer && <EmptyState title="No conversation selected" message="Choose a conversation or start a new one." />}
-        {!activeId && isCustomer && <p className="text-center text-sm text-stone-500">Ask about orders, payments, delivery or custom designs. We usually reply within a few hours.</p>}
+        {!activeId && !isCustomer && <EmptyState title={t('No conversation selected')} message="Choose a conversation or start a new one." />}
+        {!activeId && isCustomer && <p className="text-center text-sm text-stone-500">{t('Ask about orders, payments, delivery or custom designs. We usually reply within a few hours.')}</p>}
         {thread.data?.messages.map((m) => {
           const mine = String(m.sender) === String(user._id);
           return (
@@ -198,11 +200,11 @@ export default function Messages() {
               e.target.value = '';
             }}
           />
-          <Button type="button" variant="ghost" size="icon" onClick={() => fileRef.current?.click()} aria-label="Attach photos">
+          <Button type="button" variant="ghost" size="icon" onClick={() => fileRef.current?.click()} aria-label={t('Attach photos')}>
             <Paperclip className="h-5 w-5" />
           </Button>
           <label htmlFor="message-body" className="sr-only">
-            Message
+            {t('Message')}
           </label>
           <textarea
             id="message-body"
@@ -212,12 +214,12 @@ export default function Messages() {
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) submit(e);
             }}
-            placeholder="Write a message…"
+            placeholder={t('Write a message…')}
             className="input min-h-[42px] flex-1 resize-none"
             maxLength={4000}
           />
-          <Button type="submit" icon={Send} loading={send.isPending} disabled={!body.trim() && !files.length} aria-label="Send">
-            <span className="hidden sm:inline">Send</span>
+          <Button type="submit" icon={Send} loading={send.isPending} disabled={!body.trim() && !files.length} aria-label={t('Send')}>
+            <span className="hidden sm:inline">{t('Send')}</span>
           </Button>
           </div>
         </form>

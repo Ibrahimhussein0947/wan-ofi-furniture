@@ -6,7 +6,10 @@ import { Toaster } from 'react-hot-toast';
 import App from './App';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { WishlistProvider } from './context/WishlistContext';
 import { SettingsLoader } from './components/SettingsLoader';
+import { ThemeProvider } from './context/ThemeContext';
+import { LanguageProvider } from './i18n/LanguageContext';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -23,14 +26,20 @@ const queryClient = new QueryClient({
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <CartProvider>
-            <SettingsLoader />
-            <App />
-            <Toaster position="top-right" toastOptions={{ duration: 4000, style: { fontSize: '14px' } }} />
-          </CartProvider>
-        </AuthProvider>
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <ThemeProvider>
+          <LanguageProvider>
+            <AuthProvider>
+              <CartProvider>
+                <WishlistProvider>
+                  <SettingsLoader />
+                  <App />
+                  <Toaster position="top-right" toastOptions={{ duration: 4000, className: '!bg-white !text-stone-800', style: { fontSize: '14px' } }} />
+                </WishlistProvider>
+              </CartProvider>
+            </AuthProvider>
+          </LanguageProvider>
+        </ThemeProvider>
       </BrowserRouter>
     </QueryClientProvider>
   </React.StrictMode>

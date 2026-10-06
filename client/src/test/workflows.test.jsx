@@ -23,12 +23,12 @@ import ProductForm from '../pages/staff/catalog/ProductForm';
 import { CustomerPaymentModal } from '../components/finance/PaymentModals';
 
 beforeEach(() => {
-  publicApi.settings.mockResolvedValue({ currency: 'TZS', depositPercent: 40, defaultDeliveryFee: 0 });
+  publicApi.settings.mockResolvedValue({ currency: 'ETB', depositPercent: 40, defaultDeliveryFee: 0 });
 });
 
 describe('Customer workflow: checkout', () => {
   test('places an order from the cart with database prices', async () => {
-    localStorage.setItem('wanofi.cart', JSON.stringify([{ productId: 'p1', slug: 'pemba', name: 'Pemba Accent Chair', price: 450000, color: 'Teal', quantity: 2 }]));
+    localStorage.setItem('wanofi.cart', JSON.stringify([{ productId: 'p1', slug: 'harar', name: 'Harar Accent Chair', price: 450000, color: 'Teal', quantity: 2 }]));
     ordersApi.create.mockResolvedValue({ _id: 'o1', orderNumber: 'WO-2026-0100' });
     renderWithProviders(<Checkout />, {
       route: '/checkout',
@@ -37,8 +37,8 @@ describe('Customer workflow: checkout', () => {
       extraRoutes: [<Route key="o" path="/account/orders/:id" element={<p>Order page</p>} />],
     });
 
-    expect(screen.getAllByText('TZS 900,000', { selector: 'dd' })).toHaveLength(2); // subtotal and total
-    expect(await screen.findByText('TZS 360,000')).toBeInTheDocument(); // 40% deposit
+    expect(screen.getAllByText('ETB 900,000', { selector: 'dd' })).toHaveLength(2); // subtotal and total
+    expect(await screen.findByText('ETB 360,000')).toBeInTheDocument(); // 40% deposit
     await userEvent.click(screen.getByRole('button', { name: /collect from showroom/i }));
     await userEvent.click(screen.getByRole('button', { name: /place order/i }));
 
@@ -81,7 +81,7 @@ describe('Worker workflow: updating production', () => {
   const job = {
     _id: 'j1',
     jobNumber: 'PJ-2026-0035',
-    title: 'Pemba Accent Chair × 1',
+    title: 'Harar Accent Chair × 1',
     stage: 'MATERIALS_READY',
     progress: 20,
     priority: 'NORMAL',
@@ -89,9 +89,9 @@ describe('Worker workflow: updating production', () => {
     specifications: { color: 'Mustard' },
     order: { orderNumber: 'WO-2026-0071' },
     customer: { name: 'Amina Hassan' },
-    product: { name: 'Pemba Accent Chair' },
+    product: { name: 'Harar Accent Chair' },
     assignedWorkers: [{ _id: 'u1', name: 'Test WORKER', workerRole: 'CARPENTER' }],
-    requiredMaterials: [{ material: { _id: 'm1', name: 'Mahogany', unit: 'piece', quantity: 50 }, quantityRequired: 3, quantityIssued: 3, quantityReturned: 0 }],
+    requiredMaterials: [{ material: { _id: 'm1', name: 'Eucalyptus', unit: 'piece', quantity: 50 }, quantityRequired: 3, quantityIssued: 3, quantityReturned: 0 }],
     materialRequests: [],
     problems: [],
     notes: [],
@@ -155,7 +155,7 @@ describe('Owner workflow: product creation', () => {
     renderWithProviders(<ProductForm />, { route: '/app/products/new', path: '/app/products/new', user: makeUser('OWNER') });
     await userEvent.type(screen.getByLabelText(/cost price/i), '60000');
     await userEvent.type(screen.getByLabelText(/selling price/i), '50000');
-    expect(within(screen.getByText(/margin per unit/i)).getByText(/-TZS|TZS -/)).toBeInTheDocument();
+    expect(within(screen.getByText(/margin per unit/i)).getByText(/-ETB|ETB -/)).toBeInTheDocument();
     await userEvent.click(screen.getByRole('button', { name: /create product/i }));
     expect(await screen.findByText(/Selling price is below cost/)).toBeInTheDocument();
     expect(productsApi.create).not.toHaveBeenCalled();

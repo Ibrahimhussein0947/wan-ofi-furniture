@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Banknote, CheckCircle2, FileText, Percent, RotateCcw, Truck, XCircle, PackageCheck, Receipt, PencilLine } from 'lucide-react';
+import { BellRing, Banknote, CheckCircle2, FileText, Percent, RotateCcw, Truck, XCircle, PackageCheck, Receipt, PencilLine } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 import ConfirmDialog from '../../../components/ui/ConfirmDialog';
 import { Card, DetailList, PageHeader, ProgressBar } from '../../../components/ui/misc';
@@ -15,18 +15,21 @@ import { invoicesApi, ordersApi } from '../../../api/endpoints';
 import { useAuth } from '../../../context/AuthContext';
 import useMutationToast from '../../../hooks/useMutationToast';
 import { date, dateTime, label, money } from '../../../utils/format';
+import { useT } from '../../../i18n/LanguageContext';
 
 const KEYS = ['order', 'orders', 'dashboard'];
 
 export default function OrderDetail() {
+  const t = useT();
   const { id } = useParams();
   const navigate = useNavigate();
   const { can } = useAuth();
   const [modal, setModal] = useState(null);
   const query = useQuery({ queryKey: ['order', id], queryFn: () => ordersApi.get(id) });
 
+  const remind = useMutationToast(() => ordersApi.action(id, 'remind', {}), { success: 'Reminder sent to the customer', invalidate: ['order'] });
   const confirm = useMutationToast(() => ordersApi.action(id, 'confirm', {}), { success: 'Order confirmed', invalidate: KEYS });
-  const status = useMutationToast((body) => ordersApi.action(id, 'status', body), { success: (o) => `Order ${label(o.status).toLowerCase()}`, invalidate: KEYS, onSuccess: () => setModal(null) });
+  const status = useMutationToast((body) => ordersApi.action(id, 'status', body), { success: (o) => `Order ${t(label(o.status)).toLowerCase()}`, invalidate: KEYS, onSuccess: () => setModal(null) });
   const cancel = useMutationToast((reason) => ordersApi.action(id, 'cancel', { reason }), { success: 'Order cancelled', invalidate: KEYS, onSuccess: () => setModal(null) });
   const invoice = useMutationToast(() => invoicesApi.create({ order: id }), { success: 'Invoice ready', invalidate: KEYS, onSuccess: (inv) => navigate(`/app/invoices/${inv._id}`) });
 
@@ -46,7 +49,7 @@ export default function OrderDetail() {
                   <StatusBadge status={o.paymentStatus} />
                   {o.orderType === 'CUSTOM' && <Badge tone="violet">Custom</Badge>}
                   <span>
-                    Placed {dateTime(o.orderDate)} · {label(o.source)}
+                    Placed {dateTime(o.orderDate)} · {t(label(o.source))}
                   </span>
                 </span>
               }
@@ -54,37 +57,37 @@ export default function OrderDetail() {
                 <>
                   {o.status === 'PENDING' && can('orders:approve') && (
                     <Button icon={CheckCircle2} loading={confirm.isPending} onClick={() => confirm.mutate()}>
-                      Confirm order
+                      {t('Confirm order')}
                     </Button>
                   )}
                   {open && o.balance > 0 && can('payments:write') && (
                     <Button icon={Banknote} variant={o.status === 'PENDING' ? 'secondary' : 'primary'} onClick={() => setModal('pay')}>
-                      Record payment
+                      {t('Record payment')}
                     </Button>
                   )}
                   {o.status === 'READY' && o.deliveryMethod === 'DELIVERY' && !activeDelivery && can('deliveries:manage') && (
                     <Button icon={Truck} onClick={() => setModal('delivery')}>
-                      Schedule delivery
+                      {t('Schedule delivery')}
                     </Button>
                   )}
                   {o.status === 'READY' && o.deliveryMethod === 'PICKUP' && can('orders:write') && (
                     <Button icon={PackageCheck} onClick={() => setModal('collected')}>
-                      Mark collected
+                      {t('Mark collected')}
                     </Button>
                   )}
                   {o.status === 'DELIVERED' && o.balance <= 0 && can('orders:write') && (
                     <Button icon={CheckCircle2} onClick={() => status.mutate({ status: 'COMPLETED' })}>
-                      Complete
+                      {t('Complete')}
                     </Button>
                   )}
                   {o.status === 'PENDING' && o.orderType !== 'CUSTOM' && can('orders:write') && (
                     <Button variant="secondary" icon={PencilLine} onClick={() => setModal('items')}>
-                      Edit items
+                      {t('Edit items')}
                     </Button>
                   )}
                   {o.status !== 'CANCELLED' && can('invoices:write') && (
                     <Button variant="secondary" icon={FileText} loading={invoice.isPending} onClick={() => (o.invoices?.find((i) => i.status !== 'VOID') ? navigate(`/app/invoices/${o.invoices.find((i) => i.status !== 'VOID')._id}`) : invoice.mutate())}>
-                      Invoice
+                      {t('Invoice')}
                     </Button>
                   )}
                 </>
@@ -97,17 +100,17 @@ export default function OrderDetail() {
 
             <div className="grid gap-6 xl:grid-cols-3">
               <div className="space-y-6 xl:col-span-2">
-                <Card title="Items" padded={false}>
+                <Card title={t('Items')} padded={false}>
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-stone-100">
                       <thead className="bg-stone-50">
                         <tr>
-                          <th className="table-th">Item</th>
-                          <th className="table-th">Fulfilment</th>
-                          <th className="table-th text-right">Qty</th>
-                          <th className="table-th text-right">Unit price</th>
-                          <th className="table-th text-right">Unit cost</th>
-                          <th className="table-th text-right">Total</th>
+                          <th className="table-th">{t('Item')}</th>
+                          <th className="table-th">{t('Fulfilment')}</th>
+                          <th className="table-th text-right">{t('Qty')}</th>
+                          <th className="table-th text-right">{t('Unit price')}</th>
+                          <th className="table-th text-right">{t('Unit cost')}</th>
+                          <th className="table-th text-right">{t('Total')}</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-stone-100">
@@ -132,7 +135,7 @@ export default function OrderDetail() {
                 </Card>
 
                 {o.production?.length > 0 && (
-                  <Card title="Production jobs" padded={false}>
+                  <Card title={t('Production jobs')} padded={false}>
                     <ul className="divide-y divide-stone-100">
                       {o.production.map((j) => (
                         <li key={j._id}>
@@ -154,7 +157,7 @@ export default function OrderDetail() {
                   </Card>
                 )}
 
-                <Card title="Payments" padded={false}>
+                <Card title={t('Payments')} padded={false}>
                   {!o.payments.length ? (
                     <p className="p-5 text-sm text-stone-500">No payments yet. Deposit required: {money(o.depositRequired)}</p>
                   ) : (
@@ -164,7 +167,7 @@ export default function OrderDetail() {
                           <span>
                             <span className="font-medium">{p.receiptNumber || p.paymentNumber}</span>
                             <span className="block text-xs text-stone-500">
-                              {dateTime(p.paidAt)} · {label(p.method)} · {label(p.kind)} {p.receivedBy && `· by ${p.receivedBy.name}`}
+                              {dateTime(p.paidAt)} · {t(label(p.method))} · {t(label(p.kind))} {p.receivedBy && `· by ${p.receivedBy.name}`}
                             </span>
                           </span>
                           <span className="flex items-center gap-3">
@@ -174,7 +177,7 @@ export default function OrderDetail() {
                               {money(p.amount)}
                             </span>
                             {p.status === 'COMPLETED' && (
-                              <Link to={`/app/receipts/${p._id}`} className="text-walnut-700 hover:underline" aria-label="Receipt">
+                              <Link to={`/app/receipts/${p._id}`} className="text-walnut-700 hover:underline" aria-label={t('Receipt')}>
                                 <Receipt className="h-4 w-4" />
                               </Link>
                             )}
@@ -185,12 +188,12 @@ export default function OrderDetail() {
                   )}
                 </Card>
 
-                <Card title="History">
+                <Card title={t('History')}>
                   <ol className="space-y-3 border-l-2 border-walnut-100 pl-4">
                     {[...o.statusHistory].reverse().map((h, i) => (
                       <li key={i} className="relative text-sm">
                         <span className="absolute -left-[21px] top-1.5 h-2.5 w-2.5 rounded-full bg-walnut-600" />
-                        <span className="font-medium">{label(h.status)}</span>
+                        <span className="font-medium">{t(label(h.status))}</span>
                         {h.note && <span className="text-stone-600"> — {h.note}</span>}
                         <p className="text-xs text-stone-500">
                           {dateTime(h.changedAt)} {h.changedBy?.name && `· ${h.changedBy.name}`}
@@ -202,7 +205,7 @@ export default function OrderDetail() {
               </div>
 
               <div className="space-y-6">
-                <Card title="Totals">
+                <Card title={t('Totals')}>
                   <dl className="space-y-2 text-sm">
                     {[
                       ['Subtotal', o.subtotal],
@@ -216,34 +219,45 @@ export default function OrderDetail() {
                       </div>
                     ))}
                     <div className="flex justify-between border-t border-stone-100 pt-2 font-semibold">
-                      <dt>Total</dt>
+                      <dt>{t('Total')}</dt>
                       <dd className="tabular-nums">{money(o.total)}</dd>
                     </div>
                     <div className="flex justify-between">
-                      <dt className="text-stone-600">Paid</dt>
+                      <dt className="text-stone-600">{t('Paid')}</dt>
                       <dd className="tabular-nums text-emerald-700">{money(o.amountPaid)}</dd>
                     </div>
                     <div className="flex justify-between rounded-lg bg-walnut-50 px-3 py-2 text-base font-semibold text-walnut-900">
-                      <dt>Balance</dt>
+                      <dt>{t('Balance')}</dt>
                       <dd className="tabular-nums">{money(o.balance)}</dd>
                     </div>
                     <p className="text-xs text-stone-500">Deposit required: {money(o.depositRequired)}</p>
+                    {o.balance > 0 && o.status !== 'CANCELLED' && (
+                      <p className="text-xs text-stone-500">
+                        {o.lastPaymentReminderAt ? t('Last reminded {when}', { when: dateTime(o.lastPaymentReminderAt) }) : t('Not reminded yet')} ·{' '}
+                        {t('Reminders go out weekly until it is paid')}
+                      </p>
+                    )}
                   </dl>
                   <div className="mt-4 flex flex-wrap gap-2">
+                    {o.balance > 0 && o.status !== 'CANCELLED' && can('payments:write') && (
+                      <Button size="sm" variant="secondary" icon={BellRing} loading={remind.isPending} onClick={() => remind.mutate()}>
+                        {t('Send reminder')}
+                      </Button>
+                    )}
                     {open && can('discounts:write') && (
                       <Button size="sm" variant="secondary" icon={Percent} onClick={() => setModal('discount')}>
-                        Discount
+                        {t('Discount')}
                       </Button>
                     )}
                     {o.amountPaid > 0 && can('refunds:write') && (
                       <Button size="sm" variant="secondary" icon={RotateCcw} onClick={() => setModal('refund')}>
-                        Refund
+                        {t('Refund')}
                       </Button>
                     )}
                   </div>
                 </Card>
 
-                <Card title="Customer" subtitle={o.branch ? `Branch: ${o.branch.name}` : undefined}>
+                <Card title={t('Customer')} subtitle={o.branch ? `Branch: ${o.branch.name}` : undefined}>
                   <Link to={`/app/customers/${o.customer?._id}`} className="font-medium text-walnut-800 hover:underline">
                     {o.customer?.name}
                   </Link>
@@ -251,11 +265,11 @@ export default function OrderDetail() {
                   <p className="text-sm text-stone-600">{o.customer?.email}</p>
                 </Card>
 
-                <Card title="Delivery">
+                <Card title={t('Delivery')}>
                   <DetailList
                     columns={1}
                     items={[
-                      { label: 'Method', value: label(o.deliveryMethod) },
+                      { label: 'Method', value: t(label(o.deliveryMethod)) },
                       o.deliveryMethod === 'DELIVERY' && { label: 'Address', value: [o.deliveryAddress?.street, o.deliveryAddress?.city, o.deliveryAddress?.region].filter(Boolean).join(', ') || '—' },
                       { label: 'Contact phone', value: o.contactPhone || '—' },
                       { label: 'Expected completion', value: date(o.expectedCompletionDate) },
@@ -273,7 +287,7 @@ export default function OrderDetail() {
                 </Card>
 
                 {(o.notes || o.internalNotes) && (
-                  <Card title="Notes">
+                  <Card title={t('Notes')}>
                     {o.notes && <p className="text-sm text-stone-700">{o.notes}</p>}
                     {o.internalNotes && <p className="mt-2 rounded bg-amber-50 p-2 text-sm text-amber-900">Internal: {o.internalNotes}</p>}
                   </Card>
@@ -281,7 +295,7 @@ export default function OrderDetail() {
 
                 {open && !['OUT_FOR_DELIVERY', 'DELIVERED'].includes(o.status) && can('orders:write') && (
                   <Button variant="ghost" icon={XCircle} className="text-red-600" onClick={() => setModal('cancel')}>
-                    Cancel order
+                    {t('Cancel order')}
                   </Button>
                 )}
               </div>
@@ -297,7 +311,7 @@ export default function OrderDetail() {
               onClose={() => setModal(null)}
               title={`Cancel ${o.orderNumber}?`}
               message={o.amountPaid > 0 ? `The customer has paid ${money(o.amountPaid)}. Record a refund afterwards if needed.` : 'Stock reserved for this order will be returned.'}
-              confirmLabel="Cancel order"
+              confirmLabel={t('Cancel order')}
               requireReason
               loading={cancel.isPending}
               onConfirm={(reason) => cancel.mutate(reason)}
@@ -306,9 +320,9 @@ export default function OrderDetail() {
               open={modal === 'collected'}
               onClose={() => setModal(null)}
               tone="primary"
-              title="Mark as collected?"
+              title={t('Mark as collected?')}
               message={o.balance > 0 ? `Warning: ${money(o.balance)} is still outstanding.` : 'The customer has collected their furniture.'}
-              confirmLabel="Mark collected"
+              confirmLabel={t('Mark collected')}
               loading={status.isPending}
               onConfirm={() => status.mutate({ status: 'DELIVERED', note: 'Collected from showroom' })}
             />

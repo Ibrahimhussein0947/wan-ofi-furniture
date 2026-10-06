@@ -3,20 +3,22 @@ import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
 import { ChevronDown, Search, X } from 'lucide-react';
 import { Field } from './Field';
+import { useT } from '../../i18n/LanguageContext';
 
 /**
  * Searchable single-select backed by an API list endpoint.
  * `fetcher(search)` returns an array; `getLabel(item)` renders each option.
  */
 export default function EntityPicker({ label, value, onChange, fetcher, queryKey, getLabel, getSubLabel, placeholder = 'Search…', error, required, disabled, hint }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [debounced, setDebounced] = useState('');
   const ref = useRef(null);
 
   useEffect(() => {
-    const t = setTimeout(() => setDebounced(search), 250);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setDebounced(search), 250);
+    return () => clearTimeout(timer);
   }, [search]);
   useEffect(() => {
     const close = (e) => ref.current && !ref.current.contains(e.target) && setOpen(false);
@@ -46,7 +48,7 @@ export default function EntityPicker({ label, value, onChange, fetcher, queryKey
                   e.stopPropagation();
                   onChange(null);
                 }}
-                aria-label="Clear"
+                aria-label={t('Clear')}
               />
             )}
             <ChevronDown className="h-4 w-4 text-stone-400" />
@@ -56,11 +58,11 @@ export default function EntityPicker({ label, value, onChange, fetcher, queryKey
           <div className="absolute z-30 mt-1 w-full overflow-hidden rounded-lg border border-stone-200 bg-white shadow-xl">
             <div className="relative border-b border-stone-100 p-2">
               <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
-              <input autoFocus value={search} onChange={(e) => setSearch(e.target.value)} className="input h-9 pl-8" placeholder="Type to search…" aria-label="Search" />
+              <input autoFocus value={search} onChange={(e) => setSearch(e.target.value)} className="input h-9 pl-8" placeholder={t('Type to search…')} aria-label={t('Search')} />
             </div>
             <ul className="max-h-64 overflow-y-auto py-1" role="listbox">
-              {isFetching && !data.length && <li className="px-3 py-2 text-sm text-stone-500">Searching…</li>}
-              {!isFetching && !data.length && <li className="px-3 py-2 text-sm text-stone-500">No matches</li>}
+              {isFetching && !data.length && <li className="px-3 py-2 text-sm text-stone-500">{t('Searching…')}</li>}
+              {!isFetching && !data.length && <li className="px-3 py-2 text-sm text-stone-500">{t('No matches')}</li>}
               {data.map((item) => (
                 <li key={item._id}>
                   <button

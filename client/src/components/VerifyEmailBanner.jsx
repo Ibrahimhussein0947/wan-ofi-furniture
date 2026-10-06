@@ -5,9 +5,11 @@ import Button from './ui/Button';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../api/endpoints';
 import { errorMessage } from '../api/client';
+import { useT } from '../i18n/LanguageContext';
 
 /** Reminds customers to confirm their email; ordering is blocked until they do. */
 export default function VerifyEmailBanner() {
+  const t = useT();
   const { user } = useAuth();
   const [sending, setSending] = useState(false);
   if (!user || user.role !== 'CUSTOMER' || user.emailVerified !== false) return null;
@@ -32,7 +34,7 @@ export default function VerifyEmailBanner() {
           Please confirm your email address ({user.email}) to place orders and make payments.
         </p>
         <Button size="sm" variant="secondary" loading={sending} onClick={resend}>
-          Resend confirmation link
+          {t('Resend confirmation link')}
         </Button>
       </div>
     </div>

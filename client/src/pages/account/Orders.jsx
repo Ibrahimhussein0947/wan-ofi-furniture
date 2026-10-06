@@ -9,6 +9,7 @@ import { EmptyState } from '../../components/ui/States';
 import { ordersApi } from '../../api/endpoints';
 import useListParams from '../../hooks/useListParams';
 import { date, money } from '../../utils/format';
+import { useT } from '../../i18n/LanguageContext';
 
 const TABS = [
   { value: '', label: 'All' },
@@ -20,13 +21,14 @@ const TABS = [
 ];
 
 export default function Orders() {
+  const t = useT();
   const [params, set] = useListParams();
   const navigate = useNavigate();
   const query = useQuery({ queryKey: ['orders', 'mine', params], queryFn: () => ordersApi.list(params), placeholderData: keepPreviousData });
 
   return (
     <div>
-      <PageHeader title="My orders" actions={<Button to="/products">Shop more</Button>} />
+      <PageHeader title={t('My orders')} actions={<Button to="/products">{t('Shop more')}</Button>} />
       <Tabs tabs={TABS} value={params.status || ''} onChange={(status) => set({ status })} className="mb-4" />
       <DataTable
         loading={query.isLoading}
@@ -36,7 +38,7 @@ export default function Orders() {
         pagination={query.data?.pagination}
         onPageChange={(page) => set({ page })}
         onRowClick={(o) => navigate(`/account/orders/${o._id}`)}
-        empty={<EmptyState icon={Package} title="No orders here" action={<Button to="/products">Browse furniture</Button>} />}
+        empty={<EmptyState icon={Package} title={t('No orders here')} action={<Button to="/products">{t('Browse furniture')}</Button>} />}
         columns={[
           { key: 'orderNumber', header: 'Order', render: (o) => <span className="font-medium text-walnut-900">{o.orderNumber}</span> },
           { key: 'orderDate', header: 'Date', render: (o) => date(o.orderDate) },

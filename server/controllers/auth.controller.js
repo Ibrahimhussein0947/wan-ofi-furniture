@@ -103,4 +103,10 @@ exports.changePassword = asyncHandler(async (req, res) => {
   respondWithSession(res, session, 'Password changed. Other sessions have been signed out.');
 });
 
+exports.changeEmail = asyncHandler(async (req, res) => {
+  const user = await authService.changeEmail(req.user._id, req.body, actorFrom(req));
+  const message = user.emailVerified ? 'Email updated' : 'Email updated — check your inbox to confirm the new address.';
+  sendSuccess(res, { data: { user: authService.publicUser(user) }, message });
+});
+
 exports.COOKIE_NAME = COOKIE_NAME;

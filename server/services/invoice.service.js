@@ -24,6 +24,8 @@ async function issueInvoice(orderId, { dueDate, notes } = {}, actor) {
       quantity: i.quantity,
       unitPrice: i.unitPrice,
       lineTotal: i.lineTotal,
+      warrantyMonths: i.warrantyMonths || 0,
+      warrantyTerms: i.warrantyTerms,
     })),
     subtotal: order.subtotal,
     discount: order.discount,
