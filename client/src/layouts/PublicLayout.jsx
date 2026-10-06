@@ -47,13 +47,14 @@ export default function PublicLayout() {
       <header className="glass sticky top-0 z-40 !border-walnut-100">
         <div className="container-page flex h-16 items-center justify-between gap-4">
           <Logo />
-          <nav className="hidden items-center gap-1 lg:flex" aria-label="Main">
+          {/* Full menu only where it fits next to the language picker, icons and login (≥1280px). */}
+          <nav className="hidden items-center gap-1 xl:flex" aria-label="Main">
             {NAV.map(([to, text]) => (
               <NavLink
                 key={to}
                 to={to}
                 end={to === '/'}
-                className={({ isActive }) => clsx('relative whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-medium transition xl:px-3', isActive ? 'nav-active-underline text-walnut-900' : 'text-stone-600 hover:bg-white/70 hover:text-walnut-800')}
+                className={({ isActive }) => clsx('relative whitespace-nowrap rounded-lg px-2.5 py-2 text-sm font-medium transition 2xl:px-3', isActive ? 'nav-active-underline text-walnut-900' : 'text-stone-600 hover:bg-white/70 hover:text-walnut-800')}
               >
                 {t(text)}
               </NavLink>
@@ -92,13 +93,13 @@ export default function PublicLayout() {
                 </Button>
               </div>
             )}
-            <button type="button" className="rounded-lg p-2 text-stone-700 hover:bg-walnut-50 lg:hidden" onClick={() => setOpen((o) => !o)} aria-label={t('Menu')} aria-expanded={open}>
+            <button type="button" className="rounded-lg p-2 text-stone-700 hover:bg-walnut-50 xl:hidden" onClick={() => setOpen((o) => !o)} aria-label={t('Menu')} aria-expanded={open}>
               {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
           </div>
         </div>
         {open && (
-          <nav className="border-t border-walnut-100 bg-white px-4 pb-4 pt-2 lg:hidden" aria-label="Mobile">
+          <nav className="border-t border-walnut-100 bg-white px-4 pb-4 pt-2 xl:hidden" aria-label="Mobile">
             {NAV.map(([to, text]) => (
               <NavLink key={to} to={to} end={to === '/'} className={({ isActive }) => clsx('block rounded-lg px-3 py-3 text-base font-medium', isActive ? 'bg-gradient-to-r from-brass-50 to-walnut-50 text-walnut-900' : 'text-stone-700 hover:bg-white')}>
                 {t(text)}
