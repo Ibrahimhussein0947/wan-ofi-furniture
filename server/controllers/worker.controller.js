@@ -1,6 +1,6 @@
-const { Worker, ProductionJob, Payment, User } = require('../models');
+const { Worker, WorkerDocument, ProductionJob, Payment, User } = require('../models');
 const { audit, actorFrom, diff } = require('../services/audit.service');
-const { asyncHandler, sendSuccess } = require('../utils/http');
+const { asyncHandler, sendSuccess, sendCreated } = require('../utils/http');
 const { paginate, pickFilters, escapeRegex } = require('../utils/query');
 const { assertFound } = require('./helpers');
 const { AUDIT_ACTIONS, PRODUCTION_STAGES: S } = require('../config/constants');
@@ -93,4 +93,74 @@ exports.update = asyncHandler(async (req, res) => {
     changes: diff(before, worker.toObject(), ['position', 'wageType', 'wageRate', 'taxRate', 'isActive', 'skills']),
   });
   sendSuccess(res, { data: worker, message: 'Worker updated' });
+});
+
+// ── Worker documents ────────────────────────────────────────────────────
+
+const DOC_FIELDS = 'title category fileName mimetype size notes uploadedBy createdAt';
+
+async function workerOr404(id) {
+  const worker = await Worker.findById(id).select('employeeCode').lean();
+  if (!worker) throw ApiError.notFound('Worker not found.');
+  return worker;
+}
+
+exports.listDocuments = asyncHandler(async (req, res) => {
+  await workerOr404(req.params.id);
+  const docs = await WorkerDocument.find({ worker: req.params.id }).select(DOC_FIELDS).populate('uploadedBy', 'name').sort({ createdAt: -1 }).lean();
+  sendSuccess(res, { data: docs });
+});
+
+exports.uploadDocument = asyncHandler(async (req, res) => {
+  const worker = await workerOr404(req.params.id);
+  const { originalname, mimetype, size, buffer } = req.file;
+  const doc = await WorkerDocument.create({
+    worker: worker._id,
+    ...req.body,
+    // Keep only a safe display name; the stored file is never written to disk under this name.
+    fileName: originalname.replace(/[^\w.\- ()]/g, '_').slice(-200),
+    mimetype,
+    size,
+    data: buffer,
+    uploadedBy: req.user._id,
+  });
+  await audit(actorFrom(req), {
+    action: AUDIT_ACTIONS.CREATE,
+    entity: 'Worker',
+    entityId: worker._id,
+    reference: worker.employeeCode,
+    description: `Uploaded document "${doc.title}" (${doc.category.toLowerCase()})`,
+  });
+  const { data: _file, ...rest } = doc.toObject();
+  sendCreated(res, rest, 'Document uploaded');
+});
+
+/** Sends the file to authorised staff only; `?download=1` saves it instead of opening it. */
+exports.documentFile = asyncHandler(async (req, res) => {
+  // Not lean: Mongoose turns the stored binary back into a Buffer.
+  const doc = await WorkerDocument.findOne({ _id: req.params.docId, worker: req.params.id }).select('+data fileName mimetype');
+  if (!doc) throw ApiError.notFound('Document not found.');
+  const disposition = req.query.download ? 'attachment' : 'inline';
+  res.set({
+    'Content-Type': doc.mimetype,
+    'Content-Length': doc.data.length,
+    'Content-Disposition': `${disposition}; filename*=UTF-8''${encodeURIComponent(doc.fileName)}`,
+    'Cache-Control': 'private, no-store',
+    'X-Content-Type-Options': 'nosniff',
+  });
+  res.send(doc.data);
+});
+
+exports.removeDocument = asyncHandler(async (req, res) => {
+  const worker = await workerOr404(req.params.id);
+  const doc = await WorkerDocument.findOneAndDelete({ _id: req.params.docId, worker: worker._id }).select('title').lean();
+  if (!doc) throw ApiError.notFound('Document not found.');
+  await audit(actorFrom(req), {
+    action: AUDIT_ACTIONS.DELETE,
+    entity: 'Worker',
+    entityId: worker._id,
+    reference: worker.employeeCode,
+    description: `Deleted document "${doc.title}"`,
+  });
+  sendSuccess(res, { message: 'Document deleted' });
 });

@@ -97,7 +97,14 @@ const updateWorker = z.object({
   notes: optionalText(2000),
 });
 
+const workerDocument = z.object({
+  title: z.string().trim().min(1, 'Give the document a title').max(120),
+  category: z.enum(['ID', 'CONTRACT', 'CERTIFICATE', 'CV', 'MEDICAL', 'OTHER']).default('OTHER'),
+  notes: z.string().trim().max(500).optional(),
+});
+
 module.exports = {
+  workerDocument,
   createUser,
   updateUser,
   customer,

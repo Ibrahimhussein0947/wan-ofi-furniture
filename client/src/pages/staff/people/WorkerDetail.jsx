@@ -12,6 +12,7 @@ import { StatusBadge } from '../../../components/ui/Badge';
 import { EmptyState, QueryState } from '../../../components/ui/States';
 import { Checkbox, Input, Select, Textarea } from '../../../components/ui/Field';
 import { WorkerPaymentModal } from '../../../components/finance/PaymentModals';
+import WorkerDocuments from './WorkerDocuments';
 import { usersApi, workersApi } from '../../../api/endpoints';
 import { useAuth } from '../../../context/AuthContext';
 import useMutationToast from '../../../hooks/useMutationToast';
@@ -145,6 +146,7 @@ export default function WorkerDetail() {
               ]}
             />
           </Card>
+          {can('workers:write') && <WorkerDocuments workerId={w._id} />}
           <div className="grid gap-6 xl:grid-cols-2">
             <div>
               <h2 className="mb-3 text-lg font-semibold">{t('Jobs')}</h2>

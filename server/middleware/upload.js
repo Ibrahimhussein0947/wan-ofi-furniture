@@ -59,6 +59,46 @@ const uploadImages = (field, { maxCount = 6, folder = 'misc' } = {}) => [
   },
 ];
 
+// Documents (worker files): PDFs, Word files and photos/scans of paper documents.
+const DOCUMENT_TYPES = {
+  ...IMAGE_TYPES,
+  'application/pdf': ['.pdf'],
+  'application/msword': ['.doc'],
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
+};
+const DOCUMENT_SIGNATURES = {
+  ...SIGNATURES,
+  'application/pdf': (b) => b.slice(0, 5).toString('ascii') === '%PDF-',
+  'application/msword': (b) => b.slice(0, 8).equals(Buffer.from([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1])),
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': (b) => b.slice(0, 4).equals(Buffer.from([0x50, 0x4b, 0x03, 0x04])),
+};
+
+const documentMulter = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: env.MAX_UPLOAD_MB * 1024 * 1024, files: 1, fields: 20 },
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname || '').toLowerCase();
+    if (!DOCUMENT_TYPES[file.mimetype]?.includes(ext)) {
+      return cb(ApiError.badRequest('Only PDF, Word (DOC/DOCX) or image (JPG, PNG, WEBP, GIF) files are allowed.'));
+    }
+    return cb(null, true);
+  },
+});
+
+/** Accepts one document in `field`, checks its content matches its type, and leaves it on `req.file` (not stored). */
+const uploadDocument = (field) => [
+  (req, res, next) =>
+    documentMulter.single(field)(req, res, (err) => {
+      if (err?.code === 'LIMIT_FILE_SIZE') return next(ApiError.badRequest(`Files must be ${env.MAX_UPLOAD_MB} MB or smaller.`));
+      return next(err);
+    }),
+  (req, _res, next) => {
+    if (!req.file) return next(ApiError.badRequest('Choose a file to upload.'));
+    if (!DOCUMENT_SIGNATURES[req.file.mimetype]?.(req.file.buffer)) return next(ApiError.badRequest('File content does not match its type.'));
+    return next();
+  },
+];
+
 // Multipart forms send nested data as a JSON string in a "data" field. Multer parses the
 // body after the global sanitizer ran, so it is sanitized again here.
 const parseMultipartJson = (req, _res, next) => {
@@ -73,4 +113,4 @@ const parseMultipartJson = (req, _res, next) => {
   return next();
 };
 
-module.exports = { uploadImages, parseMultipartJson, IMAGE_TYPES };
+module.exports = { uploadImages, uploadDocument, parseMultipartJson, IMAGE_TYPES, DOCUMENT_TYPES };

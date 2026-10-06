@@ -82,6 +82,32 @@ export const customersApi = resource('/customers');
 export const workersApi = {
   ...resource('/workers'),
   payroll: (month) => api.get('/workers/payroll', { params: { month } }).then(data),
+  documents: (id) => api.get(`/workers/${id}/documents`).then(data),
+  uploadDocument: (id, { title, category, notes }, file) => {
+    const form = new FormData();
+    form.append('title', title);
+    form.append('category', category);
+    if (notes) form.append('notes', notes);
+    form.append('file', file);
+    return api.post(`/workers/${id}/documents`, form).then(data);
+  },
+  // Documents are private, so they are fetched with the staff member's sign-in rather than opened by URL.
+  documentFile: async (id, docId) => {
+    try {
+      return (await api.get(`/workers/${id}/documents/${docId}/file`, { responseType: 'blob' })).data;
+    } catch (err) {
+      const blob = err.response?.data;
+      if (blob instanceof Blob) {
+        try {
+          err.response.data = JSON.parse(await blob.text());
+        } catch {
+          err.response.data = {};
+        }
+      }
+      throw err;
+    }
+  },
+  removeDocument: (id, docId) => api.delete(`/workers/${id}/documents/${docId}`).then(data),
 };
 
 export const materialsApi = resource('/materials');

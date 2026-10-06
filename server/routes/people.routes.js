@@ -1,6 +1,7 @@
 const express = require('express');
 const { requirePermission } = require('../middleware/rbac');
 const validate = require('../middleware/validate');
+const { uploadDocument, parseMultipartJson } = require('../middleware/upload');
 const ApiError = require('../utils/ApiError');
 const { hasPermission, PERMISSIONS: P } = require('../config/permissions');
 const { idParam, listQuery } = require('../validators/common');
@@ -48,6 +49,12 @@ workerRoutes.get(
   asyncHandler(async (req, res) => sendSuccess(res, { data: await payrollService.monthlyPayroll(req.query.month) }))
 );
 workerRoutes.get('/:id', requirePermission(P.WORKERS_READ), id, workers.get);
+// Worker files (ID, contract…) hold personal data: only staff who manage workers can see or change them.
+const docId = validate({ params: z.object({ id: idParam.shape.id, docId: idParam.shape.id }) });
+workerRoutes.get('/:id/documents', requirePermission(P.WORKERS_WRITE), id, workers.listDocuments);
+workerRoutes.post('/:id/documents', requirePermission(P.WORKERS_WRITE), id, uploadDocument('file'), parseMultipartJson, validate({ body: v.workerDocument }), workers.uploadDocument);
+workerRoutes.get('/:id/documents/:docId/file', requirePermission(P.WORKERS_WRITE), docId, workers.documentFile);
+workerRoutes.delete('/:id/documents/:docId', requirePermission(P.WORKERS_WRITE), docId, workers.removeDocument);
 workerRoutes.patch('/:id', requirePermission(P.WORKERS_WRITE), id, validate({ body: v.updateWorker }), workers.update);
 workerRoutes.delete('/:id', requirePermission(P.USERS_WRITE), id, workers.remove);
 

@@ -29,4 +29,5 @@ module.exports = {
   Supplier: require('./Supplier'),
   User: require('./User'),
   Worker: require('./Worker'),
+  WorkerDocument: require('./WorkerDocument'),
 };
