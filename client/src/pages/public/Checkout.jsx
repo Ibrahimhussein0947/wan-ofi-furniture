@@ -93,7 +93,7 @@ export default function Checkout() {
             <div className="grid gap-3 sm:grid-cols-2">
               {[
                 ['DELIVERY', Truck, 'Deliver & install', 'Our team delivers to your address'],
-                ['PICKUP', Store, 'Collect from showroom', 'Pick up at our Addis Ababa showroom'],
+                ['PICKUP', Store, 'Collect from showroom', 'Pick up at our Bale Robe showroom'],
               ].map(([value, Icon, title, text]) => (
                 <button
                   key={value}

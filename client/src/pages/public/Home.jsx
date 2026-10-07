@@ -46,11 +46,11 @@ function SectionTitle({ eyebrow, title, action }) {
 const unsplash = (id, w = 800) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${w}&q=80`;
 
 const WHY = [
-  [Hammer, 'Handcrafted locally', 'Every piece is built by skilled carpenters in our Addis Ababa workshop.', unsplash('photo-1659930087003-2d64e33181f7')],
+  [Hammer, 'Handcrafted locally', 'Every piece is built by skilled carpenters in our Bale Robe workshop.', unsplash('photo-1659930087003-2d64e33181f7')],
   [Award, 'Premium hardwoods', 'Eucalyptus, acacia and seasoned timber chosen for strength and beauty.', unsplash('photo-1677338003679-b422eb979c5d')],
   [PencilRuler, 'Made to measure', 'Tell us your dimensions, colours and fabrics — we build exactly that.', unsplash('photo-1626081063434-79a2169791b1')],
   [ShieldCheck, 'Quality inspected', 'A 10-point quality check before anything leaves the workshop.', unsplash('photo-1590529989936-f6efdf774c23')],
-  [Truck, 'Delivery & installation', 'Our team delivers and installs across Addis Ababa and beyond.', unsplash('photo-1657049199023-87fb439d47c5')],
+  [Truck, 'Delivery & installation', 'Our team delivers and installs across Bale Robe and beyond.', unsplash('photo-1657049199023-87fb439d47c5')],
   [Clock, 'Track your order', 'Follow production from first cut to delivery in your account.', unsplash('photo-1597960194599-22929afc25b1')],
 ];
 
@@ -108,7 +108,7 @@ const GALLERY = [
 ].map(([name, caption]) => ({ src: work(name), caption }));
 
 const TESTIMONIALS = [
-  ['Amina H.', 'Bole', 'Our king bed is stunning and solid. I loved seeing progress photos while it was being built.'],
+  ['Amina H.', 'Bale Robe', 'Our king bed is stunning and solid. I loved seeing progress photos while it was being built.'],
   ['Ibrahim Hussein', '', 'They furnished our dining hall on time and on budget. The quality has held up beautifully.'],
   ['Abdul Rahman', '', 'The custom sofa fits our living room perfectly. Clear pricing and flexible payments.'],
 ];
@@ -308,7 +308,7 @@ export default function Home() {
             <p className="mt-3 text-stone-600">{t('See the craftsmanship up close, feel the fabrics and talk to our designers.')}</p>
             <ul className="mt-6 space-y-3 text-stone-700">
               <li className="flex gap-3">
-                <MapPin className="h-5 w-5 text-brass-600" /> {company?.companyAddress || 'Addis Ababa, Ethiopia'}
+                <MapPin className="h-5 w-5 text-brass-600" /> {company?.companyAddress || 'Bale Robe, Ethiopia'}
               </li>
               <li className="flex gap-3">
                 <Phone className="h-5 w-5 text-brass-600" /> {company?.companyPhone || '+251 900 000 000'}

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 
 const SITE = 'Wan Ofi Furniture';
-const DEFAULT_DESCRIPTION = 'Wan Ofi Furniture — handcrafted furniture and custom designs from our Addis Ababa workshop.';
+const DEFAULT_DESCRIPTION = 'Wan Ofi Furniture — handcrafted furniture and custom designs from our Bale Robe workshop.';
 
 function setMeta(attr, key, content) {
   let el = document.head.querySelector(`meta[${attr}="${key}"]`);

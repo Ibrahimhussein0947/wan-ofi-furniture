@@ -87,11 +87,11 @@ async function createUsers(password, branches) {
   }
 
   const customerData = [
-    ['Amina Hassan', 'amina@example.com', '+251 913 100 201', 'Bole', 'Addis Ababa'],
-    ['John Getachew', 'john@example.com', '+251 913 100 202', 'Megenagna', 'Addis Ababa'],
+    ['Amina Hassan', 'amina@example.com', '+251 913 100 201', 'Kebele 01', 'Bale Robe'],
+    ['John Getachew', 'john@example.com', '+251 913 100 202', 'Kebele 02', 'Bale Robe'],
     ['Fatma Ally', 'fatma@example.com', '+251 913 100 203', 'Abay', 'Bahir Dar'],
-    ['Emmanuel Wolde', 'emmanuel@example.com', '+251 913 100 204', 'Piassa', 'Addis Ababa'],
-    ['Halima Yusuf', 'halima@example.com', '+251 913 100 205', 'Sarbet', 'Addis Ababa'],
+    ['Emmanuel Wolde', 'emmanuel@example.com', '+251 913 100 204', 'Kebele 03', 'Bale Robe'],
+    ['Halima Yusuf', 'halima@example.com', '+251 913 100 205', 'Kebele 04', 'Bale Robe'],
     ['Simien Hotels Ltd', 'procurement@simienhotels.example.com', '+251 913 100 206', 'Kenema', 'Bahir Dar'],
   ];
   const customers = [];
@@ -119,7 +119,7 @@ async function createUsers(password, branches) {
         customerCode: await nextNumber('CUS', { yearly: false, pad: 5 }),
         name,
         phone,
-        address: { street: 'Summit', city: 'Addis Ababa', country: 'Ethiopia' },
+        address: { street: 'Kebele 01', city: 'Bale Robe', country: 'Ethiopia' },
         source: 'WALK_IN',
       })
     );
@@ -155,7 +155,7 @@ async function createCatalog(owner) {
   ];
   const suppliers = [];
   for (const [name, contactPerson, phone, materialsSupplied, paymentTerms] of supplierData) {
-    suppliers.push(await Supplier.create({ name, contactPerson, phone, email: `${name.split(' ')[0].toLowerCase()}@supplier.example.com`, address: 'Addis Ababa', materialsSupplied, paymentTerms }));
+    suppliers.push(await Supplier.create({ name, contactPerson, phone, email: `${name.split(' ')[0].toLowerCase()}@supplier.example.com`, address: 'Bale Robe', materialsSupplied, paymentTerms }));
   }
 
   // [name, code, category, unit, qty, min, unitCost, supplierIndex]
@@ -215,7 +215,7 @@ async function createCatalog(owner) {
       sku,
       slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-$/, ''),
       category: categories[cat]._id,
-      description: `${name} — handcrafted in our Addis Ababa workshop from carefully selected ${mats.join(' and ').toLowerCase()}. Built to last with solid joinery and a hand-applied finish. Available in ${colors.join(', ')}.`,
+      description: `${name} — handcrafted in our Bale Robe workshop from carefully selected ${mats.join(' and ').toLowerCase()}. Built to last with solid joinery and a hand-applied finish. Available in ${colors.join(', ')}.`,
       price,
       costPrice,
       sellingPrice,
@@ -387,7 +387,7 @@ async function seed({ password, log = console.log } = {}) {
   log('Resetting database…');
   await resetDatabase();
   const branches = {
-    hq: await Branch.create({ name: 'Bole Showroom & Workshop', code: 'ADD', address: 'Bole, Addis Ababa', phone: '+251 911 000 001' }),
+    hq: await Branch.create({ name: 'Robe Showroom & Workshop', code: 'ROB', address: 'Robe, Bale', phone: '+251 911 000 001' }),
     bahirdar: await Branch.create({ name: 'Bahir Dar Showroom', code: 'BDR', address: 'Abay Road, Bahir Dar', phone: '+251 911 000 050' }),
   };
   // Ethiopia VAT is 15%.
@@ -397,7 +397,7 @@ async function seed({ password, log = console.log } = {}) {
     defaultBranch: branches.hq._id,
     paymentInstructions: 'Transfer to one of the accounts below, then submit the transaction reference from your order page. Our accounts team confirms it shortly.',
     bankAccounts: [
-      { type: 'BANK', bankName: 'Commercial Bank of Ethiopia', accountName: 'Wan Ofi Furniture Ltd', accountNumber: '0150-000000-00', branch: 'Bole', isActive: true },
+      { type: 'BANK', bankName: 'Commercial Bank of Ethiopia', accountName: 'Wan Ofi Furniture Ltd', accountNumber: '0150-000000-00', branch: 'Robe', isActive: true },
       { type: 'BANK', bankName: 'Awash Bank', accountName: 'Wan Ofi Furniture Ltd', accountNumber: '0123-456789-00', branch: 'Mexico', isActive: true },
       { type: 'MOBILE_WALLET', bankName: 'Telebirr', accountName: 'Wan Ofi Furniture', accountNumber: '0900 000 000', notes: 'Ask for the merchant PIN at the showroom', isActive: true },
     ],
@@ -551,7 +551,7 @@ async function seed({ password, log = console.log } = {}) {
   );
   await customRequests.startReview(quoted._id, 'Checking granite availability', actorOf(users.designer));
   await customRequests.saveEstimate(quoted._id, { materialCost: 1100000, laborCost: 600000, otherCost: 150000, productionDays: 21 }, actorOf(users.designer));
-  await customRequests.sendQuote(quoted._id, { quotedPrice: 2450000, quoteNotes: 'Includes granite top, soft-close drawers and delivery within Addis Ababa.' }, ownerActor);
+  await customRequests.sendQuote(quoted._id, { quotedPrice: 2450000, quoteNotes: 'Includes granite top, soft-close drawers and delivery within Bale Robe.' }, ownerActor);
 
   log('Recording purchases, expenses and payroll…');
   const po = await purchaseService.createPurchaseOrder(
@@ -575,7 +575,7 @@ async function seed({ password, log = console.log } = {}) {
     for (const [category, base, description] of expenseTemplates) {
       if (category === 'MAINTENANCE' && month % 3) continue;
       const amount = Math.round(base * (0.85 + Math.random() * 0.3));
-      const expense = await expenseService.createExpense({ category, amount, description, method: 'BANK_TRANSFER', vendor: category === 'RENT' ? 'Bole Properties' : undefined }, ownerActor);
+      const expense = await expenseService.createExpense({ category, amount, description, method: 'BANK_TRANSFER', vendor: category === 'RENT' ? 'Robe Properties' : undefined }, ownerActor);
       if (category === 'RENT') {
         const aru = await expenseService.createExpense({ category, amount: Math.round(amount * 0.4), description: 'Bahir Dar showroom rent', method: 'BANK_TRANSFER', vendor: 'Abay Estates', branch: String(branches.bahirdar._id) }, ownerActor);
         const arusaDate = new Date(new Date().getFullYear(), new Date().getMonth() - month, 3);

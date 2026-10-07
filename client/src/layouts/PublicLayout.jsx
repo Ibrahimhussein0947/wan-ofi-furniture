@@ -135,7 +135,7 @@ export default function PublicLayout() {
         <div className="container-page grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-4">
           <div className="space-y-3">
             <Logo light />
-            <p className="text-sm text-walnut-200/80">{t('Handcrafted furniture from our workshop in Addis Ababa — built to last for generations.')}</p>
+            <p className="text-sm text-walnut-200/80">{t('Handcrafted furniture from our workshop in Bale Robe — built to last for generations.')}</p>
             {social.length > 0 && (
               <div className="flex gap-3 text-walnut-300">
                 {social.map((s) => (
@@ -184,7 +184,7 @@ export default function PublicLayout() {
             <ul className="space-y-2.5 text-sm text-walnut-200/90">
               <li className="flex gap-2">
                 <MapPin className="h-4 w-4 shrink-0 text-brass-300" />
-                {company?.companyAddress || 'Addis Ababa, Ethiopia'}
+                {company?.companyAddress || 'Bale Robe, Ethiopia'}
               </li>
               <li className="flex gap-2">
                 <Phone className="h-4 w-4 shrink-0 text-brass-300" />

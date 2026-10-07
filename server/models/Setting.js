@@ -7,7 +7,7 @@ const settingSchema = new mongoose.Schema(
     companyName: { type: String, default: 'Wan Ofi Furniture' },
     companyEmail: { type: String, default: 'info@wanofi.com' },
     companyPhone: { type: String, default: '+251 900 000 000' },
-    companyAddress: { type: String, default: 'Addis Ababa, Ethiopia' },
+    companyAddress: { type: String, default: 'Bale Robe, Ethiopia' },
     // Contact channels shown on the storefront; empty ones are hidden.
     // Facebook/Instagram: page link or username. Telegram: @username or t.me link. WhatsApp: phone number.
     socialLinks: {
