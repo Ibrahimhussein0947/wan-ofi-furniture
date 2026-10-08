@@ -46,6 +46,14 @@ export const publicApi = {
 };
 
 export const categoriesApi = resource('/categories');
+export const uploadsApi = {
+  /** Uploads images to a staff folder (categories, misc, avatars) and resolves to their URLs. */
+  images: (folder, files) => {
+    const form = new FormData();
+    [...files].forEach((f) => form.append('images', f));
+    return api.post(`/uploads/${folder}`, form).then((r) => r.data.data.urls);
+  },
+};
 export const productsApi = {
   ...resource('/products'),
   create: (body, images) => api.post('/products', toFormData(body, { images })).then(data),

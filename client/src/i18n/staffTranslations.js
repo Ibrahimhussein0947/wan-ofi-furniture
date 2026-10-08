@@ -530,6 +530,8 @@ export const STAFF_ROWS = [
   ["Catalogue products set their own warranty", "Oomishaaleen kaataalogii wabii mataa isaanii qabu", "የካታሎግ ምርቶች የራሳቸውን ዋስትና ያስቀምጣሉ"],
   ["First image: the piece on its own. Then add photos of it in a real room so customers can judge size and style.", "Suuraa jalqabaa: meeshaa qofaa isaa. Itti aansuun akka maamiltoonni hammaa fi akkaataa isaa hubatan kutaa dhugaa keessatti suuraa isaa dabalaa.", "የመጀመሪያው ምስል፦ ዕቃው ብቻውን። ከዚያም ደንበኞች መጠኑን እና ቅጡን እንዲገመግሙ በእውነተኛ ክፍል ውስጥ ፎቶዎቹን ያክሉ።"],
   ["Remove image", "Suuraa haqi", "ምስሉን አስወግድ"],
+  ["Image", "Suuraa", "ምስል"],
+  ["Add image", "Suuraa dabali", "ምስል ጨምር"],
   ["Slug", "Maqaa URL", "የURL ስም"],
   ["Sort order", "Tartiiba", "ቅደም ተከተል"],
   ["New category", "Gosa haaraa", "አዲስ ምድብ"],

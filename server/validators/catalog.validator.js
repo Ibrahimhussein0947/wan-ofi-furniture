@@ -12,7 +12,7 @@ const category = z.object({
     .max(80)
     .optional(),
   description: optionalText(1000),
-  image: optionalText(500),
+  image: optionalText(500).nullable(), // null clears the image
   sortOrder: z.coerce.number().int().optional(),
   isActive: z.boolean().optional(),
 });

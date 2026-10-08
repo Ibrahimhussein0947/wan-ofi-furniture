@@ -1,22 +1,40 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import { Pencil, Plus, Trash2, X } from 'lucide-react';
 import DataTable from '../../../components/ui/DataTable';
 import Button from '../../../components/ui/Button';
 import Modal from '../../../components/ui/Modal';
 import ConfirmDialog from '../../../components/ui/ConfirmDialog';
 import { PageHeader } from '../../../components/ui/misc';
-import { Checkbox, Input, Textarea } from '../../../components/ui/Field';
+import { Checkbox, Field, Input, Textarea } from '../../../components/ui/Field';
 import { Badge } from '../../../components/ui/Badge';
-import { categoriesApi } from '../../../api/endpoints';
+import ImagePicker from '../../../components/ui/ImagePicker';
+import ProductImage from '../../../components/ProductImage';
+import { categoriesApi, uploadsApi } from '../../../api/endpoints';
 import useMutationToast from '../../../hooks/useMutationToast';
 import { useT } from '../../../i18n/LanguageContext';
 
 function CategoryModal({ open, onClose, category }) {
   const t = useT();
   const form = useForm({ values: { name: category?.name || '', description: category?.description || '', sortOrder: category?.sortOrder ?? 0, isActive: category?.isActive ?? true } });
-  const save = useMutationToast((body) => (category ? categoriesApi.update(category._id, body) : categoriesApi.create(body)), { success: 'Category saved', invalidate: ['categories'], onSuccess: onClose });
+  // `image` is the saved URL (cleared with the remove button); `files` holds a newly picked photo.
+  const [image, setImage] = useState(null);
+  const [files, setFiles] = useState([]);
+  useEffect(() => {
+    if (!open) return;
+    setImage(category?.image || null);
+    setFiles([]);
+  }, [open, category]);
+
+  const save = useMutationToast(
+    async (body) => {
+      const [uploaded] = files.length ? await uploadsApi.images('categories', files) : [];
+      const payload = { ...body, image: uploaded || image || (category ? null : undefined) };
+      return category ? categoriesApi.update(category._id, payload) : categoriesApi.create(payload);
+    },
+    { success: 'Category saved', invalidate: ['categories'], onSuccess: onClose }
+  );
   return (
     <Modal
       open={open}
@@ -31,6 +49,18 @@ function CategoryModal({ open, onClose, category }) {
       <div className="space-y-4">
         <Input label={t('Name')} required {...form.register('name', { required: true })} />
         <Textarea label={t('Description')} rows={2} {...form.register('description')} />
+        <Field label={t('Image')}>
+          {image && !files.length ? (
+            <div className="relative h-20 w-20 overflow-hidden rounded-lg border border-stone-200">
+              <ProductImage src={image} name={category?.name} className="h-full w-full" />
+              <button type="button" onClick={() => setImage(null)} className="absolute right-1 top-1 rounded-full bg-black/60 p-0.5 text-white" aria-label={t('Remove image')}>
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ) : (
+            <ImagePicker files={files} onChange={setFiles} max={1} label={t('Add image')} />
+          )}
+        </Field>
         <Input label={t('Sort order')} type="number" {...form.register('sortOrder')} />
         <Checkbox label={t('Visible in the shop')} {...form.register('isActive')} />
       </div>
@@ -53,7 +83,16 @@ export default function Categories() {
         error={query.error}
         rows={query.data}
         columns={[
-          { key: 'name', header: 'Name', render: (c) => <span className="font-medium">{c.name}</span> },
+          {
+            key: 'name',
+            header: 'Name',
+            render: (c) => (
+              <span className="flex items-center gap-3">
+                <ProductImage src={c.image} name={c.name} className="h-10 w-10 shrink-0 rounded-md" iconClassName="h-5 w-5" />
+                <span className="font-medium">{c.name}</span>
+              </span>
+            ),
+          },
           { key: 'slug', header: 'Slug', mobile: false },
           { key: 'productCount', header: 'Products', align: 'right' },
           { key: 'sortOrder', header: 'Order', align: 'right', mobile: false },
