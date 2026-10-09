@@ -750,6 +750,7 @@ const ROWS = [
   ["Your order is confirmed once the deposit is paid; you can pay the rest in any share later.", "Ajajni yeroo kaffaltiin duraa kaffalamu mirkanaa'a; kan hafe booda hammaa feetanii kaffaluu dandeessu.", "ቅድመ ክፍያው ሲከፈል ትዕዛዝዎ ይረጋገጣል፤ የቀረውን በኋላ በፈለጉት መጠን መክፈል ይችላሉ።"],
   ["Paying in full", "Guutummaatti kaffaluu", "ሙሉ በሙሉ መክፈል"],
   ["{pct}% of the order", "{pct}% ajajaa", "{pct}% የትዕዛዙ"],
+  ["This confirmation link is not valid or has expired. Log in to request a new one.", "Linkiin mirkaneessaa kun hin jiru ykn yeroon isaa darbeera. Haaraa gaafachuuf seenaa.", "ይህ የማረጋገጫ አገናኝ ትክክል አይደለም ወይም ጊዜው አልፏል። አዲስ ለመጠየቅ ይግቡ።"],
   ["Replace receipt", "Ragaa jijjiiri", "ደረሰኙን ቀይር"],
   ["Upload receipt", "Ragaa olkaa'i", "ደረሰኝ ጫን"],
   ["Receipt uploaded. Our accounts team will check it shortly.", "Ragaan olkaa'ameera. Gareen herrega keenya dhiyootti ni mirkaneessa.", "ደረሰኙ ተጭኗል። የሂሳብ ቡድናችን በቅርቡ ያረጋግጠዋል።"],

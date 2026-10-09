@@ -11,6 +11,8 @@ const paymentIntentSchema = new mongoose.Schema(
     customer: { type: mongoose.Schema.Types.ObjectId, ref: 'Customer', required: true, index: true },
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     amount: { type: Number, required: true, min: 1 },
+    // "Pay X%" option the customer picked; copied onto the payment once it succeeds.
+    percent: { type: Number, min: 1, max: 100 },
     currency: { type: String, default: 'ETB' },
     gateway: { type: String, enum: ['sandbox', 'chapa'], required: true },
     network: { type: String, enum: ['TELEBIRR', 'CBE_BIRR', 'AMOLE', 'MPESA', 'BYBILS'], required: true },

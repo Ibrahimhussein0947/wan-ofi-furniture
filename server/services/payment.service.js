@@ -42,7 +42,7 @@ function paymentKind(order, amount) {
  */
 async function applyCustomerPayment(
   order,
-  { amount, method, reference, notes, paidAt },
+  { amount, method, reference, notes, paidAt, percent },
   { session, actor, afterCommit, existingPayment },
 ) {
   const settings = await getSettings();
@@ -106,6 +106,7 @@ async function applyCustomerPayment(
           invoice: invoice?._id,
           customer: order.customer,
           kind,
+          percent,
           receivedBy: actor.user._id,
         },
       ],

@@ -61,6 +61,7 @@ const mobilePayment = z.object({
   amount: positiveMoney,
   network: z.enum(['TELEBIRR', 'CBE_BIRR', 'AMOLE', 'MPESA', 'BYBILS']),
   phone: trimmed(20).min(9, 'Enter your mobile number'),
+  percent: z.coerce.number().int().min(1).max(100).optional(),
 });
 
 const verifyPayment = z.object({ approve: z.boolean(), reason: optionalText(500) });

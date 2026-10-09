@@ -34,6 +34,7 @@ function MobileMoney({ order, suggested, onDone }) {
   const { data: settings } = usePublicSettings();
   const [intent, setIntent] = useState(null);
   const [sending, setSending] = useState(false);
+  const [percent, setPercent] = useState(null);
   const form = useForm({
     values: { network: 'TELEBIRR', phone: customer?.phone || user?.phone || '', amount: suggested },
   });
@@ -65,6 +66,7 @@ function MobileMoney({ order, suggested, onDone }) {
           network: v.network,
           phone: v.phone,
           amount: Number(v.amount),
+          percent: percent ?? undefined,
         }),
       );
     } catch (err) {
@@ -118,8 +120,19 @@ function MobileMoney({ order, suggested, onDone }) {
   const networks = settings?.mobileNetworks?.length
     ? settings.mobileNetworks
     : Object.keys(NETWORKS);
+  const choose = (p) => {
+    setPercent(p);
+    form.setValue('amount', p === null ? suggested : amountForPercent(order.total, order.balance, p));
+  };
   return (
     <div className='space-y-4'>
+      <PercentChoice
+        total={order.total}
+        balance={order.balance}
+        depositPercent={settings?.depositPercent ?? 40}
+        value={percent}
+        onChange={choose}
+      />
       <div className='grid grid-cols-2 gap-2'>
         {networks.map((n) => (
           <label

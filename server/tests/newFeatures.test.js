@@ -501,6 +501,7 @@ describe('mobile money payments (sandbox gateway)', () => {
       amount: 50000,
       network: 'TELEBIRR',
       phone: '0913123456',
+      percent: 50,
     });
     expect(res.status).toBe(201);
     expect(res.body.data).toMatchObject({
@@ -514,7 +515,7 @@ describe('mobile money payments (sandbox gateway)', () => {
     expect(order).toMatchObject({ amountPaid: 50000, status: 'CONFIRMED' });
     expect(await models.Payment.countDocuments({ order: orderId, method: 'MOBILE_PAYMENT' })).toBe(
       1,
-    );
+    );    expect((await models.Payment.findOne({ order: orderId, method: 'MOBILE_PAYMENT' })).percent).toBe(50);
   });
 
   test('a declined prompt changes nothing', async () => {

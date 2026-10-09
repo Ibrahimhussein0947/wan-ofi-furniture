@@ -25,8 +25,14 @@ export default function VerifyEmail() {
         setState({ status: 'ok', message: res.message });
         if (user) await refreshProfile().catch(() => {});
       })
-      .catch((err) => setState({ status: 'error', message: errorMessage(err) }));
-  }, [params, user, refreshProfile]);
+      .catch((err) =>
+        setState({
+          status: 'error',
+          // A malformed token comes back as a field error ("token: …"); show a plain sentence instead.
+          message: err.response?.status === 400 ? t('This confirmation link is not valid or has expired. Log in to request a new one.') : errorMessage(err),
+        }),
+      );
+  }, [params, user, refreshProfile, t]);
 
   if (state.status === 'loading') return <PageLoader label={t('Confirming your email…')} />;
   const ok = state.status === 'ok';

@@ -15,7 +15,7 @@ const notify = require('./notification.service');
 const EPS = 0.001;
 
 /** Asks the mobile-money provider to push a payment prompt to the customer's phone. */
-async function initiatePayment({ order: orderId, amount, network, phone }, customer, user) {
+async function initiatePayment({ order: orderId, amount, network, phone, percent }, customer, user) {
   const gateway = activeGateway();
   if (!gateway) throw ApiError.badRequest('Online payments are not enabled. Please pay by bank transfer or at the showroom.');
 
@@ -43,6 +43,7 @@ async function initiatePayment({ order: orderId, amount, network, phone }, custo
     customer: customer._id,
     user: user._id,
     amount: round2(amount),
+    percent,
     currency: settings.currency,
     gateway: gateway.name,
     network,
@@ -107,7 +108,7 @@ async function handleCallback(gatewayName, body) {
       const order = await Order.findById(intent.order).session(session);
       return applyCustomerPayment(
         order,
-        { amount: intent.amount, method: 'MOBILE_PAYMENT', reference: result.providerReference || intent.reference, notes: `${intent.network} ${intent.phone} (${intent.reference})` },
+        { amount: intent.amount, method: 'MOBILE_PAYMENT', reference: result.providerReference || intent.reference, notes: `${intent.network} ${intent.phone} (${intent.reference})`, percent: intent.percent },
         { session, actor, afterCommit }
       );
     });
