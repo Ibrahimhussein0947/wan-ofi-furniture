@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import clsx from 'clsx';
-import { Heart, Landmark, Mail, MapPin, Menu, Phone, ShoppingBag, User, X } from 'lucide-react';
+import { Heart, Mail, MapPin, Menu, Phone, ShoppingBag, User, X } from 'lucide-react';
 import Logo from '../components/Logo';
 import SocialIcon from '../components/SocialIcon';
 import { socialLinks } from '../utils/social';
@@ -33,7 +33,6 @@ export default function PublicLayout() {
   const location = useLocation();
   const { data: company } = useQuery({ queryKey: ['public-settings'], queryFn: publicApi.settings, staleTime: 5 * 60 * 1000 });
   const social = socialLinks(company?.socialLinks);
-  const accounts = company?.bankAccounts || [];
 
   useEffect(() => {
     setOpen(false);
@@ -208,25 +207,6 @@ export default function PublicLayout() {
                 </li>
               ))}
             </ul>
-            {accounts.length > 0 && (
-              <div className="mt-5">
-                <h3 className="mb-2 text-sm font-semibold uppercase tracking-wider text-brass-300">{t('Pay to')}</h3>
-                <ul className="space-y-2 text-sm text-walnut-200/90">
-                  {accounts.slice(0, 3).map((a, i) => (
-                    <li key={`${a.accountNumber}-${i}`} className="flex gap-2">
-                      <Landmark className="h-4 w-4 shrink-0 text-brass-300" />
-                      <span className="min-w-0">
-                        {a.bankName}
-                        <span className="block break-all font-mono text-white">{a.accountNumber}</span>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-                <Link to="/contact#pay" className="mt-2 inline-block text-sm text-brass-300 hover:text-white">
-                  {t('All payment details')} →
-                </Link>
-              </div>
-            )}
           </div>
         </div>
         <div className="border-t border-white/10 py-5 text-center text-xs text-walnut-300/70">© {new Date().getFullYear()} Wan Ofi Furniture. {t('All rights reserved.')}</div>

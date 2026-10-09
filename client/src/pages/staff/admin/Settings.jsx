@@ -242,7 +242,7 @@ function SettingsForm({ settings }) {
       <Card title={t('Bank accounts for customer payments')}>
         <p className='mb-4 text-sm text-stone-600'>
           {t(
-            'Customers see these accounts on the Contact page, in the site footer and when they pay for an order. Each account needs a bank name, account name and account number; uncheck "Show to customers" to hide one without deleting it.',
+            'Customers see these accounts in the cart, on the Contact page and when they pay for an order. Each account needs a bank name, account name and account number; uncheck "Show to customers" to hide one without deleting it.',
           )}
         </p>
         <div className='space-y-4'>

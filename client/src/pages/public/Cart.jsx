@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import ProductImage from '../../components/ProductImage';
+import BankAccounts from '../../components/BankAccounts';
 import { EmptyState } from '../../components/ui/States';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
@@ -87,6 +88,7 @@ export default function Cart() {
           <p className="mt-4 rounded-lg bg-brass-50 p-3 text-xs text-brass-800">
             {settings?.taxRate > 0 && `${t('Prices exclude {rate}% VAT, added at checkout.', { rate: settings.taxRate })} `}{t('Pay a {pct}% deposit to confirm your order. The balance is due before delivery. Final prices are confirmed at checkout.', { pct: settings?.depositPercent ?? 40 })}
           </p>
+          <BankAccounts compact className="mt-4" title={t('Pay into one of these accounts after ordering')} />
           <Button block size="lg" className="mt-5" onClick={checkout}>
             {user ? t('Proceed to checkout') : t('Log in to check out')}
           </Button>
