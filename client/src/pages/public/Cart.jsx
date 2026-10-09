@@ -1,8 +1,12 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import ProductImage from '../../components/ProductImage';
 import BankAccounts from '../../components/BankAccounts';
+import ImagePicker from '../../components/ui/ImagePicker';
+import { Input } from '../../components/ui/Field';
 import { EmptyState } from '../../components/ui/States';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
@@ -18,6 +22,9 @@ export default function Cart() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { data: settings } = usePublicSettings();
+  const [reference, setReference] = useState('');
+  const [receipt, setReceipt] = useState([]);
+  const hasAccounts = (settings?.bankAccounts || []).length > 0;
 
   if (!items.length) {
     return (
@@ -29,7 +36,14 @@ export default function Cart() {
 
   const checkout = () => {
     if (!user) navigate('/login', { state: { from: { pathname: '/checkout' } } });
-    else navigate('/checkout');
+    else if (reference.trim().length >= 3 || receipt.length) {
+      if (reference.trim().length < 3) {
+        toast.error(t('Enter the transaction reference from your receipt.'));
+        return;
+      }
+      // The payment is submitted against the order as soon as checkout creates it.
+      navigate('/checkout', { state: { proof: { reference: reference.trim(), receipt: receipt[0] } } });
+    } else navigate('/checkout');
   };
 
   return (
@@ -89,6 +103,24 @@ export default function Cart() {
             {settings?.taxRate > 0 && `${t('Prices exclude {rate}% VAT, added at checkout.', { rate: settings.taxRate })} `}{t('Pay a {pct}% deposit to confirm your order. The balance is due before delivery. Final prices are confirmed at checkout.', { pct: settings?.depositPercent ?? 40 })}
           </p>
           <BankAccounts compact className="mt-4" title={t('Pay into one of these accounts after ordering')} />
+          {hasAccounts && user && (
+            <div className="mt-4 space-y-3 rounded-lg border border-stone-200 p-3">
+              <p className="text-sm font-semibold text-stone-700">{t('Already transferred the deposit?')}</p>
+              <Input
+                label={t('Transaction reference')}
+                placeholder={t('Bank reference or mobile-money code')}
+                value={reference}
+                onChange={(e) => setReference(e.target.value)}
+              />
+              <div>
+                <p className="mb-1 text-sm font-medium text-stone-700">
+                  {t('Payment receipt')} <span className="font-normal text-stone-500">({t('optional — you can add it later')})</span>
+                </p>
+                <ImagePicker files={receipt} onChange={setReceipt} max={1} label={t('Add receipt')} capture />
+              </div>
+              <p className="text-xs text-stone-500">{t('We submit it for verification as soon as your order is placed.')}</p>
+            </div>
+          )}
           <Button block size="lg" className="mt-5" onClick={checkout}>
             {user ? t('Proceed to checkout') : t('Log in to check out')}
           </Button>

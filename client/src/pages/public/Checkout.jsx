@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
@@ -8,7 +8,7 @@ import Button from '../../components/ui/Button';
 import { Input, Textarea } from '../../components/ui/Field';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
-import { ordersApi, promotionsApi } from '../../api/endpoints';
+import { ordersApi, paymentsApi, promotionsApi } from '../../api/endpoints';
 import { errorMessage } from '../../api/client';
 import { money } from '../../utils/format';
 import { usePublicSettings } from '../../components/SettingsLoader';
@@ -22,6 +22,8 @@ export default function Checkout() {
   const { items, subtotal, clear } = useCart();
   const { customer } = useAuth();
   const navigate = useNavigate();
+  // A transfer reference (and receipt) the customer entered in the cart, submitted once the order exists.
+  const proof = useLocation().state?.proof;
   const { data: settings } = usePublicSettings();
   const [method, setMethod] = useState('DELIVERY');
   const [promoInput, setPromoInput] = useState('');
@@ -79,6 +81,16 @@ export default function Checkout() {
       });
       placed.current = true;
       clear();
+      if (proof?.reference) {
+        const amount = Math.min(order.depositRequired || order.balance || order.total, order.balance || order.total);
+        try {
+          await paymentsApi.submit({ order: order._id, amount, method: 'BANK_TRANSFER', reference: proof.reference }, proof.receipt);
+          toast.success(t("Payment submitted. We'll confirm it shortly."));
+        } catch (err) {
+          // The order is placed either way; they can resubmit from the order page.
+          toast.error(`${errorMessage(err)} ${t('You can submit it again from your order.')}`);
+        }
+      }
       toast.success(t('Order {number} placed!', { number: order.orderNumber }));
       navigate(`/account/orders/${order._id}?new=1`);
     } catch (err) {
@@ -203,6 +215,12 @@ export default function Checkout() {
             {t('Place order')}
           </Button>
           <p className="mt-3 text-xs text-stone-500">{t('After placing your order you can pay the deposit by bank transfer or mobile money from your account.')}</p>
+          {proof?.reference && (
+            <p className="mt-3 rounded-lg bg-sage-50 p-3 text-xs text-sage-700">
+              {t('Your reference {ref} will be submitted with this order.', { ref: proof.reference })}{' '}
+              {proof.receipt ? t('Receipt attached.') : t('You can add the receipt from your order afterwards.')}
+            </p>
+          )}
           <BankAccounts
             compact
             className="mt-5 border-t border-stone-100 pt-4"
