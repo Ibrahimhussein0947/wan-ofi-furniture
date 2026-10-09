@@ -19,6 +19,9 @@ import { date, dateTime, label, money } from '../../utils/format';
 import { useT } from '../../i18n/LanguageContext';
 
 
+// What the customer should pay next: the rest of the deposit while pending, otherwise the balance.
+const due = (o) => (o.status === 'PENDING' ? Math.max(o.depositRequired - o.amountPaid, 0) || o.balance : o.balance);
+
 export default function OrderDetail() {
   const t = useT();
   const { id } = useParams();
@@ -36,14 +39,32 @@ export default function OrderDetail() {
 
   return (
     <QueryState query={query}>
-      {(o) => (
+      {(o) => {
+        const canPay = o.balance > 0 && o.status !== 'CANCELLED' && hasAccounts;
+        const payNow = canPay && Boolean(params.get('new'));
+        return (
         <div className="space-y-6">
           {params.get('new') && (
-            <div className="flex items-start gap-3 rounded-xl bg-sage-50 p-4 text-sage-700">
-              <PartyPopper className="h-5 w-5 shrink-0" />
-              <p className="text-sm">
-                Thank you! Your order has been placed. Pay the deposit of <strong>{money(o.depositRequired)}</strong> to confirm it and start production.
-              </p>
+            <div className="rounded-xl bg-sage-50 p-4 text-sage-700">
+              <div className="flex items-start gap-3">
+                <PartyPopper className="h-5 w-5 shrink-0" />
+                <p className="text-sm">
+                  {t('Thank you! Your order has been placed. Pay the deposit of {amount} to confirm it and start production.', { amount: money(o.depositRequired) })}
+                </p>
+              </div>
+              {/* Right after ordering, put the accounts and the upload step first — not down the page. */}
+              {payNow && (
+                <div className="mt-4 rounded-lg bg-white p-4 text-stone-800 shadow-sm">
+                  <ol className="mb-3 list-decimal space-y-1 pl-5 text-sm">
+                    <li>{t('Transfer {amount} to one of the accounts below.', { amount: money(due(o)) })}</li>
+                    <li>{t('Upload your receipt and the transaction reference so we can confirm your payment.')}</li>
+                  </ol>
+                  <BankAccounts title={null} listClassName="grid gap-2 sm:grid-cols-2 lg:grid-cols-3" />
+                  <Button icon={Upload} className="mt-4" onClick={() => setPaying('manual')}>
+                    {t("I've paid — upload receipt")}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
           <PageHeader
@@ -136,11 +157,11 @@ export default function OrderDetail() {
             </div>
 
             <div className="space-y-6">
-              {o.balance > 0 && o.status !== 'CANCELLED' && hasAccounts && (
+              {canPay && !payNow && (
                 <Card title={t('How to pay')}>
                   <p className="mb-3 text-sm text-stone-600">
                     {t('Transfer {amount} to one of our accounts, then upload your receipt and the transaction reference.', {
-                      amount: money(o.status === 'PENDING' ? Math.max(o.depositRequired - o.amountPaid, 0) || o.balance : o.balance),
+                      amount: money(due(o)),
                     })}
                   </p>
                   <BankAccounts title={null} compact />
@@ -240,7 +261,8 @@ export default function OrderDetail() {
             onConfirm={(reason) => cancel.mutate(reason)}
           />
         </div>
-      )}
+        );
+      }}
     </QueryState>
   );
 }

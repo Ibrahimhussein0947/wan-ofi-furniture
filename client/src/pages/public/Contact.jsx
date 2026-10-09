@@ -1,14 +1,17 @@
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
-import { Clock, Mail, MapPin, Phone, Send } from 'lucide-react';
+import { Clock, Landmark, Mail, MapPin, Phone, Send } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import { Input, Textarea } from '../../components/ui/Field';
 import { publicApi } from '../../api/endpoints';
 import { errorMessage } from '../../api/client';
 import { usePublicSettings } from '../../components/SettingsLoader';
 import SocialIcon from '../../components/SocialIcon';
+import BankAccounts from '../../components/BankAccounts';
 import { socialLinks } from '../../utils/social';
 import { useT } from '../../i18n/LanguageContext';
 import usePageMeta from '../../hooks/usePageMeta';
@@ -25,6 +28,15 @@ export default function Contact() {
   const t = useT();
   usePageMeta({ title: t('Contact us'), description: t("Questions about an order, a custom piece or a visit? We're happy to help.") });
   const { data: company } = usePublicSettings();
+  const hasAccounts = (company?.bankAccounts || []).length > 0;
+  const { hash } = useLocation();
+
+  // The footer links to /contact#pay; the section only exists once settings have loaded.
+  useEffect(() => {
+    if (hash !== '#pay' || !hasAccounts) return undefined;
+    const timer = setTimeout(() => document.getElementById('pay')?.scrollIntoView());
+    return () => clearTimeout(timer);
+  }, [hash, hasAccounts]);
   const {
     register,
     handleSubmit,
@@ -85,6 +97,18 @@ export default function Contact() {
           ))}
         </aside>
       </div>
+      {hasAccounts && (
+        <section id="pay" className="card mt-10 scroll-mt-24 p-6">
+          <h2 className="flex items-center gap-2 font-display text-2xl font-semibold text-walnut-950">
+            <Landmark className="h-6 w-6 text-brass-600" />
+            {t('How to pay')}
+          </h2>
+          <p className="mt-1 text-sm text-stone-600">
+            {company?.paymentInstructions || t('Pay by bank transfer or mobile money into one of our accounts, then keep your receipt for the order.')}
+          </p>
+          <BankAccounts title={null} className="mt-4" listClassName="grid gap-3 sm:grid-cols-2 lg:grid-cols-3" />
+        </section>
+      )}
     </div>
   );
 }

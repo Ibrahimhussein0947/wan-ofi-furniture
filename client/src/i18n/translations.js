@@ -725,6 +725,9 @@ const ROWS = [
   // Bank transfer payments with receipt upload
   ["Transfer {amount} to one of our accounts, then upload your receipt and the transaction reference.", "{amount} herrega keenya keessaa tokkotti dabarsaa, achiis ragaa kaffaltii fi lakkoofsa ragaa daldalaa olkaa'aa.", "{amount} ወደ አንዱ ሂሳባችን ያስተላልፉ፣ ከዚያም ደረሰኝዎን እና የግብይት ማጣቀሻ ቁጥሩን ይጫኑ።"],
   ["I've paid — upload receipt", "Kaffaleera — ragaa olkaa'i", "ከፍያለሁ — ደረሰኝ ጫን"],
+  ["Thank you! Your order has been placed. Pay the deposit of {amount} to confirm it and start production.", "Galatoomaa! Ajajni keessan galmaa'eera. Mirkaneessuu fi oomisha jalqabuuf kaffaltii duraa {amount} kaffalaa.", "እናመሰግናለን! ትዕዛዝዎ ተቀምጧል። ለማረጋገጥ እና ምርቱን ለመጀመር የ{amount} ቅድመ ክፍያ ይክፈሉ።"],
+  ["Transfer {amount} to one of the accounts below.", "{amount} herrega armaan gadii keessaa tokkotti dabarsaa.", "{amount} ከታች ካሉት ሂሳቦች ወደ አንዱ ያስተላልፉ።"],
+  ["Upload your receipt and the transaction reference so we can confirm your payment.", "Kaffaltii keessan mirkaneessuuf ragaa kaffaltii fi lakkoofsa ragaa daldalaa olkaa'aa.", "ክፍያዎን እንድናረጋግጥ ደረሰኝዎን እና የግብይት ማጣቀሻ ቁጥሩን ይጫኑ።"],
   ["Ref", "Ragaa", "ማጣቀሻ"],
   ["Your receipt", "Ragaa kee", "ደረሰኝዎ"],
   ["Our accounts team is checking this payment.", "Gareen herregaa keenyaa kaffaltii kana mirkaneessaa jira.", "የሂሳብ ቡድናችን ይህን ክፍያ እያረጋገጠ ነው።"],

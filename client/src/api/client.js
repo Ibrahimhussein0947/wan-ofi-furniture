@@ -68,11 +68,14 @@ export function errorMessage(error, fallback = 'Something went wrong. Please try
 export const fieldErrors = (error) =>
   Object.fromEntries((error?.response?.data?.errors || []).map((e) => [e.field, e.message]));
 
-/** Builds a FormData body: JSON fields under "data", files under their field name. */
+/** Builds a FormData body: JSON fields under "data", files under their field name (one file or a list). */
 export function toFormData(data, files = {}) {
   const form = new FormData();
   form.append('data', JSON.stringify(data));
-  Object.entries(files).forEach(([field, list]) => [...(list || [])].forEach((f) => form.append(field, f)));
+  Object.entries(files).forEach(([field, list]) => {
+    if (!list) return;
+    (list instanceof Blob ? [list] : [...list]).forEach((f) => form.append(field, f));
+  });
   return form;
 }
 

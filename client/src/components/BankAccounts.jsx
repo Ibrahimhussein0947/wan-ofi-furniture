@@ -48,9 +48,10 @@ function AccountQr({ account, companyName }) {
 
 /**
  * The bank / mobile-money accounts the admin set up in Settings, for customers to pay into.
- * Renders nothing when no accounts are active. `compact` drops the QR codes and notes.
+ * Renders nothing when no accounts are active. `compact` drops the QR codes and notes;
+ * `listClassName` replaces the default stacked list layout (e.g. with a grid).
  */
-export default function BankAccounts({ title, compact = false, className }) {
+export default function BankAccounts({ title, compact = false, className, listClassName = 'space-y-2' }) {
   const t = useT();
   const { data: settings } = usePublicSettings();
   const accounts = settings?.bankAccounts || [];
@@ -70,7 +71,7 @@ export default function BankAccounts({ title, compact = false, className }) {
       {title !== null && (
         <p className='mb-2 text-sm font-semibold text-stone-700'>{title || t('Transfer into one of these accounts')}</p>
       )}
-      <ul className='space-y-2'>
+      <ul className={listClassName}>
         {accounts.map((a, i) => (
           <li key={`${a.accountNumber}-${i}`} className='rounded-lg border border-brass-200 bg-brass-50 p-3'>
             <div className='flex items-start justify-between gap-3'>

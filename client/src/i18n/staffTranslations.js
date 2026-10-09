@@ -727,7 +727,7 @@ export const STAFF_ROWS = [
 
   // ── Bank accounts for customer payments ────────────────────────────
   ["Bank accounts for customer payments", "Herrega baankii kaffaltii maamiltootaaf", "ለደንበኛ ክፍያዎች የባንክ ሂሳቦች"],
-  ["Customers see these accounts when they pay for an order. Each account needs a bank name, account name and account number; uncheck \"Show to customers\" to hide one without deleting it.", "Maamiltoonni yeroo ajaja kaffalan herrega kana argu. Herregni tokkoon tokkoon maqaa baankii, maqaa herregaa fi lakkoofsa herregaa barbaada; osoo hin haqin dhoksuuf \"Maamiltootaaf agarsiisi\" irraa mallattoo haqaa.", "ደንበኞች ለትዕዛዝ ሲከፍሉ እነዚህን ሂሳቦች ያያሉ። እያንዳንዱ ሂሳብ የባንክ ስም፣ የሂሳብ ስም እና የሂሳብ ቁጥር ያስፈልገዋል፤ ሳይሰርዙ ለመደበቅ \"ለደንበኞች አሳይ\" የሚለውን ምልክት ያንሱ።"],
+  ["Customers see these accounts on the Contact page, in the site footer and when they pay for an order. Each account needs a bank name, account name and account number; uncheck \"Show to customers\" to hide one without deleting it.", "Maamiltoonni fuula Quunnamtii, miila marsariitii fi yeroo ajaja kaffalan herrega kana argu. Herregni tokkoon tokkoon maqaa baankii, maqaa herregaa fi lakkoofsa herregaa barbaada; osoo hin haqin dhoksuuf \"Maamiltootaaf agarsiisi\" irraa mallattoo haqaa.", "ደንበኞች እነዚህን ሂሳቦች በአግኙን ገጽ፣ በድረ-ገጹ ግርጌ እና ለትዕዛዝ ሲከፍሉ ያያሉ። እያንዳንዱ ሂሳብ የባንክ ስም፣ የሂሳብ ስም እና የሂሳብ ቁጥር ያስፈልገዋል፤ ሳይሰርዙ ለመደበቅ \"ለደንበኞች አሳይ\" የሚለውን ምልክት ያንሱ።"],
   ["Add bank account", "Herrega baankii dabali", "የባንክ ሂሳብ ጨምር"],
   ["Bank or wallet", "Baankii ykn korojoo", "ባንክ ወይም ቦርሳ"],
   ["Account name", "Maqaa herregaa", "የሂሳብ ስም"],
@@ -743,6 +743,10 @@ export const STAFF_ROWS = [
   ["e.g. Commercial Bank of Ethiopia", "fkn. Baankii Daldalaa Itoophiyaa", "ለምሳሌ የኢትዮጵያ ንግድ ባንክ"],
   ["e.g. Wan Ofi Furniture Ltd", "fkn. Wan Ofi Furniture Ltd", "ለምሳሌ Wan Ofi Furniture Ltd"],
   ["e.g. 0150-000000-00", "fkn. 0150-000000-00", "ለምሳሌ 0150-000000-00"],
+  ["How to pay", "Akkaataa kaffaltii", "እንዴት እንደሚከፍሉ"],
+  ["Pay by bank transfer or mobile money into one of our accounts, then keep your receipt for the order.", "Herrega keenya keessaa tokkotti dabarsa baankii ykn maallaqa moobaayilaan kaffalaa, achiis nagahee keessan ajajaaf qabadhaa.", "ከሂሳቦቻችን ወደ አንዱ በባንክ ዝውውር ወይም በሞባይል ገንዘብ ይክፈሉ፣ ከዚያም ደረሰኝዎን ለትዕዛዙ ያስቀምጡ።"],
+  ["Pay to", "Itti kaffalaa", "ይክፈሉ ለ"],
+  ["All payment details", "Odeeffannoo kaffaltii hunda", "ሁሉም የክፍያ ዝርዝሮች"],
 
   ["Worker added", "Hojjetaan dabalameera", "ሠራተኛው ተጨምሯል"],
   ["Worker removed", "Hojjetaan haqameera", "ሠራተኛው ተወግዷል"],

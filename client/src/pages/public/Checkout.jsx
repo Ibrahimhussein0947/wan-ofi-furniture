@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import toast from 'react-hot-toast';
@@ -27,6 +27,8 @@ export default function Checkout() {
   const [promoInput, setPromoInput] = useState('');
   const [promo, setPromo] = useState(null);
   const [checking, setChecking] = useState(false);
+  // Set once the order is placed, so emptying the cart doesn't bounce the customer to /cart.
+  const placed = useRef(false);
   const { register, handleSubmit, formState } = useForm({
     values: {
       street: customer?.address?.street || '',
@@ -37,7 +39,7 @@ export default function Checkout() {
     },
   });
 
-  if (!items.length) return <Navigate to="/cart" replace />;
+  if (!items.length && !placed.current) return <Navigate to="/cart" replace />;
   const deliveryFee = method === 'DELIVERY' ? settings?.defaultDeliveryFee || 0 : 0;
   const taxRate = settings?.taxRate || 0;
   // A promo is re-checked whenever the subtotal changes; the server recalculates it on the order anyway.
@@ -75,6 +77,7 @@ export default function Checkout() {
         notes: values.notes,
         promoCode: discount ? promo.code : undefined,
       });
+      placed.current = true;
       clear();
       toast.success(t('Order {number} placed!', { number: order.orderNumber }));
       navigate(`/account/orders/${order._id}?new=1`);
