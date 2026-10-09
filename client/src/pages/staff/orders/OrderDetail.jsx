@@ -12,6 +12,7 @@ import { CustomerPaymentModal, DiscountModal, RefundModal } from '../../../compo
 import ScheduleDeliveryModal from '../deliveries/ScheduleDeliveryModal';
 import EditItemsModal from './EditItemsModal';
 import { invoicesApi, ordersApi } from '../../../api/endpoints';
+import { fileUrl } from '../../../api/client';
 import { useAuth } from '../../../context/AuthContext';
 import useMutationToast from '../../../hooks/useMutationToast';
 import { date, dateTime, label, money } from '../../../utils/format';
@@ -169,9 +170,27 @@ export default function OrderDetail() {
                             <span className="block text-xs text-stone-500">
                               {dateTime(p.paidAt)} · {t(label(p.method))} · {t(label(p.kind))} {p.receivedBy && `· by ${p.receivedBy.name}`}
                             </span>
+                            {p.reference && (
+                              <span className="block text-xs text-stone-600">
+                                {t('Reference')}: <span className="font-mono">{p.reference}</span>
+                              </span>
+                            )}
+                            {p.status === 'PENDING_VERIFICATION' && !p.screenshot && (
+                              <span className="block text-xs text-amber-700">{t('No receipt uploaded yet')}</span>
+                            )}
                           </span>
+                          {p.screenshot && (
+                            <a href={fileUrl(p.screenshot)} target="_blank" rel="noreferrer" title={t('View the receipt the customer uploaded')}>
+                              <img src={fileUrl(p.screenshot)} alt={t('Transfer receipt')} className="h-14 w-14 rounded border border-stone-200 object-cover" />
+                            </a>
+                          )}
                           <span className="flex items-center gap-3">
                             {p.status !== 'COMPLETED' && <StatusBadge status={p.status} />}
+                            {p.status === 'PENDING_VERIFICATION' && can('payments:write') && (
+                              <Link to="/app/payments?status=PENDING_VERIFICATION" className="text-xs font-medium text-walnut-700 hover:underline">
+                                {t('Review')}
+                              </Link>
+                            )}
                             <span className={`font-semibold tabular-nums ${p.category === 'REFUND' ? 'text-red-600' : ''}`}>
                               {p.category === 'REFUND' ? '−' : ''}
                               {money(p.amount)}

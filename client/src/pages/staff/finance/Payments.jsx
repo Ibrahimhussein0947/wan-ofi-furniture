@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { Banknote, Check, ImageIcon, Truck, UserCog, X } from 'lucide-react';
+import { Banknote, Check, Truck, UserCog, X } from 'lucide-react';
 import DataTable from '../../../components/ui/DataTable';
 import Button from '../../../components/ui/Button';
 import ExportMenu from '../../../components/ExportMenu';
@@ -104,7 +104,11 @@ export default function Payments() {
             className='text-walnut-700 hover:text-walnut-900'
             title={t('View the receipt the customer uploaded')}
           >
-            <ImageIcon className='h-5 w-5' aria-label={t('Receipt attached')} />
+            <img
+              src={fileUrl(p.screenshot)}
+              alt={t('Receipt attached')}
+              className='h-10 w-10 rounded border border-stone-200 object-cover'
+            />
           </a>
         ) : (
           <span className='text-stone-300'>—</span>
