@@ -61,3 +61,18 @@ describe('production rules', () => {
     expect(WORKER_STAGE_PERMISSIONS.CARPENTER).not.toContain('QUALITY_CHECK');
   });
 });
+
+describe('date inputs', () => {
+  it('defaults to the local calendar date, even just after midnight', async () => {
+    const { localDate, toInputDate } = await import('../utils/format');
+    const justAfterMidnight = new Date(2026, 9, 10, 0, 50);
+    expect(localDate(justAfterMidnight)).toBe('2026-10-10');
+    expect(toInputDate(justAfterMidnight)).toBe('2026-10-10');
+  });
+
+  it('reads back a saved date-only value by its own date', async () => {
+    const { toInputDate } = await import('../utils/format');
+    expect(toInputDate('2026-10-10T00:00:00.000Z')).toBe('2026-10-10');
+    expect(toInputDate(undefined)).toBe('');
+  });
+});

@@ -6,10 +6,33 @@ import { useAuth } from '../context/AuthContext';
 const STREAM_URL = `${import.meta.env.VITE_API_URL || ''}/api/events/stream`;
 
 // Which cached data to refresh for each kind of live event.
+// Business lists that change when customers or colleagues act (orders, payments, ...). A
+// notification usually means one of them changed, so they are refreshed along with it.
+const BUSINESS_DATA = [
+  ['orders'],
+  ['order'],
+  ['payments'],
+  ['payment'],
+  ['customers'],
+  ['customer'],
+  ['invoices'],
+  ['invoice'],
+  ['production'],
+  ['job'],
+  ['deliveries'],
+  ['delivery'],
+  ['custom-orders'],
+  ['custom-order'],
+  ['inventory'],
+  ['quality'],
+  ['tasks'],
+];
 const INVALIDATE = {
-  notification: [['unread'], ['notifications'], ['dashboard']],
+  notification: [['unread'], ['notifications'], ['dashboard'], ...BUSINESS_DATA],
   message: [['unread'], ['conversations'], ['thread']],
 };
+// Without a working live stream (some proxies buffer it) the lists are re-checked this often.
+const FALLBACK_REFRESH_MS = 20 * 1000;
 
 /**
  * Subscribes to server-sent events so notifications and messages appear instantly.
@@ -25,6 +48,12 @@ export default function useLiveEvents() {
     let retry;
     let stopped = false;
     let attempts = 0;
+    let streaming = false;
+    // Keeps lists fresh while the stream is down; the tab must be visible so idle tabs stay quiet.
+    const poll = setInterval(() => {
+      if (streaming || document.visibilityState !== 'visible') return;
+      [['unread'], ['dashboard'], ...BUSINESS_DATA].forEach((queryKey) => qc.invalidateQueries({ queryKey }));
+    }, FALLBACK_REFRESH_MS);
 
     const connect = async () => {
       try {
@@ -34,6 +63,7 @@ export default function useLiveEvents() {
         source = new EventSource(`${STREAM_URL}?ticket=${ticket}`);
         source.addEventListener('open', () => {
           attempts = 0;
+          streaming = true;
         });
         source.addEventListener('update', (e) => {
           let event = {};
@@ -45,6 +75,7 @@ export default function useLiveEvents() {
           (INVALIDATE[event.kind] || []).forEach((queryKey) => qc.invalidateQueries({ queryKey }));
         });
         source.onerror = () => {
+          streaming = false;
           source.close();
           scheduleReconnect();
         };
@@ -62,6 +93,7 @@ export default function useLiveEvents() {
     connect();
     return () => {
       stopped = true;
+      clearInterval(poll);
       clearTimeout(retry);
       source?.close();
     };

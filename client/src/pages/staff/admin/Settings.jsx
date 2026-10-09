@@ -10,6 +10,7 @@ import { settingsApi } from '../../../api/endpoints';
 import { errorMessage } from '../../../api/client';
 import { label, setCurrency } from '../../../utils/format';
 import BranchSelect from '../../../components/BranchSelect';
+import { usePublicSettings } from '../../../components/SettingsLoader';
 import { useT } from '../../../i18n/LanguageContext';
 
 // Local account numbers need 5–34 letters/digits (spaces/dashes allowed); IBAN-looking
@@ -70,6 +71,7 @@ const emptyAccount = {
 
 function SettingsForm({ settings }) {
   const t = useT();
+  const { data: publicSettings } = usePublicSettings();
   const qc = useQueryClient();
   const form = useForm({
     defaultValues: {
@@ -230,6 +232,11 @@ function SettingsForm({ settings }) {
             label={t('Customers must confirm their email before ordering online')}
             {...form.register('requireEmailVerification')}
           />
+          {publicSettings && publicSettings.emailDelivery === false && (
+            <p className='-mt-2 text-xs text-amber-700'>
+              {t("Email sending isn't set up on this server yet, so this is not enforced: customers can order without confirming. It switches on once real email (SMTP) is configured.")}
+            </p>
+          )}
           <BranchSelect
             label={t('Default branch for online orders')}
             placeholder={t('None')}

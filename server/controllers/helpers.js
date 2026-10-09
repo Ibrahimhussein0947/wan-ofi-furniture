@@ -17,9 +17,9 @@ const isCustomer = (req) => req.user?.role === ROLES.CUSTOMER;
 /** Online customers must confirm their email before ordering or paying (configurable). */
 async function assertVerifiedCustomer(req) {
   if (!isCustomer(req) || req.user.emailVerified) return;
-  const { getSettings } = require('../services/settings.service');
+  const { getSettings, emailVerificationRequired } = require('../services/settings.service');
   const settings = await getSettings();
-  if (settings.requireEmailVerification) {
+  if (emailVerificationRequired(settings)) {
     throw ApiError.forbidden('Please confirm your email address first. Check your inbox or request a new link from your account.');
   }
 }

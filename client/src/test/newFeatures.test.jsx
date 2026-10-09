@@ -60,12 +60,20 @@ describe('password reset', () => {
 describe('email verification banner', () => {
   test('shows only for unverified customers and can resend the link', async () => {
     authApi.resendVerification.mockResolvedValue({ message: 'Sent' });
+    publicApi.settings.mockResolvedValue({ currency: 'ETB', requireEmailVerification: true });
     const { unmount } = renderWithProviders(<VerifyEmailBanner />, { user: makeUser('CUSTOMER', { emailVerified: true }) });
     expect(screen.queryByText(/confirm your email/i)).not.toBeInTheDocument();
     unmount();
     renderWithProviders(<VerifyEmailBanner />, { user: makeUser('CUSTOMER', { emailVerified: false }) });
-    await userEvent.click(screen.getByRole('button', { name: /resend/i }));
+    await userEvent.click(await screen.findByRole('button', { name: /resend/i }));
     expect(authApi.resendVerification).toHaveBeenCalled();
+  });
+
+  test('stays hidden when the shop does not require confirmation', async () => {
+    publicApi.settings.mockResolvedValue({ currency: 'ETB', requireEmailVerification: false });
+    renderWithProviders(<VerifyEmailBanner />, { user: makeUser('CUSTOMER', { emailVerified: false }) });
+    await waitFor(() => expect(publicApi.settings).toHaveBeenCalled());
+    expect(screen.queryByText(/confirm your email/i)).not.toBeInTheDocument();
   });
 });
 

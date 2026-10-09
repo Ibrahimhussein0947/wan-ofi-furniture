@@ -438,6 +438,26 @@ describe('email verification', () => {
   });
 });
 
+describe('email verification without real email', () => {
+  test('is not enforced on a production server that cannot send email', async () => {
+    const env = require('../config/env');
+    const reg = await api().post('/api/auth/register', { name: 'No Mail', email: 'nomail@test.com', password: 'Secret123' });
+    const token = reg.body.data.accessToken;
+    const { product } = await createCatalog();
+    const body = { items: [{ product: String(product._id), quantity: 1 }], deliveryMethod: 'PICKUP' };
+    const original = env.NODE_ENV;
+    env.NODE_ENV = 'production';
+    try {
+      expect((await api().get('/api/public/settings')).body.data.requireEmailVerification).toBe(false);
+      expect((await api(token).post('/api/orders', body)).status).toBe(201);
+    } finally {
+      env.NODE_ENV = original;
+    }
+    // Where email works (not production, or SMTP), the setting is enforced again.
+    expect((await api().get('/api/public/settings')).body.data.requireEmailVerification).toBe(true);
+  });
+});
+
 describe('email and SMS notifications', () => {
   test('confirming an order emails and texts the customer', async () => {
     const owner = await createUser('OWNER');

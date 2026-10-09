@@ -16,7 +16,8 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 30 * 1000,
-      refetchOnWindowFocus: false,
+      // Coming back to the tab re-checks anything older than staleTime, so lists don't go stale.
+      refetchOnWindowFocus: true,
       // Don't retry permission or not-found errors.
       retry: (count, error) => count < 2 && !(error?.response?.status >= 400 && error?.response?.status < 500),
     },

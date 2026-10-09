@@ -11,7 +11,7 @@ import { customersApi, productsApi, reportsApi } from '../../../api/endpoints';
 import { useAuth } from '../../../context/AuthContext';
 import useListParams from '../../../hooks/useListParams';
 import { EXPENSE_CATEGORIES, PAYMENT_METHODS, TRANSACTION_TYPES } from '../../../utils/constants';
-import { date, label } from '../../../utils/format';
+import { date, label, localDate } from '../../../utils/format';
 import { REPORTS } from './reportConfigs';
 import BranchSelect from '../../../components/BranchSelect';
 import { useT } from '../../../i18n/LanguageContext';
@@ -75,7 +75,7 @@ export default function Reports() {
             <h2 className="text-xl font-semibold">{config.title}</h2>
             {query.data && (
               <ExportMenu
-                filename={`${config.key}-${new Date().toISOString().slice(0, 10)}`}
+                filename={`${config.key}-${localDate()}`}
                 title={config.title}
                 subtitle={[filters.from && `From ${date(filters.from)}`, filters.to && `to ${date(filters.to)}`].filter(Boolean).join(' ')}
                 columns={config.sections ? config.sections(query.data)[0].columns : columns}

@@ -13,11 +13,11 @@ import { paymentsApi, workersApi } from '../../../api/endpoints';
 import { useAuth } from '../../../context/AuthContext';
 import useListParams from '../../../hooks/useListParams';
 import useMutationToast from '../../../hooks/useMutationToast';
-import { label, money, number } from '../../../utils/format';
+import { label, localDate, money, number } from '../../../utils/format';
 import { PAYMENT_METHODS } from '../../../utils/constants';
 import { useT } from '../../../i18n/LanguageContext';
 
-const thisMonth = () => new Date().toISOString().slice(0, 7);
+const thisMonth = () => localDate().slice(0, 7);
 const monthName = (m) => new Date(`${m}-01T00:00:00Z`).toLocaleString('en', { month: 'long', year: 'numeric', timeZone: 'UTC' });
 
 function PayModal({ row, month, onClose }) {

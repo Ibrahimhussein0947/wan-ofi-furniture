@@ -50,7 +50,21 @@ export const label = (value) => {
   return s.charAt(0).toUpperCase() + s.slice(1);
 };
 
-export const toInputDate = (value) => (value ? new Date(value).toISOString().slice(0, 10) : '');
+const pad = (n) => String(n).padStart(2, '0');
+/** Today's (or any instant's) calendar date in the viewer's own time zone, as YYYY-MM-DD. */
+export const localDate = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+
+/**
+ * Value for <input type="date">. Dates saved from such inputs sit at midnight UTC, so those read back
+ * by their UTC date; any other moment (e.g. "now") uses the viewer's local date, so that after
+ * midnight in Ethiopia (UTC+3) the default is already today rather than yesterday.
+ */
+export const toInputDate = (value) => {
+  if (!value) return '';
+  const d = new Date(value);
+  const dateOnly = !d.getUTCHours() && !d.getUTCMinutes() && !d.getUTCSeconds() && !d.getUTCMilliseconds();
+  return dateOnly ? d.toISOString().slice(0, 10) : localDate(d);
+};
 
 export const initials = (name = '') =>
   name

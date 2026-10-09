@@ -14,7 +14,8 @@ export const setSessionExpiredHandler = (fn) => {
   onSessionExpired = fn;
 };
 
-const api = axios.create({ baseURL, withCredentials: true, timeout: 30000 });
+// 60 s: a sleeping free-plan server can take most of a minute to wake up, and photo uploads can be slow on mobile data.
+const api = axios.create({ baseURL, withCredentials: true, timeout: 60000 });
 
 api.interceptors.request.use((config) => {
   if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;

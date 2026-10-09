@@ -3,6 +3,7 @@ import toast from 'react-hot-toast';
 import { useState } from 'react';
 import Button from './ui/Button';
 import { useAuth } from '../context/AuthContext';
+import { usePublicSettings } from './SettingsLoader';
 import { authApi } from '../api/endpoints';
 import { errorMessage } from '../api/client';
 import { useT } from '../i18n/LanguageContext';
@@ -11,8 +12,10 @@ import { useT } from '../i18n/LanguageContext';
 export default function VerifyEmailBanner() {
   const t = useT();
   const { user } = useAuth();
+  const { data: settings } = usePublicSettings();
   const [sending, setSending] = useState(false);
-  if (!user || user.role !== 'CUSTOMER' || user.emailVerified !== false) return null;
+  // Hidden when the shop doesn't require it (or can't send confirmation emails yet).
+  if (!user || user.role !== 'CUSTOMER' || user.emailVerified !== false || !settings?.requireEmailVerification) return null;
 
   const resend = async () => {
     setSending(true);

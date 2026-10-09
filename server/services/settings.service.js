@@ -14,6 +14,11 @@ async function getSettings({ fresh = false } = {}) {
   return doc;
 }
 
+// Confirmation links only reach customers when real email is set up. A production server still on the
+// "console" driver can't deliver them, so enforcing the setting there would lock every new customer out.
+const emailDeliverable = () => !(env.NODE_ENV === 'production' && env.EMAIL_DRIVER === 'console');
+const emailVerificationRequired = (settings) => Boolean(settings?.requireEmailVerification) && emailDeliverable();
+
 async function updateSettings({ socialLinks, ...changes }, userId) {
   // Social links are set one by one, so saving only Telegram doesn't clear Facebook.
   const social = Object.fromEntries(Object.entries(socialLinks || {}).map(([k, v]) => [`socialLinks.${k}`, v]));
@@ -48,7 +53,8 @@ async function getPublicSettings() {
     bankAccounts: customerBankAccounts(s),
     taxRate: s.taxRate,
     customWarrantyMonths: s.customWarrantyMonths,
-    requireEmailVerification: s.requireEmailVerification,
+    requireEmailVerification: emailVerificationRequired(s),
+    emailDelivery: emailDeliverable(),
     onlinePayments: env.PAYMENT_PROVIDER !== 'manual',
     mobileNetworks: env.PAYMENT_PROVIDER === 'manual' ? [] : ['TELEBIRR', 'CBE_BIRR', 'AMOLE', 'MPESA'],
   };
@@ -65,4 +71,4 @@ function customerBankAccounts(settings) {
     .map(({ type, bankName, accountName, accountNumber, branch, notes }) => ({ type: type || 'BANK', bankName, accountName, accountNumber, branch, notes }));
 }
 
-module.exports = { getSettings, updateSettings, getPublicSettings, clearSettingsCache, customerBankAccounts };
+module.exports = { emailVerificationRequired, getSettings, updateSettings, getPublicSettings, clearSettingsCache, customerBankAccounts };
