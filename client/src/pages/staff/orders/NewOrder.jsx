@@ -6,7 +6,7 @@ import Button from '../../../components/ui/Button';
 import { Card, PageHeader } from '../../../components/ui/misc';
 import { Checkbox, Input, Select, Textarea } from '../../../components/ui/Field';
 import EntityPicker from '../../../components/ui/EntityPicker';
-import CustomerFormModal from '../customers/CustomerFormModal';
+import QuickCustomerModal from '../customers/QuickCustomerModal';
 import { customersApi, ordersApi, productsApi } from '../../../api/endpoints';
 import { errorMessage } from '../../../api/client';
 import { useAuth } from '../../../context/AuthContext';
@@ -32,7 +32,8 @@ export default function NewOrder() {
   const [autoConfirm, setAutoConfirm] = useState(false);
   const [branch, setBranch] = useState(user?.branch || '');
   const [saving, setSaving] = useState(false);
-  const [newCustomer, setNewCustomer] = useState(false);
+  // null = closed; otherwise the name typed in the picker, to pre-fill the quick form.
+  const [newCustomer, setNewCustomer] = useState(null);
 
   const subtotal = lines.reduce((s, l) => s + (l.product ? l.product.sellingPrice * l.quantity : 0), 0);
   const taxRate = settings?.taxRate || 0;
@@ -75,7 +76,7 @@ export default function NewOrder() {
       <PageHeader back="/app/orders" title={t('New order')} subtitle={t('For walk-in, phone or showroom customers')} />
       <div className="grid gap-6 xl:grid-cols-3">
         <div className="space-y-6 xl:col-span-2">
-          <Card title={t('Customer')} actions={can('customers:write') && <Button size="sm" variant="secondary" icon={UserPlus} onClick={() => setNewCustomer(true)}>{t('New customer')}</Button>}>
+          <Card title={t('Customer')} actions={can('customers:write') && <Button size="sm" variant="secondary" icon={UserPlus} onClick={() => setNewCustomer('')}>{t('New customer')}</Button>}>
             <EntityPicker
               label={t('Customer')}
               required
@@ -85,6 +86,8 @@ export default function NewOrder() {
               fetcher={(search) => customersApi.list({ search, limit: 15 }).then((r) => r.items)}
               getLabel={(c) => c.name}
               getSubLabel={(c) => [c.phone, c.customerCode, c.balance > 0 && `owes ${money(c.balance)}`].filter(Boolean).join(' · ')}
+              onCreate={can('customers:write') ? (typed) => setNewCustomer(typed) : undefined}
+              createLabel={t('Create customer')}
             />
           </Card>
 
@@ -164,14 +167,17 @@ export default function NewOrder() {
           </div>
         </Card>
       </div>
-      <CustomerFormModal
-        open={newCustomer}
-        onClose={() => setNewCustomer(false)}
-        onSaved={(c) => {
-          setCustomer(c);
-          setNewCustomer(false);
-        }}
-      />
+      {newCustomer !== null && (
+        <QuickCustomerModal
+          open
+          initialName={newCustomer}
+          onClose={() => setNewCustomer(null)}
+          onSaved={(c) => {
+            setCustomer(c);
+            setNewCustomer(null);
+          }}
+        />
+      )}
     </div>
   );
 }
