@@ -9,6 +9,7 @@ import { Input, Textarea } from '../../components/ui/Field';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { ordersApi, paymentsApi, promotionsApi } from '../../api/endpoints';
+import { amountForPercent } from '../../components/PercentChoice';
 import { errorMessage } from '../../api/client';
 import { money } from '../../utils/format';
 import { usePublicSettings } from '../../components/SettingsLoader';
@@ -82,9 +83,12 @@ export default function Checkout() {
       placed.current = true;
       clear();
       if (proof?.reference) {
-        const amount = Math.min(order.depositRequired || order.balance || order.total, order.balance || order.total);
+        const owed = order.balance || order.total;
+        const amount = proof.percent
+          ? amountForPercent(order.total, owed, proof.percent)
+          : Math.min(order.depositRequired || owed, owed);
         try {
-          await paymentsApi.submit({ order: order._id, amount, method: 'BANK_TRANSFER', reference: proof.reference }, proof.receipt);
+          await paymentsApi.submit({ order: order._id, amount, method: 'BANK_TRANSFER', reference: proof.reference, percent: proof.percent ?? undefined }, proof.receipt);
           toast.success(t("Payment submitted. We'll confirm it shortly."));
         } catch (err) {
           // The order is placed either way; they can resubmit from the order page.

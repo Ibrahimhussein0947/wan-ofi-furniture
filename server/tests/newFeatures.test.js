@@ -315,6 +315,10 @@ describe('payment receipt screenshots', () => {
       .post(`/api/payments/${noReceipt.body.data._id}/receipt`)
       .set('Authorization', `Bearer ${customer.token}`);
     expect(noFile.status).toBe(400);
+    const chosen = await submitPayment(customer.token, { order: orderId, amount: 500, method: 'BANK_TRANSFER', reference: 'BT-PCT-25', percent: 25 });
+    expect(chosen.status).toBe(201);
+    expect(chosen.body.data.percent).toBe(25);
+    expect((await submitPayment(customer.token, { order: orderId, amount: 500, method: 'BANK_TRANSFER', reference: 'BT-PCT-BAD', percent: 150 })).status).toBe(400);
     const noReference = await submitPayment(customer.token, { order: orderId, amount: 1000, method: 'BANK_TRANSFER' });
     expect(noReference.status).toBe(400);
 

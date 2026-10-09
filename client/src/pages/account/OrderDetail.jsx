@@ -204,6 +204,7 @@ export default function OrderDetail() {
                           <span className="block text-xs text-stone-500">
                             {t(label(p.method))}
                             {p.reference && ` · ${t('Ref')} ${p.reference}`}
+                            {p.percent && ` · ${p.percent === 100 ? t('Paying in full') : t('{pct}% of the order', { pct: p.percent })}`}
                           </span>
                           {p.screenshot && (
                             <a href={fileUrl(p.screenshot)} target="_blank" rel="noreferrer" className="text-xs text-walnut-700 hover:underline">

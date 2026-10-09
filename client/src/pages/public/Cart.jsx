@@ -6,6 +6,7 @@ import Button from '../../components/ui/Button';
 import ProductImage from '../../components/ProductImage';
 import BankAccounts from '../../components/BankAccounts';
 import ImagePicker from '../../components/ui/ImagePicker';
+import PercentChoice from '../../components/PercentChoice';
 import { Input } from '../../components/ui/Field';
 import { EmptyState } from '../../components/ui/States';
 import { useCart } from '../../context/CartContext';
@@ -24,6 +25,7 @@ export default function Cart() {
   const { data: settings } = usePublicSettings();
   const [reference, setReference] = useState('');
   const [receipt, setReceipt] = useState([]);
+  const [percent, setPercent] = useState(null);
   const hasAccounts = (settings?.bankAccounts || []).length > 0;
 
   if (!items.length) {
@@ -42,7 +44,7 @@ export default function Cart() {
         return;
       }
       // The payment is submitted against the order as soon as checkout creates it.
-      navigate('/checkout', { state: { proof: { reference: reference.trim(), receipt: receipt[0] } } });
+      navigate('/checkout', { state: { proof: { reference: reference.trim(), receipt: receipt[0], percent } } });
     } else navigate('/checkout');
   };
 
@@ -106,6 +108,11 @@ export default function Cart() {
           {hasAccounts && user && (
             <div className="mt-4 space-y-3 rounded-lg border border-stone-200 p-3">
               <p className="text-sm font-semibold text-stone-700">{t('Already transferred the deposit?')}</p>
+              <PercentChoice
+                depositPercent={settings?.depositPercent ?? 40}
+                value={percent}
+                onChange={setPercent}
+              />
               <Input
                 label={t('Transaction reference')}
                 placeholder={t('Bank reference or mobile-money code')}

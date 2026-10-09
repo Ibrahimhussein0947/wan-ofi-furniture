@@ -728,6 +728,8 @@ export const STAFF_ROWS = [
   // ── Bank accounts for customer payments ────────────────────────────
   ["Bank accounts for customer payments", "Herrega baankii kaffaltii maamiltootaaf", "ለደንበኛ ክፍያዎች የባንክ ሂሳቦች"],
   ["Customers see these accounts in the cart, on the Contact page and when they pay for an order. Each account needs a bank name, account name and account number; uncheck \"Show to customers\" to hide one without deleting it.", "Maamiltoonni gulaallii (cart) keessatti, fuula Quunnamtii irratti fi yeroo ajaja kaffalan herrega kana argu. Herregni tokkoon tokkoon maqaa baankii, maqaa herregaa fi lakkoofsa herregaa barbaada; osoo hin haqin dhoksuuf \"Maamiltootaaf agarsiisi\" irraa mallattoo haqaa.", "ደንበኞች እነዚህን ሂሳቦች በጋሪው፣ በአግኙን ገጽ እና ለትዕዛዝ ሲከፍሉ ያያሉ። እያንዳንዱ ሂሳብ የባንክ ስም፣ የሂሳብ ስም እና የሂሳብ ቁጥር ያስፈልገዋል፤ ሳይሰርዙ ለመደበቅ \"ለደንበኞች አሳይ\" የሚለውን ምልክት ያንሱ።"],
+  ["Customer chose: paying in full", "Maamilichi filate: guutummaatti kaffaluu", "ደንበኛው የመረጠው፡ ሙሉ ክፍያ"],
+  ["Customer chose: {pct}% of the order", "Maamilichi filate: {pct}% ajajaa", "ደንበኛው የመረጠው፡ {pct}% የትዕዛዙ"],
   ["No receipt uploaded yet", "Ragaan hin olkaa'amne", "ደረሰኝ ገና አልተጫነም"],
   ["Transfer receipt", "Ragaa dabarsaa", "የዝውውር ደረሰኝ"],
   ["View the receipt the customer uploaded", "Ragaa maamilichi olkaa'e ilaali", "ደንበኛው የጫነውን ደረሰኝ ይመልከቱ"],

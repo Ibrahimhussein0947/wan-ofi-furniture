@@ -116,6 +116,8 @@ const customerPayment = z.object({
   // The bank / mobile-money transaction reference staff match against their statement.
   reference: trimmed(120).min(3, 'Enter the transaction reference from your receipt'),
   notes: optionalText(1000),
+  // Which "pay X%" option the customer picked; informational, the amount is what counts.
+  percent: z.coerce.number().int().min(1).max(100).optional(),
   // Set automatically from the uploaded receipt (required by the controller).
   screenshot: optionalText(300),
 });

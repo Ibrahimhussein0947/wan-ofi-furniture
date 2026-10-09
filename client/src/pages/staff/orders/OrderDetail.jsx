@@ -170,6 +170,11 @@ export default function OrderDetail() {
                             <span className="block text-xs text-stone-500">
                               {dateTime(p.paidAt)} · {t(label(p.method))} · {t(label(p.kind))} {p.receivedBy && `· by ${p.receivedBy.name}`}
                             </span>
+                            {p.percent && (
+                              <span className="block text-xs text-stone-600">
+                                {p.percent === 100 ? t('Customer chose: paying in full') : t('Customer chose: {pct}% of the order', { pct: p.percent })}
+                              </span>
+                            )}
                             {p.reference && (
                               <span className="block text-xs text-stone-600">
                                 {t('Reference')}: <span className="font-mono">{p.reference}</span>

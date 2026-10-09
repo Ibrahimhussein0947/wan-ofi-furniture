@@ -114,7 +114,22 @@ export default function Payments() {
           <span className='text-stone-300'>—</span>
         ),
     },
-    { key: 'amount', header: 'Amount', align: 'right', render: (p) => money(p.amount) },
+    {
+      key: 'amount',
+      header: 'Amount',
+      align: 'right',
+      render: (p) => (
+        <>
+          {money(p.amount)}
+          {p.percent ? (
+            <span className='block text-xs font-normal text-stone-500'>
+              {p.percent === 100 ? t('Paying in full') : t('{pct}% of the order', { pct: p.percent })}
+            </span>
+          ) : null}
+        </>
+      ),
+      exportValue: (p) => p.amount,
+    },
     {
       key: 'status',
       header: 'Status',

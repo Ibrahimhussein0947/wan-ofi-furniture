@@ -8,6 +8,7 @@ import Modal from '../../components/ui/Modal';
 import Button from '../../components/ui/Button';
 import ImagePicker from '../../components/ui/ImagePicker';
 import BankAccounts from '../../components/BankAccounts';
+import PercentChoice, { amountForPercent } from '../../components/PercentChoice';
 import { Tabs } from '../../components/ui/misc';
 import { Input, Select, Textarea } from '../../components/ui/Field';
 import { paymentsApi } from '../../api/endpoints';
@@ -173,6 +174,7 @@ function ManualTransfer({ order, suggested, onDone }) {
   const t = useT();
   const { data: settings } = usePublicSettings();
   const [screenshot, setScreenshot] = useState([]);
+  const [percent, setPercent] = useState(null);
   const form = useForm({
     values: { amount: suggested, method: 'BANK_TRANSFER', reference: '', notes: '' },
   });
@@ -181,9 +183,20 @@ function ManualTransfer({ order, suggested, onDone }) {
     invalidate: KEYS,
     onSuccess: onDone,
   });
+  const choose = (p) => {
+    setPercent(p);
+    form.setValue('amount', p === null ? suggested : amountForPercent(order.total, order.balance, p));
+  };
   return (
     <div className='space-y-4'>
       <BankAccounts />
+      <PercentChoice
+        total={order.total}
+        balance={order.balance}
+        depositPercent={settings?.depositPercent ?? 40}
+        value={percent}
+        onChange={choose}
+      />
       {settings?.paymentInstructions && (
         <p className='rounded-lg bg-brass-50 p-3 text-sm text-brass-900'>
           {settings.paymentInstructions}
@@ -233,7 +246,7 @@ function ManualTransfer({ order, suggested, onDone }) {
         block
         loading={submit.isPending}
         onClick={form.handleSubmit((v) =>
-          submit.mutate({ ...v, reference: v.reference.trim(), order: order._id, amount: Number(v.amount) }),
+          submit.mutate({ ...v, reference: v.reference.trim(), order: order._id, amount: Number(v.amount), percent: percent ?? undefined }),
         )}
       >
         {t('Submit for verification')}

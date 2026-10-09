@@ -50,6 +50,8 @@ const paymentSchema = new mongoose.Schema(
       index: true,
     },
     submittedByCustomer: { type: Boolean, default: false },
+    // Share of the order total the customer chose to pay (10/25/50/75; 100 = the whole remaining balance).
+    percent: { type: Number, min: 1, max: 100 },
     // Transfer receipt screenshot the customer uploaded with their payment proof.
     screenshot: { type: String, trim: true, maxlength: 300 },
     // Why staff rejected a customer-submitted payment (shown to the customer).

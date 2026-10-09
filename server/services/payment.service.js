@@ -224,7 +224,7 @@ async function recordCustomerPayment(input, actor) {
 
 /** A customer reports a payment made by bank/mobile transfer; staff verify it before it counts. */
 async function submitCustomerPayment(
-  { order: orderId, amount, method, reference, notes, screenshot },
+  { order: orderId, amount, method, reference, notes, screenshot, percent },
   customerId,
   actor,
 ) {
@@ -255,6 +255,7 @@ async function submitCustomerPayment(
     reference,
     notes,
     screenshot,
+    percent,
     order: order._id,
     customer: customerId,
     status: 'PENDING_VERIFICATION',
