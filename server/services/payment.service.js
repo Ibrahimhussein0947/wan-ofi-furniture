@@ -277,6 +277,30 @@ async function submitCustomerPayment(
   return payment;
 }
 
+// Lets a customer add (or replace) the receipt on a payment of theirs that is still awaiting verification.
+async function attachCustomerReceipt(paymentId, screenshot, customerId, actor) {
+  const payment = await Payment.findOneAndUpdate(
+    { _id: paymentId, customer: customerId, submittedByCustomer: true, status: 'PENDING_VERIFICATION' },
+    { $set: { screenshot } },
+    { new: true },
+  );
+  if (!payment) throw ApiError.notFound('Payment not found, or it is no longer awaiting verification.');
+  await audit(actor, {
+    action: AUDIT_ACTIONS.UPDATE,
+    entity: 'Payment',
+    entityId: payment._id,
+    amount: payment.amount,
+    description: 'Customer uploaded a payment receipt',
+  });
+  await notify.notifyFinance({
+    type: 'PAYMENT_RECEIVED',
+    title: `Receipt uploaded: ${payment.paymentNumber}`,
+    message: `The customer added a receipt (ref ${payment.reference || '—'}) — ready to verify.`,
+    link: '/app/payments?status=PENDING_VERIFICATION',
+  });
+  return payment;
+}
+
 async function verifyCustomerPayment(paymentId, { approve, reason }, actor) {
   if (!approve) {
     const payment = await Payment.findOneAndUpdate(
@@ -553,6 +577,7 @@ module.exports = {
   sendBalanceReminder,
   recordCustomerPayment,
   submitCustomerPayment,
+  attachCustomerReceipt,
   verifyCustomerPayment,
   recordRefund,
   recordSupplierPayment,

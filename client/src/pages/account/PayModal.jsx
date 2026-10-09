@@ -173,7 +173,6 @@ function ManualTransfer({ order, suggested, onDone }) {
   const t = useT();
   const { data: settings } = usePublicSettings();
   const [screenshot, setScreenshot] = useState([]);
-  const [missingReceipt, setMissingReceipt] = useState(false);
   const form = useForm({
     values: { amount: suggested, method: 'BANK_TRANSFER', reference: '', notes: '' },
   });
@@ -182,10 +181,6 @@ function ManualTransfer({ order, suggested, onDone }) {
     invalidate: KEYS,
     onSuccess: onDone,
   });
-  const pickReceipt = (files) => {
-    setScreenshot(files);
-    if (files.length) setMissingReceipt(false);
-  };
   return (
     <div className='space-y-4'>
       <BankAccounts />
@@ -226,30 +221,20 @@ function ManualTransfer({ order, suggested, onDone }) {
       />
       <div>
         <p className='mb-1 text-sm font-medium text-stone-700'>
-          {t('Payment receipt')} <span className='text-red-600'>*</span>
+          {t('Payment receipt')} <span className='font-normal text-stone-500'>({t('optional — you can add it later')})</span>
         </p>
-        <ImagePicker files={screenshot} onChange={pickReceipt} max={1} label={t('Add receipt')} capture />
-        {missingReceipt ? (
-          <p className='mt-1 text-xs font-medium text-red-600' role='alert'>
-            {t('Please attach a photo or screenshot of your payment receipt.')}
-          </p>
-        ) : (
-          <p className='mt-1 text-xs text-stone-500'>
-            {t('Upload a photo or screenshot of the bank or mobile-money receipt showing the amount and reference.')}
-          </p>
-        )}
+        <ImagePicker files={screenshot} onChange={setScreenshot} max={1} label={t('Add receipt')} capture />
+        <p className='mt-1 text-xs text-stone-500'>
+          {t('Upload a photo or screenshot of the bank or mobile-money receipt showing the amount and reference.')}
+        </p>
       </div>
       <Textarea label={t('Note (optional)')} rows={2} {...form.register('notes')} />
       <Button
         block
         loading={submit.isPending}
-        onClick={form.handleSubmit((v) => {
-          if (!screenshot.length) {
-            setMissingReceipt(true);
-            return;
-          }
-          submit.mutate({ ...v, reference: v.reference.trim(), order: order._id, amount: Number(v.amount) });
-        })}
+        onClick={form.handleSubmit((v) =>
+          submit.mutate({ ...v, reference: v.reference.trim(), order: order._id, amount: Number(v.amount) }),
+        )}
       >
         {t('Submit for verification')}
       </Button>

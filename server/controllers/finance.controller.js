@@ -80,8 +80,8 @@ exports.recordCustomerPayment = asyncHandler(async (req, res) => {
 exports.submitPayment = asyncHandler(async (req, res) => {
   await assertVerifiedCustomer(req);
   const customer = await customerOf(req);
+  // The receipt can be attached now or later (POST /payments/:id/receipt).
   const screenshot = req.uploadedFiles?.[0];
-  if (!screenshot) throw ApiError.badRequest('Please attach a photo or screenshot of your payment receipt.');
   const payment = await paymentService.submitCustomerPayment(
     { ...req.body, screenshot },
     customer._id,
@@ -92,6 +92,15 @@ exports.submitPayment = asyncHandler(async (req, res) => {
     payment,
     'Payment submitted. It will reflect on your order once our accounts team verifies it.',
   );
+});
+
+exports.attachReceipt = asyncHandler(async (req, res) => {
+  await assertVerifiedCustomer(req);
+  const customer = await customerOf(req);
+  const screenshot = req.uploadedFiles?.[0];
+  if (!screenshot) throw ApiError.badRequest('Please attach a photo or screenshot of your payment receipt.');
+  const payment = await paymentService.attachCustomerReceipt(req.params.id, screenshot, customer._id, actorFrom(req));
+  sendSuccess(res, { data: payment, message: 'Receipt uploaded. Our accounts team will check it shortly.' });
 });
 
 exports.initiateMobilePayment = asyncHandler(async (req, res) => {

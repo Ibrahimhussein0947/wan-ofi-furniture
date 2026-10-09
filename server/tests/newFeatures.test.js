@@ -296,15 +296,25 @@ describe('payment receipt screenshots', () => {
       });
     expect(rejected.status).toBe(400);
 
-    // A receipt and a reference are both required.
+    // A reference is required; the receipt can come now or later.
     const noReceipt = await api(customer.token).post('/api/payments/submit', {
       order: orderId,
       amount: 1000,
       method: 'BANK_TRANSFER',
       reference: 'BT-102',
     });
-    expect(noReceipt.status).toBe(400);
-    expect(noReceipt.body.message).toMatch(/receipt/i);
+    expect(noReceipt.status).toBe(201);
+    expect(noReceipt.body.data.screenshot).toBeUndefined();
+    const later = await request(app)
+      .post(`/api/payments/${noReceipt.body.data._id}/receipt`)
+      .set('Authorization', `Bearer ${customer.token}`)
+      .attach('screenshot', PNG, { filename: 'receipt.png', contentType: 'image/png' });
+    expect(later.status).toBe(200);
+    expect(later.body.data.screenshot).toMatch(/^\/uploads\/payments\//);
+    const noFile = await request(app)
+      .post(`/api/payments/${noReceipt.body.data._id}/receipt`)
+      .set('Authorization', `Bearer ${customer.token}`);
+    expect(noFile.status).toBe(400);
     const noReference = await submitPayment(customer.token, { order: orderId, amount: 1000, method: 'BANK_TRANSFER' });
     expect(noReference.status).toBe(400);
 

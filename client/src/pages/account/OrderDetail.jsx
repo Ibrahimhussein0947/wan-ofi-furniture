@@ -10,6 +10,7 @@ import { QueryState } from '../../components/ui/States';
 import OrderTimeline from '../../components/OrderTimeline';
 import ProductImage from '../../components/ProductImage';
 import PayModal from './PayModal';
+import AddReceiptModal from './AddReceiptModal';
 import BankAccounts from '../../components/BankAccounts';
 import { usePublicSettings } from '../../components/SettingsLoader';
 import { invoicesApi, messagesApi, ordersApi } from '../../api/endpoints';
@@ -28,6 +29,7 @@ export default function OrderDetail() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const [paying, setPaying] = useState(false);
+  const [receiptFor, setReceiptFor] = useState(null);
   const { data: settings } = usePublicSettings();
   const hasAccounts = (settings?.bankAccounts || []).length > 0;
   const [cancelling, setCancelling] = useState(false);
@@ -208,6 +210,11 @@ export default function OrderDetail() {
                               {t('Your receipt')}
                             </a>
                           )}
+                          {p.status === 'PENDING_VERIFICATION' && (
+                            <button type="button" className="block text-xs font-medium text-brass-700 hover:underline" onClick={() => setReceiptFor(p)}>
+                              {p.screenshot ? t('Replace receipt') : t('Add receipt')}
+                            </button>
+                          )}
                           {p.status === 'PENDING_VERIFICATION' && <span className="block text-xs text-amber-700">{t('Our accounts team is checking this payment.')}</span>}
                           {p.status === 'REJECTED' && (
                             <span className="block text-xs text-red-600">
@@ -250,6 +257,7 @@ export default function OrderDetail() {
           </div>
 
           <PayModal order={o} open={Boolean(paying)} initialTab={paying === 'manual' ? 'manual' : undefined} onClose={() => setPaying(false)} />
+          <AddReceiptModal payment={receiptFor} onClose={() => setReceiptFor(null)} />
           <ConfirmDialog
             open={cancelling}
             onClose={() => setCancelling(false)}

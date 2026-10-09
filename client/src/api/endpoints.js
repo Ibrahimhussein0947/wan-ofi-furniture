@@ -184,6 +184,7 @@ export const paymentsApi = {
   // Customers attach an optional transfer receipt screenshot with their payment proof.
   submit: (body, screenshot) =>
     api.post('/payments/submit', screenshot ? toFormData(body, { screenshot }) : body).then(data),
+  attachReceipt: (id, screenshot) => api.post(`/payments/${id}/receipt`, toFormData({}, { screenshot })).then(data),
   verify: (id, body) => api.post(`/payments/${id}/verify`, body).then(data),
   supplier: (body) => api.post('/payments/supplier', body).then(data),
   worker: (body) => api.post('/payments/worker', body).then(data),

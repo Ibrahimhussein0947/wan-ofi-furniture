@@ -46,6 +46,14 @@ payments.post(
   validate({ body: orderV.customerPayment }),
   finance.submitPayment,
 );
+// A customer who paid first can add the receipt afterwards.
+payments.post(
+  '/:id/receipt',
+  requireRole(ROLES.CUSTOMER),
+  id,
+  uploadImages('screenshot', { maxCount: 1, folder: 'payments' }),
+  finance.attachReceipt,
+);
 payments.post(
   '/:id/verify',
   requirePermission(P.PAYMENTS_WRITE),
