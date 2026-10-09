@@ -179,7 +179,7 @@ export default function Checkout() {
             )}
             <div className="flex justify-between">
               <dt className="text-stone-600">{t('Delivery')}</dt>
-              <dd className="tabular-nums">{deliveryFee ? money(deliveryFee) : t('Free')}</dd>
+              <dd className="tabular-nums">{deliveryFee ? money(deliveryFee) : method === 'DELIVERY' ? t('Negotiable') : t('Free')}</dd>
             </div>
             <div className="flex justify-between text-base font-semibold">
               <dt>{t('Total')}</dt>

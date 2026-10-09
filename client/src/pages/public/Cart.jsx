@@ -96,7 +96,7 @@ export default function Cart() {
             </div>
             <div className="flex justify-between">
               <dt className="text-stone-600">{t('Delivery')}</dt>
-              <dd>{settings?.defaultDeliveryFee ? money(settings.defaultDeliveryFee) : t('Free')}</dd>
+              <dd>{settings?.defaultDeliveryFee ? money(settings.defaultDeliveryFee) : t('Negotiable')}</dd>
             </div>
           </dl>
           <p className="mt-4 rounded-lg bg-brass-50 p-3 text-xs text-brass-800">

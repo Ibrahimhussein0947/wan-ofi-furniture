@@ -308,6 +308,7 @@ const ROWS = [
   ["Subtotal", "Waliigala xiqqaa", "ንዑስ ድምር"],
   ["Delivery", "Geejjiba", "ማድረስ"],
   ["Free", "Bilisa", "ነፃ"],
+  ["Negotiable", "Mari'achuun danda'ama", "በድርድር"],
   ["Prices exclude {rate}% VAT, added at checkout.", "Gatiin VAT {rate}% hin dabalatu; yeroo kaffaltiitti ni dabalama.", "ዋጋዎቹ {rate}% ተ.እ.ታን አያካትቱም፤ በክፍያ ጊዜ ይጨመራል።"],
   ["Pay a {pct}% deposit to confirm your order. The balance is due before delivery. Final prices are confirmed at checkout.", "Ajaja keessan mirkaneessuuf kaffaltii duraa {pct}% kaffalaa. Hambaan geejjibaan dura kaffalama. Gatiin dhumaa yeroo kaffaltiitti mirkanaa'a.", "ትዕዛዝዎን ለማረጋገጥ {pct}% ቅድመ ክፍያ ይክፈሉ። ቀሪው ከማድረስ በፊት ይከፈላል። የመጨረሻ ዋጋ በክፍያ ጊዜ ይረጋገጣል።"],
   ["Proceed to checkout", "Gara kaffaltiitti darbi", "ወደ ክፍያ ይቀጥሉ"],
