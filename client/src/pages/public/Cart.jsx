@@ -26,6 +26,12 @@ export default function Cart() {
   const [reference, setReference] = useState('');
   const [receipt, setReceipt] = useState([]);
   const [percent, setPercent] = useState(null);
+  const taxRate = settings?.taxRate || 0;
+  const deliveryFee = settings?.defaultDeliveryFee || 0;
+  const tax = Math.round(subtotal * taxRate) / 100;
+  const total = subtotal + tax + deliveryFee;
+  const depositAmount = Math.round((total * (settings?.depositPercent ?? 40)) / 100);
+  const itemCount = items.reduce((n, i) => n + i.quantity, 0);
   const hasAccounts = (settings?.bankAccounts || []).length > 0;
 
   if (!items.length) {
@@ -93,23 +99,43 @@ export default function Cart() {
           <h2 className="font-semibold text-walnut-950">{t('Order summary')}</h2>
           <dl className="mt-4 space-y-2 text-sm">
             <div className="flex justify-between">
-              <dt className="text-stone-600">{t('Subtotal')}</dt>
+              <dt className="text-stone-600">
+                {t('Subtotal')} <span className="text-xs text-stone-400">({itemCount} {t('Items')})</span>
+              </dt>
               <dd className="tabular-nums">{money(subtotal)}</dd>
             </div>
             <div className="flex justify-between">
               <dt className="text-stone-600">{t('Delivery')}</dt>
-              <dd>{settings?.defaultDeliveryFee ? money(settings.defaultDeliveryFee) : t('Negotiable')}</dd>
+              <dd>{deliveryFee ? money(deliveryFee) : t('Negotiable')}</dd>
+            </div>
+            {taxRate > 0 && (
+              <div className="flex justify-between">
+                <dt className="text-stone-600">
+                  {t('VAT')} ({taxRate}%)
+                </dt>
+                <dd className="tabular-nums">{money(tax)}</dd>
+              </div>
+            )}
+            <div className="flex justify-between border-t border-stone-100 pt-2 text-base font-semibold text-walnut-950">
+              <dt>{t('Total')}</dt>
+              <dd className="tabular-nums">{money(total)}</dd>
+            </div>
+            <div className="flex justify-between rounded-lg bg-walnut-50 px-3 py-2 font-semibold text-walnut-900">
+              <dt>
+                {t('Deposit to confirm')} ({settings?.depositPercent ?? 40}%)
+              </dt>
+              <dd className="tabular-nums">{money(depositAmount)}</dd>
             </div>
           </dl>
           <p className="mt-4 rounded-lg bg-brass-50 p-3 text-xs text-brass-800">
-            {settings?.taxRate > 0 && `${t('Prices exclude {rate}% VAT, added at checkout.', { rate: settings.taxRate })} `}{t('Pay a {pct}% deposit to confirm your order. The balance is due before delivery. Final prices are confirmed at checkout.', { pct: settings?.depositPercent ?? 40 })}
+            {t('Pay a {pct}% deposit to confirm your order. The balance is due before delivery. Final prices are confirmed at checkout.', { pct: settings?.depositPercent ?? 40 })}
           </p>
           <BankAccounts compact className="mt-4" title={t('Pay into one of these accounts after ordering')} />
           {hasAccounts && user && (
             <div className="mt-4 space-y-3 rounded-lg border border-stone-200 p-3">
               <p className="text-sm font-semibold text-stone-700">{t('Already transferred the deposit?')}</p>
               <PercentChoice
-                total={subtotal + Math.round(subtotal * (settings?.taxRate || 0)) / 100}
+                total={total}
                 depositPercent={settings?.depositPercent ?? 40}
                 value={percent}
                 onChange={setPercent}
