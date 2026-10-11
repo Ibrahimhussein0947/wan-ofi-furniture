@@ -14,6 +14,9 @@ export const amountForPercent = (total, balance, percent) =>
  */
 export default function PercentChoice({ total, balance, depositPercent, value, onChange, className }) {
   const t = useT();
+  const owed = balance ?? total;
+  const depositAmount = total ? amountForPercent(total, owed, depositPercent) : null;
+  const chosenAmount = !total ? null : value === null ? depositAmount : amountForPercent(total, owed, value);
   const chip = (key, active, text, sub, onClick) => (
     <button
       key={key}
@@ -32,8 +35,8 @@ export default function PercentChoice({ total, balance, depositPercent, value, o
   return (
     <div className={className}>
       <p className='mb-1 text-sm font-medium text-stone-700'>{t('How much do you want to pay now?')}</p>
-      <div className='grid grid-cols-3 gap-2 sm:grid-cols-6'>
-        {chip('deposit', value === null, `${depositPercent}%`, t('Deposit'), () => onChange(null))}
+      <div className='grid grid-cols-3 gap-2'>
+        {chip('deposit', value === null, `${depositPercent}%`, depositAmount ? `${t('Deposit')} · ${money(depositAmount)}` : t('Deposit'), () => onChange(null))}
         {PERCENT_OPTIONS.map((p) =>
           chip(
             p,
@@ -44,6 +47,12 @@ export default function PercentChoice({ total, balance, depositPercent, value, o
           ),
         )}
       </div>
+      {chosenAmount > 0 && (
+        <p className='mt-2 flex items-center justify-between rounded-lg bg-walnut-50 px-3 py-2 text-sm font-semibold text-walnut-900'>
+          <span>{t('You will pay')}</span>
+          <span className='tabular-nums'>{money(chosenAmount)}</span>
+        </p>
+      )}
       <p className='mt-1 text-xs text-stone-500'>
         {t('Your order is confirmed once the deposit is paid; you can pay the rest in any share later.')}
       </p>

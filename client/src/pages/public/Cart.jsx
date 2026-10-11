@@ -109,6 +109,7 @@ export default function Cart() {
             <div className="mt-4 space-y-3 rounded-lg border border-stone-200 p-3">
               <p className="text-sm font-semibold text-stone-700">{t('Already transferred the deposit?')}</p>
               <PercentChoice
+                total={subtotal + Math.round(subtotal * (settings?.taxRate || 0)) / 100}
                 depositPercent={settings?.depositPercent ?? 40}
                 value={percent}
                 onChange={setPercent}

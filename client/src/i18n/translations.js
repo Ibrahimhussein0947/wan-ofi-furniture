@@ -747,6 +747,7 @@ const ROWS = [
   ["How much do you want to pay now?", "Amma meeqa kaffaluu barbaaddu?", "አሁን ምን ያህል መክፈል ይፈልጋሉ?"],
   ["Deposit", "Kaffaltii duraa", "ቅድመ ክፍያ"],
   ["Full", "Guutuu", "ሙሉ"],
+  ["You will pay", "Kan kaffaltan", "የሚከፍሉት"],
   ["Your order is confirmed once the deposit is paid; you can pay the rest in any share later.", "Ajajni yeroo kaffaltiin duraa kaffalamu mirkanaa'a; kan hafe booda hammaa feetanii kaffaluu dandeessu.", "ቅድመ ክፍያው ሲከፈል ትዕዛዝዎ ይረጋገጣል፤ የቀረውን በኋላ በፈለጉት መጠን መክፈል ይችላሉ።"],
   ["Paying in full", "Guutummaatti kaffaluu", "ሙሉ በሙሉ መክፈል"],
   ["{pct}% of the order", "{pct}% ajajaa", "{pct}% የትዕዛዙ"],
