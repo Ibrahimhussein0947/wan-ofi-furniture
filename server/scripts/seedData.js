@@ -682,4 +682,4 @@ async function seed({ password, log = console.log } = {}) {
   return { password: pw };
 }
 
-module.exports = { seed, addPendingPayments, resetDatabase, createReviews, logJobHours };
+module.exports = { seed, addPendingPayments, demoReceipt, actorOf, resetDatabase, createReviews, logJobHours };

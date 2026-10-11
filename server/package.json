@@ -9,6 +9,7 @@
     "dev:memory": "node scripts/devMemoryServer.js",
     "seed": "node scripts/seed.js",
     "seed:pending": "node scripts/seedPending.js",
+    "seed:more": "node scripts/seedMore.js",
     "create-owner": "node scripts/createOwner.js",
     "test": "jest --runInBand",
     "lint": "eslint ."
