@@ -25,6 +25,9 @@ exports.list = asyncHandler(async (req, res) => {
   if (isCustomer(req)) filter.customer = (await customerOf(req))._id;
   if (req.query.search) Object.assign(filter, searchFilter(req.query.search, ['orderNumber', 'items.name', 'contactPhone']));
   if (req.query.withBalance === 'true') filter.balance = { $gt: 0 };
+  if (!isCustomer(req) && req.query.needsVerification === 'true') {
+    filter._id = { $in: await Payment.distinct('order', { status: 'PENDING_VERIFICATION' }) };
+  }
 
   const { items, pagination } = await paginate(Order, filter, req.query, {
     populate: [
@@ -34,7 +37,35 @@ exports.list = asyncHandler(async (req, res) => {
     allowedSort: ['orderDate', 'total', 'balance', 'orderNumber', 'expectedCompletionDate'],
     sort: { orderDate: -1 },
   });
-  sendSuccess(res, { data: isCustomer(req) ? items.map(toCustomerOrder) : items, pagination });
+  if (isCustomer(req)) return sendSuccess(res, { data: items.map(toCustomerOrder), pagination });
+
+  // Tell staff which orders carry customer payments that still need checking, and whether a receipt came with them.
+  const pending = await Payment.aggregate([
+    { $match: { order: { $in: items.map((o) => o._id) }, status: 'PENDING_VERIFICATION' } },
+    { $group: { _id: '$order', count: { $sum: 1 }, withReceipt: { $sum: { $cond: [{ $ifNull: ['$screenshot', false] }, 1, 0] } } } },
+  ]);
+  const byOrder = new Map(pending.map((p) => [String(p._id), p]));
+  const data = items.map((o) => {
+    const p = byOrder.get(String(o._id));
+    return { ...o, pendingPayments: p?.count || 0, pendingReceipts: p?.withReceipt || 0 };
+  });
+  // Money totals across every order matching the filters (not just this page).
+  const [totals] = await Order.aggregate([
+    { $match: { ...filter, status: { $ne: 'CANCELLED' } } },
+    { $group: { _id: null, total: { $sum: '$total' }, paid: { $sum: '$amountPaid' }, balance: { $sum: '$balance' } } },
+  ]);
+  const toVerify = await Payment.aggregate([
+    { $match: { status: 'PENDING_VERIFICATION' } },
+    { $group: { _id: null, count: { $sum: 1 }, amount: { $sum: '$amount' } } },
+  ]);
+  const meta = {
+    total: totals?.total || 0,
+    paid: totals?.paid || 0,
+    balance: totals?.balance || 0,
+    toVerifyCount: toVerify[0]?.count || 0,
+    toVerifyAmount: toVerify[0]?.amount || 0,
+  };
+  sendSuccess(res, { data, pagination, meta });
 });
 
 exports.get = asyncHandler(async (req, res) => {

@@ -1,12 +1,12 @@
 import { useNavigate } from 'react-router-dom';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
-import { Plus } from 'lucide-react';
+import { Banknote, Hourglass, Plus, ReceiptText, Wallet } from 'lucide-react';
 import DataTable from '../../../components/ui/DataTable';
 import Button from '../../../components/ui/Button';
 import ExportMenu from '../../../components/ExportMenu';
-import { FilterBar, PageHeader, SearchInput } from '../../../components/ui/misc';
+import { FilterBar, PageHeader, ProgressBar, SearchInput, StatCard } from '../../../components/ui/misc';
 import { Input, Select } from '../../../components/ui/Field';
-import { StatusBadge } from '../../../components/ui/Badge';
+import { Badge, StatusBadge } from '../../../components/ui/Badge';
 import { ordersApi } from '../../../api/endpoints';
 import BranchSelect from '../../../components/BranchSelect';
 import { useAuth } from '../../../context/AuthContext';
@@ -29,7 +29,31 @@ export default function OrderList() {
     { key: 'orderType', header: 'Type', mobile: false, render: (o) => t(label(o.orderType)) },
     { key: 'branch', header: 'Branch', mobile: false, render: (o) => o.branch?.code || '—', exportValue: (o) => o.branch?.name },
     { key: 'total', header: 'Total', align: 'right', render: (o) => money(o.total) },
+    {
+      key: 'amountPaid',
+      header: 'Paid',
+      align: 'right',
+      render: (o) => (
+        <div className="ml-auto w-28">
+          <span className={o.amountPaid > 0 ? 'font-medium text-emerald-700' : 'text-stone-400'}>{money(o.amountPaid)}</span>
+          <ProgressBar value={o.total ? (o.amountPaid / o.total) * 100 : 0} tone={o.balance <= 0 ? 'green' : 'brass'} className="mt-1" />
+        </div>
+      ),
+      exportValue: (o) => o.amountPaid,
+    },
     { key: 'balance', header: 'Balance', align: 'right', render: (o) => <span className={o.balance > 0 ? 'font-medium text-brass-800' : 'text-stone-400'}>{money(o.balance)}</span> },
+    {
+      key: 'receipt',
+      header: 'Receipt',
+      mobile: false,
+      render: (o) =>
+        o.pendingPayments ? (
+          <Badge tone="amber">{o.pendingReceipts ? t('Receipt to verify') : t('Awaiting receipt')}</Badge>
+        ) : (
+          <span className="text-stone-400">—</span>
+        ),
+      exportValue: (o) => (o.pendingPayments ? (o.pendingReceipts ? 'Receipt to verify' : 'Awaiting receipt') : ''),
+    },
     { key: 'paymentStatus', header: 'Payment', render: (o) => <StatusBadge status={o.paymentStatus} /> },
     { key: 'status', header: 'Status', render: (o) => <StatusBadge status={o.status} /> },
   ];
@@ -50,10 +74,19 @@ export default function OrderList() {
           </>
         }
       />
+      {query.data?.meta && (
+        <div className="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <StatCard label={t('Ordered')} value={money(query.data.meta.total)} icon={Wallet} />
+          <StatCard label={t('Paid so far')} value={money(query.data.meta.paid)} icon={Banknote} tone="green" hint={`${query.data.meta.total ? Math.round((query.data.meta.paid / query.data.meta.total) * 100) : 0}%`} />
+          <StatCard label={t('Still owed')} value={money(query.data.meta.balance)} icon={Hourglass} tone="brass" />
+          <StatCard label={t('To verify')} value={money(query.data.meta.toVerifyAmount)} icon={ReceiptText} tone="red" hint={`${query.data.meta.toVerifyCount} ${t('payments')}`} />
+        </div>
+      )}
       <FilterBar>
         <SearchInput value={params.search} onChange={(search) => set({ search })} placeholder={t('Order number, item, phone…')} className="sm:w-72" />
         <Select value={params.status || ''} onChange={(e) => set({ status: e.target.value })} options={ORDER_STATUSES.map((s) => ({ value: s, label: t(label(s)) }))} placeholder={t('All statuses')} aria-label={t('Status')} containerClassName="sm:w-44" />
         <Select value={params.paymentStatus || ''} onChange={(e) => set({ paymentStatus: e.target.value })} options={PAYMENT_STATUSES.map((s) => ({ value: s, label: t(label(s)) }))} placeholder={t('Any payment')} aria-label={t('Payment status')} containerClassName="sm:w-40" />
+        <Select value={params.needsVerification || ''} onChange={(e) => set({ needsVerification: e.target.value })} options={[{ value: 'true', label: t('Payment to verify') }]} placeholder={t('Any receipt')} aria-label={t('Receipt')} containerClassName="sm:w-44" />
         <BranchSelect label={undefined} value={params.branch || ''} onChange={(e) => set({ branch: e.target.value })} aria-label={t('Branch')} containerClassName="sm:w-48" />
         <Input type="date" value={params.from || ''} onChange={(e) => set({ from: e.target.value })} aria-label={t('From date')} containerClassName="sm:w-40" />
         <Input type="date" value={params.to || ''} onChange={(e) => set({ to: e.target.value })} aria-label={t('To date')} containerClassName="sm:w-40" />

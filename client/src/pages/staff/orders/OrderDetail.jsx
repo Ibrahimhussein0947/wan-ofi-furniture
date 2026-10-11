@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { BellRing, Banknote, CheckCircle2, FileText, Percent, RotateCcw, Truck, XCircle, PackageCheck, Receipt, PencilLine } from 'lucide-react';
+import { Check, X, BellRing, Banknote, CheckCircle2, FileText, Percent, RotateCcw, Truck, XCircle, PackageCheck, Receipt, PencilLine } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 import ConfirmDialog from '../../../components/ui/ConfirmDialog';
 import { Card, DetailList, PageHeader, ProgressBar } from '../../../components/ui/misc';
@@ -11,7 +11,7 @@ import OrderTimeline from '../../../components/OrderTimeline';
 import { CustomerPaymentModal, DiscountModal, RefundModal } from '../../../components/finance/PaymentModals';
 import ScheduleDeliveryModal from '../deliveries/ScheduleDeliveryModal';
 import EditItemsModal from './EditItemsModal';
-import { invoicesApi, ordersApi } from '../../../api/endpoints';
+import { invoicesApi, ordersApi, paymentsApi } from '../../../api/endpoints';
 import { fileUrl } from '../../../api/client';
 import { useAuth } from '../../../context/AuthContext';
 import useMutationToast from '../../../hooks/useMutationToast';
@@ -26,12 +26,18 @@ export default function OrderDetail() {
   const navigate = useNavigate();
   const { can } = useAuth();
   const [modal, setModal] = useState(null);
+  const [rejecting, setRejecting] = useState(null);
   const query = useQuery({ queryKey: ['order', id], queryFn: () => ordersApi.get(id) });
 
   const remind = useMutationToast(() => ordersApi.action(id, 'remind', {}), { success: 'Reminder sent to the customer', invalidate: ['order'] });
   const confirm = useMutationToast(() => ordersApi.action(id, 'confirm', {}), { success: 'Order confirmed', invalidate: KEYS });
   const status = useMutationToast((body) => ordersApi.action(id, 'status', body), { success: (o) => `Order ${t(label(o.status)).toLowerCase()}`, invalidate: KEYS, onSuccess: () => setModal(null) });
   const cancel = useMutationToast((reason) => ordersApi.action(id, 'cancel', { reason }), { success: 'Order cancelled', invalidate: KEYS, onSuccess: () => setModal(null) });
+  const verify = useMutationToast(({ id, approve, reason }) => paymentsApi.verify(id, { approve, reason }), {
+    success: (_, v) => t(v.approve ? 'Payment verified and applied to the order' : 'Payment rejected'),
+    invalidate: KEYS.concat('payments'),
+    onSuccess: () => setRejecting(null),
+  });
   const invoice = useMutationToast(() => invoicesApi.create({ order: id }), { success: 'Invoice ready', invalidate: KEYS, onSuccess: (inv) => navigate(`/app/invoices/${inv._id}`) });
 
   return (
@@ -94,6 +100,49 @@ export default function OrderDetail() {
                 </>
               }
             />
+
+            {o.payments.some((p) => p.status === 'PENDING_VERIFICATION') && (
+              <Card title={t('Payments to verify')} subtitle={t('Check the receipt against your bank or mobile-money statement, then verify.')}>
+                <ul className="space-y-4">
+                  {o.payments
+                    .filter((p) => p.status === 'PENDING_VERIFICATION')
+                    .map((p) => (
+                      <li key={p._id} className="flex flex-wrap items-start gap-4 rounded-lg border border-amber-200 bg-amber-50/50 p-3">
+                        {p.screenshot ? (
+                          <a href={fileUrl(p.screenshot)} target="_blank" rel="noreferrer" title={t('View the receipt the customer uploaded')}>
+                            <img src={fileUrl(p.screenshot)} alt={t('Transfer receipt')} className="h-32 w-32 rounded border border-stone-200 object-cover" />
+                          </a>
+                        ) : (
+                          <div className="flex h-32 w-32 items-center justify-center rounded border border-dashed border-amber-300 p-2 text-center text-xs text-amber-700">{t('No receipt uploaded yet')}</div>
+                        )}
+                        <div className="min-w-0 flex-1 space-y-1 text-sm">
+                          <p className="text-lg font-semibold tabular-nums">{money(p.amount)}</p>
+                          <p className="text-stone-600">
+                            {t(label(p.method))} · {dateTime(p.createdAt || p.paidAt)}
+                          </p>
+                          {p.reference && (
+                            <p>
+                              {t('Reference')}: <span className="font-mono">{p.reference}</span>
+                            </p>
+                          )}
+                          {p.percent && <p className="text-xs text-stone-600">{p.percent === 100 ? t('Customer chose: paying in full') : t('Customer chose: {pct}% of the order', { pct: p.percent })}</p>}
+                          {p.notes && <p className="text-xs text-stone-500">{p.notes}</p>}
+                          {can('payments:write') && (
+                            <div className="flex gap-2 pt-2">
+                              <Button size="sm" icon={Check} loading={verify.isPending} onClick={() => verify.mutate({ id: p._id, approve: true })}>
+                                {t('Verify')}
+                              </Button>
+                              <Button size="sm" variant="secondary" icon={X} onClick={() => setRejecting(p)}>
+                                {t('Reject')}
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                </ul>
+              </Card>
+            )}
 
             <Card>
               <OrderTimeline order={o} />
@@ -230,6 +279,14 @@ export default function OrderDetail() {
 
               <div className="space-y-6">
                 <Card title={t('Totals')}>
+                  <div className="mb-4 rounded-lg bg-emerald-50 p-3">
+                    <p className="text-xs text-emerald-800">{t('Paid so far')}</p>
+                    <p className="text-2xl font-bold tabular-nums text-emerald-800">{money(o.amountPaid)}</p>
+                    <ProgressBar value={o.total ? (o.amountPaid / o.total) * 100 : 0} tone="green" showLabel className="mt-2" />
+                    <p className="mt-1 text-xs text-emerald-800">
+                      {t('of')} {money(o.total)}
+                    </p>
+                  </div>
                   <dl className="space-y-2 text-sm">
                     {[
                       ['Subtotal', o.subtotal],
@@ -330,6 +387,16 @@ export default function OrderDetail() {
             <RefundModal open={modal === 'refund'} onClose={() => setModal(null)} order={o} />
             <ScheduleDeliveryModal open={modal === 'delivery'} onClose={() => setModal(null)} order={o} />
             <EditItemsModal open={modal === 'items'} onClose={() => setModal(null)} order={o} />
+            <ConfirmDialog
+              open={Boolean(rejecting)}
+              onClose={() => setRejecting(null)}
+              title={t('Reject this payment?')}
+              message={t('The customer will be told it could not be verified.')}
+              confirmLabel={t('Reject')}
+              requireReason
+              loading={verify.isPending}
+              onConfirm={(reason) => verify.mutate({ id: rejecting._id, approve: false, reason })}
+            />
             <ConfirmDialog
               open={modal === 'cancel'}
               onClose={() => setModal(null)}
