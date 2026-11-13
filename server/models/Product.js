@@ -50,7 +50,8 @@ const productSchema = new mongoose.Schema(
   { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
-productSchema.index({ sku: 1 }, { unique: true, partialFilterExpression: { deletedAt: { $type: 'null' } } });
+// SKUs are deliberately NOT unique: the same product code can be entered more than once.
+productSchema.index({ sku: 1 }, { name: 'sku_lookup' });
 productSchema.index({ name: 'text', description: 'text', sku: 'text' });
 productSchema.index({ sellingPrice: 1 });
 productSchema.virtual('isLowStock').get(function isLowStock() {

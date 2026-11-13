@@ -30,8 +30,8 @@ describe('products', () => {
     expect(tx).toMatchObject({ type: 'STOCK_IN', quantity: 3, balanceAfter: 3 });
   });
 
-  test('SKU must be unique and selling below cost needs explicit confirmation', async () => {
-    expect((await api(owner.token).post('/api/products', productBody())).status).toBe(409);
+  test('duplicate SKUs are accepted and selling below cost needs explicit confirmation', async () => {
+    expect((await api(owner.token).post('/api/products', productBody())).status).toBe(201);
     const loss = await api(owner.token).post('/api/products', productBody({ sku: 'BED-002', sellingPrice: 700000 }));
     expect(loss.status).toBe(400);
     expect(loss.body.message).toMatch(/below cost/);

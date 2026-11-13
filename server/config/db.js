@@ -16,8 +16,22 @@ async function detectTransactionSupport() {
   return state.supportsTransactions;
 }
 
+// Older databases have a unique index on product SKU; remove it so duplicates are accepted.
+async function dropLegacyUniqueSkuIndex() {
+  try {
+    const coll = mongoose.connection.db.collection('products');
+    const indexes = await coll.indexes();
+    for (const idx of indexes) {
+      if (idx.unique && idx.key && idx.key.sku === 1 && Object.keys(idx.key).length === 1) await coll.dropIndex(idx.name);
+    }
+  } catch {
+    // collection may not exist yet
+  }
+}
+
 async function connectDB(uri) {
   await mongoose.connect(uri, { autoIndex: true });
+  await dropLegacyUniqueSkuIndex();
   await detectTransactionSupport();
   logger.info(
     `MongoDB connected (${mongoose.connection.host}) — transactions ${state.supportsTransactions ? 'enabled' : 'unavailable, using atomic updates only'}`
