@@ -13,6 +13,7 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { publicApi } from '../api/endpoints';
 import { LanguageSwitcher, ThemeToggle } from '../components/PreferenceControls';
+import InstallButton from '../components/InstallButton';
 import { useT } from '../i18n/LanguageContext';
 
 const NAV = [
@@ -63,6 +64,7 @@ export default function PublicLayout() {
           </nav>
           <div className="flex items-center gap-1">
             <LanguageSwitcher className="hidden sm:flex" />
+            <InstallButton />
             <ThemeToggle />
             {(!user || user.role === 'CUSTOMER') && (
               <Link to={user ? '/account/wishlist' : '/wishlist'} className="relative rounded-lg p-2 text-stone-700 hover:bg-walnut-50" aria-label={t('Wishlist, {count} saved', { count: saved })}>

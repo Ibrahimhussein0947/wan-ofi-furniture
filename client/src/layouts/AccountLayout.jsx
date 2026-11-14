@@ -6,6 +6,7 @@ import VerifyEmailBanner from '../components/VerifyEmailBanner';
 import useLiveEvents from '../hooks/useLiveEvents';
 import { MessagesLink, NotificationBell, UserMenu } from '../components/TopbarWidgets';
 import { LanguageSwitcher, ThemeToggle } from '../components/PreferenceControls';
+import InstallButton from '../components/InstallButton';
 import { useT } from '../i18n/LanguageContext';
 
 const NAV = [
@@ -32,6 +33,7 @@ export default function AccountLayout() {
               <ShoppingBag className="h-4 w-4" /> {t('Shop')}
             </NavLink>
             <LanguageSwitcher className="hidden md:flex" />
+            <InstallButton />
             <ThemeToggle />
             <MessagesLink basePath="/account" />
             <NotificationBell basePath="/account" />

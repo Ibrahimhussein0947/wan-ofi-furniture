@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { visibleNav } from './navigation';
 import useLiveEvents from '../hooks/useLiveEvents';
 import { LanguageSwitcher, ThemeToggle } from '../components/PreferenceControls';
+import InstallButton from '../components/InstallButton';
 import { useT } from '../i18n/LanguageContext';
 
 function Sidebar({ groups, onNavigate }) {
@@ -100,6 +101,7 @@ export default function AppLayout() {
           <div className="hidden flex-1 sm:block">{auth.user?.role !== 'WORKER' || auth.can('production:manage') ? <GlobalSearch /> : null}</div>
           <div className="flex flex-1 items-center justify-end gap-1 sm:flex-none">
             <LanguageSwitcher className="hidden md:flex" />
+            <InstallButton />
             <ThemeToggle />
             <MessagesLink basePath="/app" />
             <NotificationBell basePath="/app" />

@@ -47,6 +47,7 @@ const ROWS = [
   ["Back", "Deebi'i", "ተመለስ"],
   ["Close", "Cufi", "ዝጋ"],
   ["Close menu", "Baafata cufi", "ምናሌውን ዝጋ"],
+  ["Install app", "Appii kaa'i", "መተግበሪያውን ጫን"],
   ["Open menu", "Baafata bani", "ምናሌውን ክፈት"],
   ["View storefront", "Suuqii ilaali", "ሱቁን ይመልከቱ"],
 
