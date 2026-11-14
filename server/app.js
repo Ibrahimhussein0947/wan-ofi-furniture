@@ -77,7 +77,16 @@ app.use(
 // In production the API can also serve the built React app.
 if (env.isProduction) {
   const clientDist = path.join(__dirname, '..', 'client', 'dist');
-  app.use(express.static(clientDist, { index: false, maxAge: '7d' }));
+  app.use(
+    express.static(clientDist, {
+      index: false,
+      maxAge: '7d',
+      // The service worker and manifest must always be revalidated so updates roll out.
+      setHeaders: (res, file) => {
+        if (/[\\/](sw\.js|manifest\.webmanifest)$/.test(file)) res.setHeader('Cache-Control', 'no-cache');
+      },
+    })
+  );
   app.get(/^\/(?!api|uploads).*/, (_req, res, next) => res.sendFile(path.join(clientDist, 'index.html'), (err) => err && next()));
 }
 

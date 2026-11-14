@@ -73,7 +73,7 @@ export default function ReorderSuggestions() {
                   !g.supplier && <p className="text-xs text-stone-500">{t('Set a main supplier on these materials to order them in one click.')}</p>
                 )}
               </div>
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto"><table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-xs uppercase tracking-wide text-stone-500">
                     <th className="px-4 py-2">{t('Material')}</th>
@@ -103,7 +103,7 @@ export default function ReorderSuggestions() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
             </div>
           ))}
         </div>

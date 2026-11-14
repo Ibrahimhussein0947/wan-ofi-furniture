@@ -45,3 +45,8 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </QueryClientProvider>
   </React.StrictMode>
 );
+
+// Register the service worker (production only) so the app can be installed.
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+}

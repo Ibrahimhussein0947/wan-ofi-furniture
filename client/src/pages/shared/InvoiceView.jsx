@@ -96,7 +96,7 @@ export default function InvoiceView() {
                 </p>
               </div>
             </div>
-            <table className='w-full text-sm'>
+            <div className="overflow-x-auto"><table className='w-full text-sm'>
               <thead>
                 <tr className='border-y border-stone-200 text-left text-xs uppercase tracking-wide text-stone-500'>
                   <th className='py-2'>{t('Description')}</th>
@@ -122,7 +122,7 @@ export default function InvoiceView() {
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
             <dl className='ml-auto mt-4 w-full max-w-xs space-y-1.5 text-sm'>
               {[
                 ['Subtotal', inv.subtotal],

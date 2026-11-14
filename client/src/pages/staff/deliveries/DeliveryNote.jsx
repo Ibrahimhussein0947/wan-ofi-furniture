@@ -74,7 +74,7 @@ export default function DeliveryNote() {
                 </div>
               </div>
 
-              <table className="w-full text-left text-sm">
+              <div className="overflow-x-auto"><table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-y border-stone-200 text-xs uppercase tracking-wide text-stone-500">
                     <th className="py-2">{t('Item')}</th>
@@ -99,7 +99,7 @@ export default function DeliveryNote() {
                     </tr>
                   ))}
                 </tbody>
-              </table>
+              </table></div>
 
               {d.notes && (
                 <div className="mt-6 rounded-lg bg-stone-50 p-4 text-sm">
