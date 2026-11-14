@@ -189,7 +189,6 @@ export const reportsApi = {
 };
 export const dashboardApi = {
   get: () => api.get('/dashboard').then(data),
-  analytics: () => api.get('/dashboard/analytics').then(data),
 };
 
 export const notificationsApi = {

@@ -145,7 +145,6 @@ const SEARCH_GROUPS = {
   customers: ['Customers', (r) => `/app/customers/${r._id}`, (r) => `${r.name} · ${r.phone || r.customerCode}`],
   products: ['Products', (r) => `/app/products/${r._id}`, (r) => `${r.name} · ${r.sku}`],
   workers: ['Workers', (r) => (r.workerId ? `/app/workers/${r.workerId}` : '/app/workers'), (r) => `${r.name} · ${label(r.workerRole)}`],
-  suppliers: ['Suppliers', (r) => `/app/suppliers/${r._id}`, (r) => r.name],
 };
 
 export function GlobalSearch() {

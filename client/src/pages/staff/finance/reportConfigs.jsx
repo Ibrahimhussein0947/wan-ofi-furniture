@@ -175,7 +175,7 @@ export const REPORTS = [
     filters: [],
     rows: (d) => d.rows,
     columns: [
-      { key: 'supplier', header: 'Supplier', render: (r) => <Link className="link" to={`/app/suppliers/${r.supplierId}`}>{r.supplier}</Link>, exportValue: (r) => r.supplier },
+      { key: 'supplier', header: 'Supplier', exportValue: (r) => r.supplier },
       { key: 'phone', header: 'Phone' },
       { key: 'paymentTerms', header: 'Terms' },
       m('balance', 'We owe'),

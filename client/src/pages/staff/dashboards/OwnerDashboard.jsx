@@ -63,9 +63,6 @@ export default function OwnerDashboard({ data }) {
             <Button to="/app/orders/new" icon={ShoppingCart}>
               {t('New order')}
             </Button>
-            <Button to="/app/analytics" variant="secondary">
-              {t('Analytics')}
-            </Button>
           </>
         }
       />

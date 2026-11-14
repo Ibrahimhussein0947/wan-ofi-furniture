@@ -40,7 +40,6 @@ const AccountCustomRequestDetail = lazy(() => import('./pages/account/CustomRequ
 
 // Staff app
 const Dashboard = lazy(() => import('./pages/staff/Dashboard'));
-const Analytics = lazy(() => import('./pages/staff/Analytics'));
 const OrderList = lazy(() => import('./pages/staff/orders/OrderList'));
 const OrderDetail = lazy(() => import('./pages/staff/orders/OrderDetail'));
 const NewOrder = lazy(() => import('./pages/staff/orders/NewOrder'));
@@ -59,10 +58,6 @@ const Inspect = lazy(() => import('./pages/staff/quality/Inspect'));
 const ProductList = lazy(() => import('./pages/staff/catalog/ProductList'));
 const ProductForm = lazy(() => import('./pages/staff/catalog/ProductForm'));
 const CategoryAdmin = lazy(() => import('./pages/staff/catalog/Categories'));
-const SupplierList = lazy(() => import('./pages/staff/suppliers/SupplierList'));
-const SupplierDetail = lazy(() => import('./pages/staff/suppliers/SupplierDetail'));
-const Purchases = lazy(() => import('./pages/staff/suppliers/Purchases'));
-const PurchaseDetail = lazy(() => import('./pages/staff/suppliers/PurchaseDetail'));
 const Payments = lazy(() => import('./pages/staff/finance/Payments'));
 const Expenses = lazy(() => import('./pages/staff/finance/Expenses'));
 const Reports = lazy(() => import('./pages/staff/finance/Reports'));
@@ -121,7 +116,6 @@ export default function App() {
         <Route element={<ProtectedRoute roles={['OWNER', 'ACCOUNTANT', 'WORKER']} />}>
           <Route path="app" element={<AppLayout />}>
             <Route index element={<Dashboard />} />
-            <Route path="analytics" element={p(['analytics:read'], <Analytics />)} />
             <Route path="orders" element={p(['orders:read'], <OrderList />)} />
             <Route path="orders/new" element={p(['orders:write'], <NewOrder />)} />
             <Route path="orders/:id" element={p(['orders:read'], <OrderDetail />)} />
@@ -141,10 +135,6 @@ export default function App() {
             <Route path="products/new" element={p(['products:write'], <ProductForm />)} />
             <Route path="products/:id" element={p(['products:write'], <ProductForm />)} />
             <Route path="categories" element={p(['categories:write'], <CategoryAdmin />)} />
-            <Route path="suppliers" element={p(['suppliers:read'], <SupplierList />)} />
-            <Route path="suppliers/:id" element={p(['suppliers:read'], <SupplierDetail />)} />
-            <Route path="purchases" element={p(['purchases:read'], <Purchases />)} />
-            <Route path="purchases/:id" element={p(['purchases:read'], <PurchaseDetail />)} />
             <Route path="payments" element={p(['payments:read'], <Payments />)} />
             <Route path="receipts/:id" element={p(['payments:read'], <ReceiptView />)} />
             <Route path="expenses" element={p(['expenses:read'], <Expenses />)} />

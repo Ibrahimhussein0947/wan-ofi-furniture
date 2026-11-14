@@ -1,12 +1,10 @@
 import {
-  BarChart3,
   Building2,
   ClipboardCheck,
   ClipboardList,
   CreditCard,
   Factory,
   FolderTree,
-  Hammer,
   LayoutDashboard,
   Receipt,
   Settings,
@@ -17,7 +15,6 @@ import {
   UserCog,
   Users,
   Wallet,
-  PackageOpen,
   PencilRuler,
 } from 'lucide-react';
 
@@ -30,7 +27,6 @@ export const STAFF_NAV = [
     section: null,
     items: [
       { to: '/app', label: 'Dashboard', icon: LayoutDashboard, end: true },
-      { to: '/app/analytics', label: 'Analytics', icon: BarChart3, perms: ['analytics:read'] },
     ],
   },
   {
@@ -55,8 +51,6 @@ export const STAFF_NAV = [
     items: [
       { to: '/app/products', label: 'Products', icon: Sofa, perms: ['products:write'] },
       { to: '/app/categories', label: 'Categories', icon: FolderTree, perms: ['categories:write'] },
-      { to: '/app/suppliers', label: 'Suppliers', icon: Hammer, perms: ['suppliers:read'] },
-      { to: '/app/purchases', label: 'Purchase orders', icon: PackageOpen, perms: ['purchases:read'] },
     ],
   },
   {
