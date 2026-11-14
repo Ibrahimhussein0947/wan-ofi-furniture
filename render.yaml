@@ -30,6 +30,11 @@ services:
         sync: false
       - key: OWNER_PASSWORD
         sync: false
+      # Super admin (system on/off switches), created on the first start. Remove SUPERADMIN_PASSWORD afterwards.
+      - key: SUPERADMIN_EMAIL
+        sync: false
+      - key: SUPERADMIN_PASSWORD
+        sync: false
       # Uploaded photos: any S3-compatible storage — Supabase Storage (no card needed) or Cloudflare R2.
       # The service disk is wiped on every deploy, so don't use local storage here.
       - key: STORAGE_DRIVER
