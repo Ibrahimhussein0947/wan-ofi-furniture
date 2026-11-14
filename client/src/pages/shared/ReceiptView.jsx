@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Printer } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import { QueryState } from '../../components/ui/States';
-import { DocumentHeader } from './InvoiceView';
+import { DocumentHeader } from './DocumentHeader';
 import { paymentsApi } from '../../api/endpoints';
 import { useAuth } from '../../context/AuthContext';
 import { dateTime, label, money } from '../../utils/format';
@@ -24,7 +24,7 @@ export default function ReceiptView() {
         return (
           <div className="mx-auto max-w-2xl">
             <div className="no-print mb-4 flex justify-between">
-              <Button to={user?.role === 'CUSTOMER' ? '/account/invoices' : '/app/payments'} variant="ghost" size="sm">
+              <Button to={user?.role === 'CUSTOMER' ? '/account/orders' : '/app/payments'} variant="ghost" size="sm">
                 ← Back
               </Button>
               <Button variant="secondary" size="sm" icon={Printer} onClick={() => window.print()}>

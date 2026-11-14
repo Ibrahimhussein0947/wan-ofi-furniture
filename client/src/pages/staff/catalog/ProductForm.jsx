@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
-import { ExternalLink, Layers, Trash2, X } from 'lucide-react';
+import { ExternalLink, Trash2, X } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 import ConfirmDialog from '../../../components/ui/ConfirmDialog';
 import { Card, PageHeader } from '../../../components/ui/misc';
@@ -171,9 +171,6 @@ export default function ProductForm() {
                 <Button variant="ghost" icon={ExternalLink} to={`/products/${p.slug}`} target="_blank">
                   {t('View in shop')}
                 </Button>
-                <Button variant="secondary" icon={Layers} to={`/app/bom?product=${id}`}>
-                  {t('Bill of materials')}
-                </Button>
               </>
             )}
             <Button type="submit" loading={isSubmitting}>
@@ -246,7 +243,7 @@ export default function ProductForm() {
                 <Input label={t('Opening stock')} type="number" min="0" hint={t('Recorded as a stock-in transaction')} {...form.register('quantity')} />
               ) : (
                 <p className="text-sm text-stone-600">
-                  {t('Current stock:')} <strong>{p.quantity}</strong>. Adjust it from <a className="link" href="/app/inventory">{t('Inventory')}</a> so every change is recorded.
+                  {t('Current stock:')} <strong>{p.quantity}</strong>. 
                 </p>
               )}
               <Input label={t('Minimum stock level')} type="number" min="0" {...form.register('minStock')} />

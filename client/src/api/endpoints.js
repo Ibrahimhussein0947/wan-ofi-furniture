@@ -70,18 +70,6 @@ export const wishlistApi = {
   merge: (productIds) => api.post('/wishlist/merge', { productIds }).then(data),
 };
 
-export const promotionsApi = {
-  check: (code, subtotal) => api.post('/promotions/check', { code, subtotal }).then(data),
-  list: () => api.get('/promotions').then(data),
-  create: (body) => api.post('/promotions', body).then(data),
-  update: (id, body) => api.patch(`/promotions/${id}`, body).then(data),
-};
-
-export const reviewsApi = {
-  list: (params) => api.get('/reviews', { params: clean(params) }).then(page),
-  setStatus: (id, status) => api.patch(`/reviews/${id}`, { status }).then(data),
-};
-
 export const usersApi = {
   ...resource('/users'),
   permissions: () => api.get('/users/permissions').then(data),
@@ -89,7 +77,6 @@ export const usersApi = {
 export const customersApi = resource('/customers');
 export const workersApi = {
   ...resource('/workers'),
-  payroll: (month) => api.get('/workers/payroll', { params: { month } }).then(data),
   documents: (id) => api.get(`/workers/${id}/documents`).then(data),
   uploadDocument: (id, { title, category, notes }, file) => {
     const form = new FormData();
@@ -192,18 +179,11 @@ export const paymentsApi = {
   mobile: (body) => api.post('/payments/mobile', body).then(data),
   mobileStatus: (reference) => api.get(`/payments/mobile/${reference}`).then(data),
 };
-export const invoicesApi = resource('/invoices');
 export const expensesApi = {
   ...resource('/expenses'),
   create: (body, receipt) => api.post('/expenses', toFormData(body, { receipt })).then(data),
   decide: (id, body) => api.post(`/expenses/${id}/decision`, body).then(data),
 };
-export const accountingApi = {
-  transactions: (params) =>
-    api.get('/accounting/transactions', { params: clean(params) }).then(page),
-  income: (body) => api.post('/accounting/income', body).then(data),
-};
-
 export const reportsApi = {
   run: (name, params) => api.get(`/reports/${name}`, { params: clean(params) }).then(data),
 };
@@ -226,9 +206,6 @@ export const messagesApi = {
     api.post('/messages', attachments.length ? toFormData(body, { attachments }) : body).then(data),
 };
 
-export const auditApi = {
-  list: (params) => api.get('/audit-logs', { params: clean(params) }).then(page),
-};
 export const settingsApi = {
   get: () => api.get('/settings').then(data),
   update: (body) => api.patch('/settings', body).then(data),

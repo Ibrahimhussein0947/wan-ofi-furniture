@@ -75,7 +75,7 @@ export default function PurchaseDetail() {
                       {po.items.map((l) => (
                         <tr key={l._id}>
                           <td className="table-td">
-                            <Link to={`/app/materials/${l.material?._id}`} className="link">{l.material?.name || l.materialName}</Link>
+                            {l.material?.name || l.materialName}
                           </td>
                           <td className="table-td text-right">
                             {number(l.quantity)} {l.material?.unit}

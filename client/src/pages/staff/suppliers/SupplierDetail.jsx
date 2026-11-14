@@ -112,7 +112,7 @@ export default function SupplierDetail() {
               dense
               rows={s.materials}
               columns={[
-                { key: 'name', header: 'Material', render: (m) => <Link to={`/app/materials/${m._id}`} className="link">{m.name}</Link> },
+                { key: 'name', header: 'Material', render: (m) => m.name },
                 { key: 'quantity', header: 'In stock', align: 'right', render: (m) => `${number(m.quantity)} ${m.unit}` },
                 { key: 'unitCost', header: 'Unit cost', align: 'right', render: (m) => money(m.unitCost) },
               ]}

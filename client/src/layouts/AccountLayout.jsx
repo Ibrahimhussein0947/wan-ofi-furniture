@@ -1,6 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom';
 import clsx from 'clsx';
-import { FileText, Heart, Home, MessageSquare, Package, PencilRuler, ShoppingBag, User, Bell } from 'lucide-react';
+import { Heart, Home, MessageSquare, Package, PencilRuler, ShoppingBag, User, Bell } from 'lucide-react';
 import Logo from '../components/Logo';
 import VerifyEmailBanner from '../components/VerifyEmailBanner';
 import useLiveEvents from '../hooks/useLiveEvents';
@@ -14,7 +14,6 @@ const NAV = [
   ['/account/orders', 'Orders', Package],
   ['/account/wishlist', 'Wishlist', Heart],
   ['/account/custom-requests', 'Custom requests', PencilRuler],
-  ['/account/invoices', 'Invoices & receipts', FileText],
   ['/account/messages', 'Messages', MessageSquare],
   ['/account/notifications', 'Notifications', Bell],
   ['/account/profile', 'Profile', User],

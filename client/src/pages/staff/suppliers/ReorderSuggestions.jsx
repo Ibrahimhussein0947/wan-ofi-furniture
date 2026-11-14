@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { AlertTriangle, ChevronDown, ChevronUp, FilePlus2 } from 'lucide-react';
@@ -87,9 +87,9 @@ export default function ReorderSuggestions() {
                   {g.items.map((i) => (
                     <tr key={i.material._id}>
                       <td className="px-4 py-2">
-                        <Link to={`/app/materials/${i.material._id}`} className="font-medium text-stone-900 hover:underline">
+                        <span className="font-medium text-stone-900">
                           {i.material.name}
-                        </Link>
+                        </span>
                         {i.openOrders.length > 0 && <span className="block text-xs text-stone-500">Partly on order: {i.openOrders.join(', ')}</span>}
                       </td>
                       <td className="px-4 py-2 text-right tabular-nums text-red-600">

@@ -83,9 +83,9 @@ export default function OwnerDashboard({ data }) {
             </Link>
           )}
           {k.lowStockMaterials > 0 && (
-            <Link to="/app/materials?lowStock=true" className="flex items-center gap-3 rounded-xl border border-orange-200 bg-orange-50 p-3 text-sm text-orange-900 hover:bg-orange-100">
+            <div className="flex items-center gap-3 rounded-xl border border-orange-200 bg-orange-50 p-3 text-sm text-orange-900 hover:bg-orange-100">
               <AlertTriangle className="h-5 w-5" /> {t('{count} material(s) low on stock', { count: k.lowStockMaterials })}
-            </Link>
+            </div>
           )}
           {k.pendingCustomRequests > 0 && (
             <Link to="/app/custom-orders?status=SUBMITTED,UNDER_REVIEW,ESTIMATED" className="flex items-center gap-3 rounded-xl border border-sky-200 bg-sky-50 p-3 text-sm text-sky-900 hover:bg-sky-100">
@@ -155,13 +155,13 @@ export default function OwnerDashboard({ data }) {
             </table>
           </div>
         </Card>
-        <Card title={t('Recent transactions')} padded={false} actions={<Link to="/app/accounting" className="link text-sm">{t('Ledger')}</Link>}>
+        <Card title={t('Recent transactions')} padded={false}>
           <RecentTransactions rows={data.recentTransactions} />
         </Card>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card title={t('Low-stock materials')} padded={false} actions={<Link to="/app/materials?lowStock=true" className="link text-sm">{t('View')}</Link>}>
+        <Card title={t('Low-stock materials')} padded={false}>
           {!data.lowStock.length ? (
             <p className="p-5 text-sm text-stone-500">{t('All materials are above their minimum levels.')}</p>
           ) : (

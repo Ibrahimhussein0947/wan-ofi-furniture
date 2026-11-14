@@ -8,7 +8,7 @@ import Button from '../../components/ui/Button';
 import { Input, Textarea } from '../../components/ui/Field';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
-import { ordersApi, paymentsApi, promotionsApi } from '../../api/endpoints';
+import { ordersApi, paymentsApi } from '../../api/endpoints';
 import { amountForPercent } from '../../components/PercentChoice';
 import { errorMessage } from '../../api/client';
 import { money } from '../../utils/format';
@@ -27,9 +27,6 @@ export default function Checkout() {
   const proof = useLocation().state?.proof;
   const { data: settings } = usePublicSettings();
   const [method, setMethod] = useState('DELIVERY');
-  const [promoInput, setPromoInput] = useState('');
-  const [promo, setPromo] = useState(null);
-  const [checking, setChecking] = useState(false);
   // Set once the order is placed, so emptying the cart doesn't bounce the customer to /cart.
   const placed = useRef(false);
   const { register, handleSubmit, formState } = useForm({
@@ -45,25 +42,9 @@ export default function Checkout() {
   if (!items.length && !placed.current) return <Navigate to="/cart" replace />;
   const deliveryFee = method === 'DELIVERY' ? settings?.defaultDeliveryFee || 0 : 0;
   const taxRate = settings?.taxRate || 0;
-  // A promo is re-checked whenever the subtotal changes; the server recalculates it on the order anyway.
-  const discount = promo && promo.subtotal === subtotal ? promo.discount : 0;
-  const tax = Math.round((subtotal - discount) * taxRate) / 100;
-  const total = subtotal - discount + tax + deliveryFee;
+  const tax = Math.round(subtotal * taxRate) / 100;
+  const total = subtotal + tax + deliveryFee;
 
-  const applyPromo = async () => {
-    if (!promoInput.trim()) return;
-    setChecking(true);
-    try {
-      const result = await promotionsApi.check(promoInput.trim(), subtotal);
-      setPromo({ ...result, subtotal });
-      toast.success(t('Promo code {code} applied', { code: result.code }));
-    } catch (err) {
-      setPromo(null);
-      toast.error(errorMessage(err));
-    } finally {
-      setChecking(false);
-    }
-  };
   const deposit = Math.round((total * (settings?.depositPercent ?? 40)) / 100);
 
   const onSubmit = async (values) => {
@@ -78,7 +59,6 @@ export default function Checkout() {
         deliveryAddress: method === 'DELIVERY' ? { street: values.street, city: values.city, region: values.region, country: 'Ethiopia' } : undefined,
         contactPhone: values.contactPhone,
         notes: values.notes,
-        promoCode: discount ? promo.code : undefined,
       });
       placed.current = true;
       clear();
@@ -164,17 +144,6 @@ export default function Checkout() {
               <dt className="text-stone-600">{t('Subtotal')}</dt>
               <dd className="tabular-nums">{money(subtotal)}</dd>
             </div>
-            {discount > 0 && (
-              <div className="flex justify-between text-sage-700">
-                <dt>
-                  {t('Promo {code}', { code: promo.code })}{' '}
-                  <button type="button" className="ml-1 text-xs text-stone-500 underline hover:text-stone-700" onClick={() => setPromo(null)}>
-                    {t('Remove')}
-                  </button>
-                </dt>
-                <dd className="tabular-nums">−{money(discount)}</dd>
-              </div>
-            )}
             {taxRate > 0 && (
               <div className="flex justify-between">
                 <dt className="text-stone-600">{t('VAT')} ({taxRate}%)</dt>
@@ -194,27 +163,6 @@ export default function Checkout() {
               <dd className="tabular-nums">{money(deposit)}</dd>
             </div>
           </dl>
-          {!discount && (
-            <div className="mt-4 flex gap-2">
-              <input
-                className="input uppercase placeholder:normal-case"
-                value={promoInput}
-                onChange={(e) => setPromoInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    applyPromo();
-                  }
-                }}
-                placeholder={t('Promo code')}
-                aria-label={t('Promo code')}
-                maxLength={30}
-              />
-              <Button variant="secondary" onClick={applyPromo} loading={checking}>
-                {t('Apply')}
-              </Button>
-            </div>
-          )}
           <Button type="submit" block size="lg" className="mt-6" loading={formState.isSubmitting}>
             {t('Place order')}
           </Button>

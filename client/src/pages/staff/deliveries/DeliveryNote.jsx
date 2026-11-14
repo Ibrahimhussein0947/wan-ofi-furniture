@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Printer } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 import { QueryState } from '../../../components/ui/States';
-import { DocumentHeader } from '../../shared/InvoiceView';
+import { DocumentHeader } from '../../shared/DocumentHeader';
 import { usePublicSettings } from '../../../components/SettingsLoader';
 import { deliveriesApi } from '../../../api/endpoints';
 import { fileUrl } from '../../../api/client';

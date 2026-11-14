@@ -103,7 +103,6 @@ export default function CustomerDetail() {
             tabs={[
               { value: 'orders', label: 'Orders', count: c.orders.length },
               { value: 'payments', label: 'Payments', count: c.payments.length },
-              { value: 'invoices', label: 'Invoices', count: c.invoices.length },
               { value: 'custom', label: 'Custom requests', count: c.customRequests.length },
             ]}
           />
@@ -142,22 +141,6 @@ export default function CustomerDetail() {
                       </td>
                     </tr>
                   ))}
-                {tab === 'invoices' &&
-                  c.invoices.map((i) => (
-                    <tr key={i._id}>
-                      <td className='table-td'>
-                        <Link to={`/app/invoices/${i._id}`} className='link'>
-                          {i.invoiceNumber}
-                        </Link>
-                      </td>
-                      <td className='table-td'>{date(i.issueDate)}</td>
-                      <td className='table-td text-right tabular-nums'>{money(i.total)}</td>
-                      <td className='table-td text-right tabular-nums'>{money(i.balance)}</td>
-                      <td className='table-td'>
-                        <StatusBadge status={i.status} />
-                      </td>
-                    </tr>
-                  ))}
                 {tab === 'custom' &&
                   c.customRequests.map((r) => (
                     <tr key={r._id}>
@@ -181,7 +164,6 @@ export default function CustomerDetail() {
             {!{
               orders: c.orders,
               payments: c.payments,
-              invoices: c.invoices,
               custom: c.customRequests,
             }[tab].length && (
               <p className='p-6 text-center text-sm text-stone-500'>{t('Nothing to show.')}</p>

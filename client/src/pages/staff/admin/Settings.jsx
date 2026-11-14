@@ -334,7 +334,7 @@ export default function Settings() {
     <div className='max-w-4xl'>
       <PageHeader
         title={t('System settings')}
-        subtitle={t('Only the owner can change these. Every change is recorded in the audit log.')}
+        subtitle={t('Only the owner can change these.')}
       />
       <QueryState query={query}>{(settings) => <SettingsForm settings={settings} />}</QueryState>
     </div>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Check, X, BellRing, Banknote, CheckCircle2, FileText, Percent, RotateCcw, Truck, XCircle, PackageCheck, Receipt, PencilLine } from 'lucide-react';
+import { Check, X, BellRing, Banknote, CheckCircle2, Percent, RotateCcw, Truck, XCircle, PackageCheck, Receipt, PencilLine } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 import ConfirmDialog from '../../../components/ui/ConfirmDialog';
 import { Card, DetailList, PageHeader, ProgressBar } from '../../../components/ui/misc';
@@ -11,7 +11,7 @@ import OrderTimeline from '../../../components/OrderTimeline';
 import { CustomerPaymentModal, DiscountModal, RefundModal } from '../../../components/finance/PaymentModals';
 import ScheduleDeliveryModal from '../deliveries/ScheduleDeliveryModal';
 import EditItemsModal from './EditItemsModal';
-import { invoicesApi, ordersApi, paymentsApi } from '../../../api/endpoints';
+import { ordersApi, paymentsApi } from '../../../api/endpoints';
 import { fileUrl } from '../../../api/client';
 import { useAuth } from '../../../context/AuthContext';
 import useMutationToast from '../../../hooks/useMutationToast';
@@ -23,7 +23,6 @@ const KEYS = ['order', 'orders', 'dashboard'];
 export default function OrderDetail() {
   const t = useT();
   const { id } = useParams();
-  const navigate = useNavigate();
   const { can } = useAuth();
   const [modal, setModal] = useState(null);
   const [rejecting, setRejecting] = useState(null);
@@ -38,7 +37,6 @@ export default function OrderDetail() {
     invalidate: KEYS.concat('payments'),
     onSuccess: () => setRejecting(null),
   });
-  const invoice = useMutationToast(() => invoicesApi.create({ order: id }), { success: 'Invoice ready', invalidate: KEYS, onSuccess: (inv) => navigate(`/app/invoices/${inv._id}`) });
 
   return (
     <QueryState query={query}>
@@ -90,11 +88,6 @@ export default function OrderDetail() {
                   {o.status === 'PENDING' && o.orderType !== 'CUSTOM' && can('orders:write') && (
                     <Button variant="secondary" icon={PencilLine} onClick={() => setModal('items')}>
                       {t('Edit items')}
-                    </Button>
-                  )}
-                  {o.status !== 'CANCELLED' && can('invoices:write') && (
-                    <Button variant="secondary" icon={FileText} loading={invoice.isPending} onClick={() => (o.invoices?.find((i) => i.status !== 'VOID') ? navigate(`/app/invoices/${o.invoices.find((i) => i.status !== 'VOID')._id}`) : invoice.mutate())}>
-                      {t('Invoice')}
                     </Button>
                   )}
                 </>

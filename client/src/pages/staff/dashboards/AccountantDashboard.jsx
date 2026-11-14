@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { AlertCircle, ArrowDownCircle, ArrowUpCircle, Banknote, CalendarDays, CircleDollarSign, HandCoins, Receipt, ShieldCheck, Wallet } from 'lucide-react';
+import { ArrowDownCircle, ArrowUpCircle, Banknote, CalendarDays, CircleDollarSign, HandCoins, Receipt, ShieldCheck, Wallet } from 'lucide-react';
 import Button from '../../../components/ui/Button';
 import { Card, PageHeader, StatCard } from '../../../components/ui/misc';
 import { TrendChart, DonutChart } from '../../../components/charts/Charts';
@@ -30,16 +30,11 @@ export default function AccountantDashboard({ data }) {
         }
       />
 
-      {(k.pendingVerification > 0 || k.overdueInvoices > 0 || k.pendingExpenses > 0) && (
+      {(k.pendingVerification > 0 || k.pendingExpenses > 0) && (
         <div className="grid gap-3 sm:grid-cols-3">
           {k.pendingVerification > 0 && (
             <Link to="/app/payments?status=PENDING_VERIFICATION" className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
               <ShieldCheck className="h-5 w-5" /> {k.pendingVerification} customer payment(s) to verify
-            </Link>
-          )}
-          {k.overdueInvoices > 0 && (
-            <Link to="/app/invoices?overdue=true" className="flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
-              <AlertCircle className="h-5 w-5" /> {k.overdueInvoices} overdue invoice(s)
             </Link>
           )}
           {k.pendingExpenses > 0 && (
@@ -76,7 +71,7 @@ export default function AccountantDashboard({ data }) {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card title={t('Recent transactions')} padded={false} actions={<Link to="/app/accounting" className="link text-sm">{t('Ledger')}</Link>}>
+        <Card title={t('Recent transactions')} padded={false}>
           <RecentTransactions rows={data.recentTransactions} />
         </Card>
         <Card title={t('Top customer debts')} padded={false} actions={<Link to="/app/reports?report=customer-debts" className="link text-sm">{t('Debt report')}</Link>}>

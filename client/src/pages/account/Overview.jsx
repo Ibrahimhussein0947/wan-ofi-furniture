@@ -114,24 +114,6 @@ export default function Overview() {
                 ))}
               </ul>
             </Card>
-            <Card title={t('Recent invoices')} padded={false} actions={<Link to="/account/invoices" className="link text-sm">{t('View all')}</Link>}>
-              <ul className="divide-y divide-stone-100">
-                {!d.invoices.length && <li className="p-5 text-sm text-stone-500">{t('No invoices yet.')}</li>}
-                {d.invoices.map((inv) => (
-                  <li key={inv._id}>
-                    <Link to={`/account/invoices/${inv._id}`} className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-stone-50">
-                      <span>
-                        <span className="block text-sm font-medium">{inv.invoiceNumber}</span>
-                        <span className="text-xs text-stone-500">
-                          {date(inv.issueDate)} · {t('Balance')} {money(inv.balance)}
-                        </span>
-                      </span>
-                      <StatusBadge status={inv.status} />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </Card>
           </div>
         </div>
       )}

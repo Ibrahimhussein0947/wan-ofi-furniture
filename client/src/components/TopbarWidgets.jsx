@@ -6,7 +6,7 @@ import { Bell, CheckCheck, LogOut, MessageSquare, Search, User } from 'lucide-re
 import { notificationsApi, searchApi } from '../api/endpoints';
 import { useAuth } from '../context/AuthContext';
 import { Avatar } from './ui/misc';
-import { label, money, timeAgo } from '../utils/format';
+import { label, timeAgo } from '../utils/format';
 import { useT } from '../i18n/LanguageContext';
 
 function useClickOutside(ref, onOutside) {
@@ -145,10 +145,7 @@ const SEARCH_GROUPS = {
   customers: ['Customers', (r) => `/app/customers/${r._id}`, (r) => `${r.name} · ${r.phone || r.customerCode}`],
   products: ['Products', (r) => `/app/products/${r._id}`, (r) => `${r.name} · ${r.sku}`],
   workers: ['Workers', (r) => (r.workerId ? `/app/workers/${r.workerId}` : '/app/workers'), (r) => `${r.name} · ${label(r.workerRole)}`],
-  materials: ['Materials', (r) => `/app/materials/${r._id}`, (r) => `${r.name} · ${r.quantity} ${r.unit}`],
   suppliers: ['Suppliers', (r) => `/app/suppliers/${r._id}`, (r) => r.name],
-  invoices: ['Invoices', (r) => `/app/invoices/${r._id}`, (r) => `${r.invoiceNumber} · ${money(r.total)}`],
-  transactions: ['Transactions', () => '/app/accounting', (r) => `${r.transactionNumber} · ${label(r.type)} · ${money(r.amount)}`],
 };
 
 export function GlobalSearch() {

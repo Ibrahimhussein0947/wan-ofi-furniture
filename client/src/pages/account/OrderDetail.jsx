@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { CreditCard, FileText, MessageSquare, PartyPopper, Upload, XCircle } from 'lucide-react';
+import { CreditCard, MessageSquare, PartyPopper, Upload, XCircle } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
 import { Card, PageHeader, ProgressBar } from '../../components/ui/misc';
@@ -13,7 +13,7 @@ import PayModal from './PayModal';
 import AddReceiptModal from './AddReceiptModal';
 import BankAccounts from '../../components/BankAccounts';
 import { usePublicSettings } from '../../components/SettingsLoader';
-import { invoicesApi, messagesApi, ordersApi } from '../../api/endpoints';
+import { messagesApi, ordersApi } from '../../api/endpoints';
 import { fileUrl } from '../../api/client';
 import useMutationToast from '../../hooks/useMutationToast';
 import { date, dateTime, label, money } from '../../utils/format';
@@ -36,7 +36,6 @@ export default function OrderDetail() {
   const query = useQuery({ queryKey: ['order', id], queryFn: () => ordersApi.get(id) });
 
   const cancel = useMutationToast((reason) => ordersApi.action(id, 'cancel', { reason }), { success: 'Order cancelled', invalidate: ['order', 'orders', 'dashboard'], onSuccess: () => setCancelling(false) });
-  const invoice = useMutationToast(() => invoicesApi.create({ order: id }), { onSuccess: (inv) => navigate(`/account/invoices/${inv._id}`) });
   const contact = useMutationToast((body) => messagesApi.send(body), { success: 'Message sent to our team', onSuccess: () => navigate('/account/messages') });
 
   return (
@@ -78,11 +77,6 @@ export default function OrderDetail() {
                 {o.balance > 0 && o.status !== 'CANCELLED' && (
                   <Button icon={CreditCard} onClick={() => setPaying(true)}>
                     Pay {o.status === 'PENDING' ? 'deposit' : 'balance'}
-                  </Button>
-                )}
-                {o.status !== 'CANCELLED' && (
-                  <Button variant="secondary" icon={FileText} loading={invoice.isPending} onClick={() => (o.invoices?.[0] ? navigate(`/account/invoices/${o.invoices[0]._id}`) : invoice.mutate())}>
-                    {t('Invoice')}
                   </Button>
                 )}
                 {o.status === 'PENDING' && (

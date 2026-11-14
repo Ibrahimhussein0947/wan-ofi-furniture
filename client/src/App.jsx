@@ -26,7 +26,6 @@ const ResetPassword = lazy(() => import('./pages/auth/ResetPassword'));
 const VerifyEmail = lazy(() => import('./pages/auth/VerifyEmail'));
 
 // Shared
-const InvoiceView = lazy(() => import('./pages/shared/InvoiceView'));
 const ReceiptView = lazy(() => import('./pages/shared/ReceiptView'));
 const Messages = lazy(() => import('./pages/shared/Messages'));
 const Notifications = lazy(() => import('./pages/shared/Notifications'));
@@ -38,7 +37,6 @@ const AccountOrders = lazy(() => import('./pages/account/Orders'));
 const AccountOrderDetail = lazy(() => import('./pages/account/OrderDetail'));
 const AccountCustomRequests = lazy(() => import('./pages/account/CustomRequests'));
 const AccountCustomRequestDetail = lazy(() => import('./pages/account/CustomRequestDetail'));
-const AccountInvoices = lazy(() => import('./pages/account/Invoices'));
 
 // Staff app
 const Dashboard = lazy(() => import('./pages/staff/Dashboard'));
@@ -59,28 +57,18 @@ const Tasks = lazy(() => import('./pages/staff/production/Tasks'));
 const QualityList = lazy(() => import('./pages/staff/quality/QualityList'));
 const Inspect = lazy(() => import('./pages/staff/quality/Inspect'));
 const ProductList = lazy(() => import('./pages/staff/catalog/ProductList'));
-const Reviews = lazy(() => import('./pages/staff/catalog/Reviews'));
 const ProductForm = lazy(() => import('./pages/staff/catalog/ProductForm'));
 const CategoryAdmin = lazy(() => import('./pages/staff/catalog/Categories'));
-const Inventory = lazy(() => import('./pages/staff/inventory/Inventory'));
-const Materials = lazy(() => import('./pages/staff/inventory/Materials'));
-const MaterialDetail = lazy(() => import('./pages/staff/inventory/MaterialDetail'));
-const Bom = lazy(() => import('./pages/staff/inventory/Bom'));
 const SupplierList = lazy(() => import('./pages/staff/suppliers/SupplierList'));
 const SupplierDetail = lazy(() => import('./pages/staff/suppliers/SupplierDetail'));
 const Purchases = lazy(() => import('./pages/staff/suppliers/Purchases'));
 const PurchaseDetail = lazy(() => import('./pages/staff/suppliers/PurchaseDetail'));
 const Payments = lazy(() => import('./pages/staff/finance/Payments'));
-const Invoices = lazy(() => import('./pages/staff/finance/Invoices'));
 const Expenses = lazy(() => import('./pages/staff/finance/Expenses'));
-const Promotions = lazy(() => import('./pages/staff/finance/Promotions'));
-const Ledger = lazy(() => import('./pages/staff/finance/Ledger'));
 const Reports = lazy(() => import('./pages/staff/finance/Reports'));
 const Workers = lazy(() => import('./pages/staff/people/Workers'));
-const Payroll = lazy(() => import('./pages/staff/people/Payroll'));
 const WorkerDetail = lazy(() => import('./pages/staff/people/WorkerDetail'));
 const Users = lazy(() => import('./pages/staff/people/Users'));
-const AuditLogs = lazy(() => import('./pages/staff/admin/AuditLogs'));
 const Settings = lazy(() => import('./pages/staff/admin/Settings'));
 const Branches = lazy(() => import('./pages/staff/admin/Branches'));
 
@@ -123,8 +111,6 @@ export default function App() {
             <Route path="wishlist" element={<Wishlist inAccount />} />
             <Route path="custom-requests" element={<AccountCustomRequests />} />
             <Route path="custom-requests/:id" element={<AccountCustomRequestDetail />} />
-            <Route path="invoices" element={<AccountInvoices />} />
-            <Route path="invoices/:id" element={<InvoiceView />} />
             <Route path="receipts/:id" element={<ReceiptView />} />
             <Route path="messages" element={<Messages />} />
             <Route path="notifications" element={<Notifications />} />
@@ -152,31 +138,20 @@ export default function App() {
             <Route path="quality" element={p(['quality:manage'], <QualityList />)} />
             <Route path="quality/:id" element={p(['quality:manage'], <Inspect />)} />
             <Route path="products" element={p(['products:write'], <ProductList />)} />
-            <Route path="reviews" element={p(['products:write'], <Reviews />)} />
             <Route path="products/new" element={p(['products:write'], <ProductForm />)} />
             <Route path="products/:id" element={p(['products:write'], <ProductForm />)} />
             <Route path="categories" element={p(['categories:write'], <CategoryAdmin />)} />
-            <Route path="inventory" element={p(['inventory:read'], <Inventory />)} />
-            <Route path="materials" element={p(['materials:read'], <Materials />)} />
-            <Route path="materials/:id" element={p(['materials:read'], <MaterialDetail />)} />
-            <Route path="bom" element={p(['bom:read'], <Bom />)} />
             <Route path="suppliers" element={p(['suppliers:read'], <SupplierList />)} />
             <Route path="suppliers/:id" element={p(['suppliers:read'], <SupplierDetail />)} />
             <Route path="purchases" element={p(['purchases:read'], <Purchases />)} />
             <Route path="purchases/:id" element={p(['purchases:read'], <PurchaseDetail />)} />
             <Route path="payments" element={p(['payments:read'], <Payments />)} />
             <Route path="receipts/:id" element={p(['payments:read'], <ReceiptView />)} />
-            <Route path="invoices" element={p(['invoices:read'], <Invoices />)} />
-            <Route path="invoices/:id" element={p(['invoices:read'], <InvoiceView />)} />
             <Route path="expenses" element={p(['expenses:read'], <Expenses />)} />
-            <Route path="promotions" element={p(['discounts:write'], <Promotions />)} />
-            <Route path="accounting" element={p(['accounting:read'], <Ledger />)} />
             <Route path="reports" element={p(['reports:financial', 'reports:operations'], <Reports />)} />
             <Route path="workers" element={p(['workers:read'], <Workers />)} />
-            <Route path="payroll" element={p(['payments:read'], <Payroll />)} />
             <Route path="workers/:id" element={p(['workers:read'], <WorkerDetail />)} />
             <Route path="users" element={p(['users:read'], <Users />)} />
-            <Route path="audit-logs" element={p(['audit:read'], <AuditLogs />)} />
             <Route path="settings" element={p(['settings:manage'], <Settings />)} />
             <Route path="branches" element={p(['settings:manage'], <Branches />)} />
             <Route path="messages" element={<Messages />} />
