@@ -39,10 +39,29 @@ export function refreshSession() {
   return refreshing;
 }
 
+// Set when the API answers 503 SYSTEM_OFF (the super admin switched the system off).
+let systemOff = false;
+const offListeners = new Set();
+export const setSystemOff = (v) => {
+  if (systemOff === v) return;
+  systemOff = v;
+  offListeners.forEach((fn) => fn());
+};
+export const isSystemOff = () => systemOff;
+export const subscribeSystemOff = (fn) => {
+  offListeners.add(fn);
+  return () => offListeners.delete(fn);
+};
+
 api.interceptors.response.use(
-  (res) => res,
+  (res) => {
+    // A real answer from a non-auth endpoint means the system is on again (auth calls stay open while it is off).
+    if (systemOff && !res.config?.url?.startsWith('/auth/')) setSystemOff(false);
+    return res;
+  },
   async (error) => {
     const original = error.config;
+    if (error.response?.status === 503 && error.response?.data?.code === 'SYSTEM_OFF') setSystemOff(true);
     const isAuthCall = original?.url?.startsWith('/auth/');
     if (error.response?.status === 401 && !original._retried && !isAuthCall && accessToken) {
       original._retried = true;

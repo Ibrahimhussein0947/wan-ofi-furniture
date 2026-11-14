@@ -48,6 +48,11 @@ async function createStaffUser(input, actor) {
   return user;
 }
 
+// Only a super admin can touch a super admin account; to everyone else it does not exist.
+function assertCanManage(user, actor) {
+  if (user.role === ROLES.SUPER_ADMIN && actor.user.role !== ROLES.SUPER_ADMIN) throw ApiError.notFound('User not found.');
+}
+
 async function assertNotLastOwner(user) {
   if (user.role !== ROLES.OWNER) return;
   const owners = await User.countDocuments({ role: ROLES.OWNER, isActive: true, _id: { $ne: user._id } });
@@ -57,6 +62,7 @@ async function assertNotLastOwner(user) {
 async function updateUser(id, changes, actor) {
   const user = await User.findById(id);
   if (!user) throw ApiError.notFound('User not found.');
+  assertCanManage(user, actor);
   if (user.role === ROLES.CUSTOMER && changes.role && changes.role !== ROLES.CUSTOMER) {
     throw ApiError.badRequest('Customer accounts cannot be converted to staff accounts.');
   }
@@ -111,6 +117,7 @@ async function updateUser(id, changes, actor) {
 async function deleteUser(id, actor) {
   const user = await User.findById(id);
   if (!user) throw ApiError.notFound('User not found.');
+  assertCanManage(user, actor);
   if (String(user._id) === String(actor.user._id)) throw ApiError.badRequest('You cannot delete your own account.');
   await assertNotLastOwner(user);
   user.isActive = false;

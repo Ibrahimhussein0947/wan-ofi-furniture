@@ -39,6 +39,7 @@ const AccountCustomRequests = lazy(() => import('./pages/account/CustomRequests'
 const AccountCustomRequestDetail = lazy(() => import('./pages/account/CustomRequestDetail'));
 
 // Staff app
+const SystemControl = lazy(() => import('./pages/staff/admin/SystemControl'));
 const Dashboard = lazy(() => import('./pages/staff/Dashboard'));
 const OrderList = lazy(() => import('./pages/staff/orders/OrderList'));
 const OrderDetail = lazy(() => import('./pages/staff/orders/OrderDetail'));
@@ -113,9 +114,12 @@ export default function App() {
           </Route>
         </Route>
 
-        <Route element={<ProtectedRoute roles={['OWNER', 'ACCOUNTANT', 'WORKER']} />}>
+        <Route element={<ProtectedRoute roles={['SUPER_ADMIN', 'OWNER', 'ACCOUNTANT', 'WORKER']} />}>
           <Route path="app" element={<AppLayout />}>
             <Route index element={<Dashboard />} />
+            <Route element={<ProtectedRoute roles={['SUPER_ADMIN']} />}>
+              <Route path="system" element={<SystemControl />} />
+            </Route>
             <Route path="orders" element={p(['orders:read'], <OrderList />)} />
             <Route path="orders/new" element={p(['orders:write'], <NewOrder />)} />
             <Route path="orders/:id" element={p(['orders:read'], <OrderDetail />)} />

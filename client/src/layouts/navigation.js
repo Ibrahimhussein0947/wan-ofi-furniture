@@ -6,6 +6,7 @@ import {
   Factory,
   FolderTree,
   LayoutDashboard,
+  Power,
   Receipt,
   Settings,
   ShieldCheck,
@@ -26,6 +27,7 @@ export const STAFF_NAV = [
   {
     section: null,
     items: [
+      { to: '/app/system', label: 'System control', icon: Power, roles: ['SUPER_ADMIN'] },
       { to: '/app', label: 'Dashboard', icon: LayoutDashboard, end: true },
     ],
   },

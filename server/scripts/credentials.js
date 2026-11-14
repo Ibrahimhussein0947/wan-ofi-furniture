@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 const ACCOUNTS = [
+  ['Super admin', 'superadmin@wanofi.com'],
   ['Owner', 'owner@wanofi.com'],
   ['Accountant', 'accountant@wanofi.com'],
   ['Accountant', 'accountant2@wanofi.com'],

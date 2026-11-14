@@ -1,7 +1,7 @@
 const toEnum = (values) => Object.freeze(Object.fromEntries(values.map((v) => [v, v])));
 
-const ROLES = toEnum(['OWNER', 'ACCOUNTANT', 'WORKER', 'CUSTOMER']);
-const STAFF_ROLES = [ROLES.OWNER, ROLES.ACCOUNTANT, ROLES.WORKER];
+const ROLES = toEnum(['SUPER_ADMIN', 'OWNER', 'ACCOUNTANT', 'WORKER', 'CUSTOMER']);
+const STAFF_ROLES = [ROLES.SUPER_ADMIN, ROLES.OWNER, ROLES.ACCOUNTANT, ROLES.WORKER];
 
 const WORKER_ROLES = toEnum([
   'CARPENTER',

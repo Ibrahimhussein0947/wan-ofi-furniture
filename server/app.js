@@ -1,5 +1,6 @@
 const path = require('path');
 const express = require('express');
+const { systemGate } = require('./middleware/systemGate');
 const helmet = require('helmet');
 const cors = require('cors');
 const compression = require('compression');
@@ -58,7 +59,7 @@ app.use(sanitizeRequest);
 if (!env.isTest) app.use(morgan(env.isProduction ? 'combined' : 'dev'));
 
 app.get('/api/health', (_req, res) => res.json({ success: true, message: 'OK', data: { uptime: process.uptime() } }));
-app.use('/api', apiLimiter, routes);
+app.use('/api', systemGate, apiLimiter, routes);
 
 // Search-engine files. In development Vite forwards these two paths here.
 app.get('/robots.txt', seo.robots);

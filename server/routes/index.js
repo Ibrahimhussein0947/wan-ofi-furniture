@@ -56,6 +56,7 @@ router.use('/accounting', finance.accounting);
 router.use('/reports', finance.reports);
 router.use('/dashboard', finance.dashboard);
 
+router.use('/superadmin', require('./superadmin.routes'));
 router.use('/notifications', sys.notifications);
 router.use('/messages', sys.messages);
 router.use('/audit-logs', sys.auditLogs);

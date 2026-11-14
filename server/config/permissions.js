@@ -54,6 +54,7 @@ const P = PERMISSIONS;
 const ALL = '*';
 
 const ROLE_PERMISSIONS = Object.freeze({
+  [ROLES.SUPER_ADMIN]: [ALL],
   [ROLES.OWNER]: [ALL],
   [ROLES.ACCOUNTANT]: [
     P.CUSTOMERS_READ,
@@ -134,7 +135,7 @@ function hasPermission(user, permission) {
 
 function canMoveToStage(user, stage) {
   if (!user) return false;
-  if (user.role === ROLES.OWNER) return true;
+  if (user.role === ROLES.OWNER || user.role === ROLES.SUPER_ADMIN) return true;
   if (hasPermission(user, P.PRODUCTION_MANAGE)) return true;
   if (user.role !== ROLES.WORKER) return false;
   return (WORKER_STAGE_PERMISSIONS[user.workerRole] || []).includes(stage);

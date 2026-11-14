@@ -49,6 +49,13 @@ const settingSchema = new mongoose.Schema(
         isActive: { type: Boolean, default: true },
       },
     ],
+    // Master and per-area switches controlled only by the super admin (see middleware/systemGate.js).
+    systems: {
+      master: { type: Boolean, default: true },
+      storefront: { type: Boolean, default: true },
+      customers: { type: Boolean, default: true },
+      staff: { type: Boolean, default: true },
+    },
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   },
   { timestamps: true }

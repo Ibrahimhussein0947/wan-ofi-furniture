@@ -30,6 +30,10 @@ async function main() {
   process.env.PAYMENT_PROVIDER = process.env.PAYMENT_PROVIDER || 'sandbox';
   process.env.PAYMENT_WEBHOOK_SECRET = process.env.PAYMENT_WEBHOOK_SECRET || crypto.randomBytes(16).toString('hex');
 
+  // Development only: make sure a super admin exists even on databases seeded before that role existed.
+  process.env.SUPERADMIN_EMAIL = process.env.SUPERADMIN_EMAIL || 'superadmin@wanofi.com';
+  process.env.SUPERADMIN_PASSWORD = process.env.SUPERADMIN_PASSWORD || process.env.SEED_DEFAULT_PASSWORD || 'Password123!';
+
   const { connectDB } = require('../config/db');
   const { seed } = require('./seedData');
   const { printCredentials } = require('./credentials');

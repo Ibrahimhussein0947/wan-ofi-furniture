@@ -143,7 +143,7 @@ export default function Users() {
               </span>
             ),
           },
-          { key: 'role', header: 'Role', render: (u) => <Badge tone={u.role === 'OWNER' ? 'brass' : u.role === 'ACCOUNTANT' ? 'blue' : u.role === 'WORKER' ? 'violet' : 'stone'}>{label(u.workerRole || u.role)}</Badge> },
+          { key: 'role', header: 'Role', render: (u) => <Badge tone={u.role === 'OWNER' || u.role === 'SUPER_ADMIN' ? 'brass' : u.role === 'ACCOUNTANT' ? 'blue' : u.role === 'WORKER' ? 'violet' : 'stone'}>{label(u.workerRole || u.role)}</Badge> },
           { key: 'extra', header: 'Extra permissions', mobile: false, render: (u) => (u.permissions?.length ? <span className="inline-flex items-center gap-1 text-xs"><KeyRound className="h-3.5 w-3.5" /> {u.permissions.length}</span> : '—') },
           { key: 'lastLoginAt', header: 'Last login', mobile: false, render: (u) => dateTime(u.lastLoginAt) },
           { key: 'isActive', header: 'Status', render: (u) => (u.isActive ? <Badge tone="green">{t('Active')}</Badge> : <Badge tone="red">{t('Disabled')}</Badge>) },

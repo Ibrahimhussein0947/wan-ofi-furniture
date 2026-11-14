@@ -2,6 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import SystemOffScreen from './components/SystemOffScreen';
 import { Toaster } from 'react-hot-toast';
 import App from './App';
 import { AuthProvider } from './context/AuthContext';
@@ -33,8 +34,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(
             <AuthProvider>
               <CartProvider>
                 <WishlistProvider>
-                  <SettingsLoader />
-                  <App />
+                  <SystemOffScreen>
+                    <SettingsLoader />
+                    <App />
+                  </SystemOffScreen>
                   <Toaster position="top-right" toastOptions={{ duration: 4000, className: '!bg-white !text-stone-800', style: { fontSize: '14px' } }} />
                 </WishlistProvider>
               </CartProvider>

@@ -187,6 +187,11 @@ export const expensesApi = {
 export const reportsApi = {
   run: (name, params) => api.get(`/reports/${name}`, { params: clean(params) }).then(data),
 };
+export const superAdminApi = {
+  overview: () => api.get('/superadmin/overview').then(data),
+  setSystems: (body) => api.patch('/superadmin/systems', body).then(data),
+};
+
 export const dashboardApi = {
   get: () => api.get('/dashboard').then(data),
 };

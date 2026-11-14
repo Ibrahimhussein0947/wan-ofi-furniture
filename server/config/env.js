@@ -15,6 +15,9 @@ const schema = z.object({
   OWNER_NAME: z.string().default('Owner'),
   OWNER_EMAIL: z.string().optional(),
   OWNER_PASSWORD: z.string().optional(),
+  // Super admin (system on/off switches), created on start-up when the database has none.
+  SUPERADMIN_EMAIL: z.string().optional(),
+  SUPERADMIN_PASSWORD: z.string().optional(),
   JWT_EXPIRES_IN: z.string().default('15m'),
   JWT_REFRESH_EXPIRES_DAYS: z.coerce.number().default(7),
   COOKIE_SAMESITE: z.enum(['lax', 'strict', 'none']).default('lax'),

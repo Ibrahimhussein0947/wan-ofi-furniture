@@ -31,7 +31,7 @@ exports.run = asyncHandler(async (req, res) => {
 exports.dashboard = asyncHandler(async (req, res) => {
   const { role } = req.user;
   let data;
-  if (role === ROLES.OWNER) data = await dashboards.ownerDashboard();
+  if (role === ROLES.OWNER || role === ROLES.SUPER_ADMIN) data = await dashboards.ownerDashboard();
   else if (role === ROLES.ACCOUNTANT) data = await dashboards.accountantDashboard();
   else if (role === ROLES.WORKER) data = await dashboards.workerDashboard(req.user);
   else data = await dashboards.customerDashboard((await customerOf(req))._id, req.user._id);

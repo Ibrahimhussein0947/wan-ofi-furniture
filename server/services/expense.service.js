@@ -30,7 +30,7 @@ function bookExpense(expense, actor, session) {
  */
 async function createExpense(input, actor) {
   const settings = await getSettings();
-  const needsApproval = input.amount > settings.largeExpenseThreshold && actor.user.role !== ROLES.OWNER;
+  const needsApproval = input.amount > settings.largeExpenseThreshold && ![ROLES.OWNER, ROLES.SUPER_ADMIN].includes(actor.user.role);
   const expenseNumber = await nextNumber('EXP');
 
   const expense = await withTransaction(async (session) => {

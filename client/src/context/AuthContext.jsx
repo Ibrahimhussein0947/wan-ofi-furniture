@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { authApi } from '../api/endpoints';
-import { refreshSession, setAccessToken, setSessionExpiredHandler } from '../api/client';
+import { refreshSession, setAccessToken, setSessionExpiredHandler, setSystemOff } from '../api/client';
 
 export const AuthContext = createContext(null);
 
@@ -15,6 +15,8 @@ export function AuthProvider({ children }) {
     setAccessToken(session.accessToken);
     setUser(session.user);
     setStatus('authenticated');
+    // The super admin is never blocked, so a signed-in super admin means the "something went wrong" screen must go.
+    if (session.user.role === 'SUPER_ADMIN') setSystemOff(false);
     if (session.user.role === 'CUSTOMER') {
       const me = await authApi.me().catch(() => null);
       setCustomer(me?.customer || null);
@@ -88,4 +90,4 @@ export const useAuth = () => {
   return ctx;
 };
 
-export const homePathFor = (user) => (user?.role === 'CUSTOMER' ? '/account' : '/app');
+export const homePathFor = (user) => (user?.role === 'CUSTOMER' ? '/account' : user?.role === 'SUPER_ADMIN' ? '/app/system' : '/app');

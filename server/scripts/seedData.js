@@ -55,6 +55,7 @@ async function resetDatabase() {
 
 async function createUsers(password, branches) {
   const staff = [
+    { name: 'Super Admin', email: 'superadmin@wanofi.com', role: 'SUPER_ADMIN', phone: '+251 911 000 000' },
     { name: 'Wondafrash Wanofi', email: 'owner@wanofi.com', role: 'OWNER', phone: '+251 911 000 001' },
     { name: 'Hana Tesfaye', email: 'accountant@wanofi.com', role: 'ACCOUNTANT', phone: '+251 911 000 002' },
     { name: 'Yohannes Bekele', email: 'accountant2@wanofi.com', role: 'ACCOUNTANT', phone: '+251 911 000 003' },

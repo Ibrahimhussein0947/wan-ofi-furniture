@@ -34,4 +34,20 @@ async function ensureOwnerFromEnv(env, logger) {
   }
 }
 
-module.exports = { createFirstOwner, ensureOwnerFromEnv };
+/** On start-up, creates the super admin from SUPERADMIN_EMAIL / SUPERADMIN_PASSWORD when none exists yet. */
+async function ensureSuperAdminFromEnv(env, logger) {
+  if (!env.SUPERADMIN_EMAIL || !env.SUPERADMIN_PASSWORD) return null;
+  if (await User.exists({ role: ROLES.SUPER_ADMIN })) return null;
+  try {
+    const parsed = ownerInput.parse({ name: 'Super Admin', email: env.SUPERADMIN_EMAIL, password: env.SUPERADMIN_PASSWORD });
+    if (await User.exists({ email: parsed.email })) throw new Error('That email is already used by another account.');
+    const admin = await User.create({ ...parsed, role: ROLES.SUPER_ADMIN, emailVerified: true });
+    logger.info(`Created the super admin account ${admin.email}. You can now remove SUPERADMIN_PASSWORD from the environment.`);
+    return admin;
+  } catch (err) {
+    logger.error(`Could not create the super admin from SUPERADMIN_EMAIL/SUPERADMIN_PASSWORD: ${err.message}`);
+    return null;
+  }
+}
+
+module.exports = { createFirstOwner, ensureOwnerFromEnv, ensureSuperAdminFromEnv };

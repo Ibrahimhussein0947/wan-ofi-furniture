@@ -8,6 +8,7 @@ const { ALL_PERMISSIONS, ROLE_PERMISSIONS, WORKER_ROLE_PERMISSIONS, WORKER_STAGE
 
 exports.list = asyncHandler(async (req, res) => {
   const filter = { ...pickFilters(req.query, ['role', 'workerRole']), ...searchFilter(req.query.search, ['name', 'email', 'phone']) };
+  if (req.user.role !== 'SUPER_ADMIN') filter.role = filter.role && filter.role !== 'SUPER_ADMIN' ? filter.role : { $ne: 'SUPER_ADMIN' };
   if (req.query.isActive) filter.isActive = req.query.isActive === 'true';
   const { items, pagination } = await paginate(User, filter, req.query, { allowedSort: ['name', 'email', 'role', 'createdAt', 'lastLoginAt'] });
   sendSuccess(res, { data: items.map((u) => ({ ...u, password: undefined })), pagination });

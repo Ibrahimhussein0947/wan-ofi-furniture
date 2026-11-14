@@ -19,6 +19,6 @@ const requirePermission =
     return next();
   };
 
-const requireStaff = requireRole(ROLES.OWNER, ROLES.ACCOUNTANT, ROLES.WORKER);
+const requireStaff = requireRole(ROLES.SUPER_ADMIN, ROLES.OWNER, ROLES.ACCOUNTANT, ROLES.WORKER);
 
 module.exports = { requireRole, requirePermission, requireStaff };

@@ -10,7 +10,7 @@ export default function Dashboard() {
   return (
     <QueryState query={query}>
       {(data) => {
-        if (data.role === 'OWNER') return <OwnerDashboard data={data} />;
+        if (data.role === 'OWNER' || data.role === 'SUPER_ADMIN') return <OwnerDashboard data={data} />;
         if (data.role === 'ACCOUNTANT') return <AccountantDashboard data={data} />;
         return <WorkerDashboard data={data} />;
       }}
